@@ -1,0 +1,143 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define IDC_STATIC -1
+#include <winresrc.h>
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RT_MANIFEST
+//
+
+1                       RT_MANIFEST             "StuntCarRacer.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN_ICON           ICON                    "common\\directx.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// TRACK
+//
+
+LITTLERAMP              TRACK                   "Tracks\\LittleRamp.bin"
+STEPPINGSTONES          TRACK                   "Tracks\\SteppingStones.bin"
+HUMPBACK                TRACK                   "Tracks\\HumpBack.bin"
+BIGRAMP                 TRACK                   "Tracks\\BigRamp.bin"
+SKIJUMP                 TRACK                   "Tracks\\SkiJump.bin"
+DRAWBRIDGE              TRACK                   "Tracks\\DrawBridge.bin"
+HIGHJUMP                TRACK                   "Tracks\\HighJump.bin"
+ROLLERCOASTER           TRACK                   "Tracks\\RollerCoaster.bin"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// WAVE
+//
+
+TICKOVER                WAVE                    "Sounds\\TickOver.wav"
+ENGINEPITCH2            WAVE                    "Sounds\\EnginePitch2.wav"
+ENGINEPITCH3            WAVE                    "Sounds\\EnginePitch3.wav"
+ENGINEPITCH4            WAVE                    "Sounds\\EnginePitch4.wav"
+ENGINEPITCH5            WAVE                    "Sounds\\EnginePitch5.wav"
+ENGINEPITCH6            WAVE                    "Sounds\\EnginePitch6.wav"
+ENGINEPITCH7            WAVE                    "Sounds\\EnginePitch7.wav"
+ENGINEPITCH8            WAVE                    "Sounds\\EnginePitch8.wav"
+GROUNDED                WAVE                    "Sounds\\Grounded.wav"
+SMASH                   WAVE                    "Sounds\\Smash.wav"
+CREAK                   WAVE                    "Sounds\\Creak.wav"
+OFFROAD                 WAVE                    "Sounds\\OffRoad.wav"
+WRECK                   WAVE                    "Sounds\\Wreck.wav"
+HITCAR                  WAVE                    "Sounds\\HitCar.wav"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#define IDC_STATIC -1\r\n"
+    "#include <winresrc.h>\r\n"
+    "\r\n"
+    "\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+RoadYellowDark          BITMAP                  "Bitmap\\RoadYellowDark.bmp"
+RoadYellowLight         BITMAP                  "Bitmap\\RoadYellowLight.bmp"
+RoadRedDark             BITMAP                  "Bitmap\\RoadRedDark.bmp"
+RoadRedLight            BITMAP                  "Bitmap\\RoadRedLight.bmp"
+RoadBlack               BITMAP                  "Bitmap\\RoadBlack.bmp"
+RoadWhite               BITMAP                  "Bitmap\\RoadWhite.bmp"
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
