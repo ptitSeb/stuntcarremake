@@ -19,10 +19,11 @@ private:
 	XINPUT_STATE _controllerState;
 	int _controllerNum;
 public:
-	CXBOXController(int playerNumber);
+	// ctor - playerNumber 1<>4
+	CXBOXController(const int playerNumber);
 	XINPUT_STATE GetState();
 	bool IsConnected();
-	void Vibrate(int leftVal = 0, int rightVal = 0);
+	void Vibrate(const unsigned short leftVal = 0, const unsigned short rightVal = 0);
 };
 
 #endif

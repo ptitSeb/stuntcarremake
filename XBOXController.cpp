@@ -1,6 +1,8 @@
+#include "dxstdafx.h"
 #include "XBOXController.h"
 
-CXBOXController::CXBOXController(int playerNumber)
+// ctor - playerNumber 1<>4
+CXBOXController::CXBOXController(const int playerNumber)
 {
 	// Set the Controller Number
 	_controllerNum = playerNumber - 1;
@@ -35,7 +37,7 @@ bool CXBOXController::IsConnected()
 	}
 }
 
-void CXBOXController::Vibrate(int leftVal, int rightVal)
+void CXBOXController::Vibrate(const unsigned short leftVal, const unsigned short rightVal)
 {
 	// Create a Vibraton State
 	XINPUT_VIBRATION Vibration;
