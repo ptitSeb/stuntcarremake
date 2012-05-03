@@ -52,6 +52,7 @@
 #include "Opponent Behaviour.h"
 #include "Track.h"
 #include "3D Engine.h"
+#include "XBOXCOntroller.h"
 
 /*	===== */
 /*	Debug */
@@ -117,6 +118,8 @@ long car_collision_x_acceleration,
 
 long boostReserve = 0, boostUnit = 0;
 long playerLapNumber;
+
+static CXBOXController P1Controller(1);
 
 
 #if defined(DEBUG) || defined(_DEBUG)
@@ -787,6 +790,34 @@ static void CarControl (DWORD input)
 		}
 
 	// if none of the resulting keys are pressed then read joystick
+	if( !input )
+	{
+		if(P1Controller.IsConnected())
+		{
+			// easier to read...
+			const XINPUT_GAMEPAD &pad = P1Controller.GetState().Gamepad;
+			if(pad.bRightTrigger)
+			{
+				accelerate = TRUE;
+			}
+
+			if(pad.wButtons & XINPUT_GAMEPAD_A)
+			{
+				boost = TRUE;
+			}
+
+			if(pad.wButtons & XINPUT_GAMEPAD_B || pad.bLeftTrigger)
+			{
+				brake = TRUE;	// select brake
+				accelerate = FALSE;
+			}
+
+			if( abs(pad.sThumbLX) > XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE )
+			{
+				(pad.sThumbLX < 0) ? (left = TRUE) : (right = TRUE);
+			}
+		}
+	}
 
 	left_right_value = 0;
 	if ((touching_road) && (! on_chains))
