@@ -18,7 +18,7 @@ ifeq ($(PANDORA),1)
 	HAVE_GLES=1
 endif
 FLAGS+= -pipe
-CFLAGS=$(FLAGS) -Wno-conversion-null
+CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings
 LDFLAGS=$(FLAGS)
 
 ifeq ($(PANDORA),1)

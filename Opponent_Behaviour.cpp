@@ -8,15 +8,19 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 
 #include <stdlib.h>
 
 #include "StuntCarRacer.h"
-#include "Opponent Behaviour.h"
-#include "Car Behaviour.h"
+#include "Opponent_Behaviour.h"
+#include "Car_Behaviour.h"
 #include "Track.h"
-#include "3D Engine.h"
+#include "3D_Engine.h"
 
 /*	===== */
 /*	Debug */
@@ -38,6 +42,10 @@ extern bool bTestKey;
 /*	========= */
 /*	Constants */
 /*	========= */
+#ifdef linux
+#undef FALSE
+#undef TRUE
+#endif
 #define	FALSE	0
 #define	TRUE	1
 
@@ -1264,6 +1272,7 @@ static void RandomizeOpponentsSteering( void )
 {
 // TO DO: Tidy up, rename variables, remove gotos
 long d0, d1, d2;
+long value;
 
 #ifdef TEST_AMIGA_ROS
 	if (GetRecordedAmigaWord(&opponentsID))
@@ -1337,7 +1346,7 @@ ros1:
 
 	B1bbc2 = d2;
 
-	long value = rand() & 0x1f;
+	value = rand() & 0x1f;
 #ifdef TEST_AMIGA_ROS
 	GetRecordedAmigaWord(&value);
 #endif
@@ -1698,6 +1707,7 @@ static void CarToCarCollisionDetection( void )
 {
 // TO DO: Tidy up, rename variables, remove gotos
 long d0, d3, d4;
+long players_smaller_y;
 
 	if (!drop_start_done)
 		return;
@@ -1709,7 +1719,7 @@ long d0, d3, d4;
 		goto ctccd2;
 
 ctccd1:
-	long players_smaller_y = player_y >> 11;
+	players_smaller_y = player_y >> 11;
 	d0 = players_smaller_y - opp_actual_height[REAR_LEFT];
 	d4 = d0;
 	d0 += 40;
@@ -1863,6 +1873,7 @@ static void OpponentPlayerInteraction( void )
 {
 // TO DO: Tidy up, rename variables, remove gotos
 long d0, d1, d2;
+long count, piece;
 
 	//VALUE2 = players_road_x_position;
 	//VALUE3 = rear_wheel_surface_x_position;
@@ -2017,7 +2028,7 @@ far_away:
 
 opic:
 	// move opponent to middle of road if approaching or on a curve
-	long count, piece = opponents_current_piece;
+	piece = opponents_current_piece;
 	for (count = 2; count > 0; count--)
 	{
 		d0 = GetPieceAngleAndTemplate(piece);
