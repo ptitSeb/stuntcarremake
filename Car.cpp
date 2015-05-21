@@ -7,11 +7,15 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 
 #include "Car.h"
 #include "StuntCarRacer.h"
-#include "3D Engine.h"
+#include "3D_Engine.h"
 
 /*	===== */
 /*	Debug */

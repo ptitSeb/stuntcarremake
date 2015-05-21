@@ -5,7 +5,7 @@
 /*	============= */
 /*	Include files */
 /*	============= */
-#include "3D Engine.h"
+#include "3D_Engine.h"
 
 /*	========= */
 /*	Constants */
@@ -92,13 +92,25 @@ extern long ConvertAmigaTrack( long track );
 
 extern void FreeTrackData( void );
 
+#ifdef linux
+extern HRESULT CreateTrackVertexBuffer ();
+#else
 extern HRESULT CreateTrackVertexBuffer (IDirect3DDevice9 *pd3dDevice);
+#endif
 
 extern void FreeTrackVertexBuffer (void);
 
+#ifdef linux
+extern void DrawTrack ();
+
+
+extern HRESULT CreateShadowVertexBuffer ();
+#else
 extern void DrawTrack (IDirect3DDevice9 *pd3dDevice);
 
+
 extern HRESULT CreateShadowVertexBuffer (IDirect3DDevice9 *pd3dDevice);
+#endif
 
 extern void FreeShadowVertexBuffer (void);
 

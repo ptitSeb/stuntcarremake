@@ -1,4 +1,8 @@
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 #include "XBOXController.h"
 
 // ctor - playerNumber 1<>4
@@ -14,7 +18,12 @@ XINPUT_STATE CXBOXController::GetState()
 	ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));
 
 	// Get the state
+	#ifdef linux
+#warning TODO...
+	_controllerState = 0;
+	#else
 	XInputGetState(_controllerNum, &_controllerState);
+	#endif
 
 	return _controllerState;
 }
@@ -25,7 +34,12 @@ bool CXBOXController::IsConnected()
 	ZeroMemory(&_controllerState, sizeof(XINPUT_STATE));
 
 	// Get the state
+	#ifdef linux
+#warning TODO
+	DWORD Result = 0xFFFF;
+	#else
 	DWORD Result = XInputGetState(_controllerNum, &_controllerState);
+	#endif
 
 	if(Result == ERROR_SUCCESS)
 	{
@@ -39,6 +53,9 @@ bool CXBOXController::IsConnected()
 
 void CXBOXController::Vibrate(const unsigned short leftVal, const unsigned short rightVal)
 {
+	#ifdef linux
+#warning TODO
+	#else
 	// Create a Vibraton State
 	XINPUT_VIBRATION Vibration;
 
@@ -51,4 +68,5 @@ void CXBOXController::Vibrate(const unsigned short leftVal, const unsigned short
 
 	// Vibrate the controller
 	XInputSetState(_controllerNum, &Vibration);
+	#endif
 }

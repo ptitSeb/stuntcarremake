@@ -7,10 +7,14 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 
 #include "StuntCarRacer.h"
-#include "3D Engine.h"
+#include "3D_Engine.h"
 
 /*	===== */
 /*	Debug */
@@ -1008,7 +1012,7 @@ struct TRANSFORMEDVERTEX
 };
 #define D3DFVF_TRANSFORMEDVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
 
-
+#ifndef linux
 static IDirect3DVertexBuffer9 *pPolygonVB = NULL;
 
 HRESULT CreatePolygonVertexBuffer (IDirect3DDevice9 *pd3dDevice)
@@ -1028,42 +1032,96 @@ void FreePolygonVertexBuffer (void)
 {
 	if (pPolygonVB) pPolygonVB->Release(), pPolygonVB = NULL;
 }
-
+#endif
 
 // Draw flat polygon (no z information)
 void DrawPolygon( POINT *pptr,
 				  long sides)
 {
 long i;
+#ifndef linux
 IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
+#endif
 TRANSFORMEDVERTEX *pVertices;
 
 	// finish if too many sides
 	if (sides > MAX_POLY_SIDES)
 		return;
 
+#ifdef linux
+#ifdef HAVE_GLES
+	pVertices = (TRANSFORMEDVERTEX*)malloc(sides*sizeof(TRANSFORMEDVERTEX));
+	if (!pVertices)
+		return;
+#else
+	glBegin(GL_TRIANGLE_FAN);
+#endif
+#else
 	if( FAILED( pPolygonVB->Lock( 0, sides*sizeof(TRANSFORMEDVERTEX), (void**)&pVertices, 0 ) ) )
 		return;
-
+#endif
     for (i = 0; i < sides; i++)
         {
+#if defined(linux) && !defined(HAVE_GLES)
+		glColor4ubv((GLubyte*)&Fill_Colour);
+		glVertex3f((float)pptr[i].x, (float)pptr[i].y, 0.5f);
+#else
 		pVertices[i].x = (float)pptr[i].x;      // screen x
 		pVertices[i].y = (float)pptr[i].y;      // screen y
 		pVertices[i].z = (float)0.5f;			// not needed unless Z buffering
 		pVertices[i].rhw = (float)1.0f;
 		pVertices[i].color = Fill_Colour;
+#endif
         }
+	#ifdef linux
+	#ifdef HAVE_GLES
+	// setup arrays
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(TRANSFORMEDVERTEX), &pVertices[0].color);
+	glVertexPointer(4, GL_FLOAT, sizeof(TRANSFORMEDVERTEX), &pVertices[0].x);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, sides-2);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	#else
+	glEnd();
+	#endif
+	#else
 	pPolygonVB->Unlock();
 
 	pd3dDevice->SetStreamSource( 0, pPolygonVB, 0, sizeof(TRANSFORMEDVERTEX) );
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, sides-2 );
+	#endif
 	return;
 	}
 
 
 void DrawFilledRectangle( long x1, long y1, long x2, long y2, DWORD colour )
 {
+#ifdef linux
+#ifdef HAVE_GLES
+	float vtx[4*2] = {
+		x1, y1,
+		x1, y2,
+		x2, y2,
+		x2, y1
+	};
+	glColor4ubv((GLubyte*)&colour);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(4, GL_FLOAT, 0, vtx);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+	glDisableClientState(GL_VERTEX_ARRAY);
+#else
+	glColor4ubv((GLubyte*)&colour);
+	glBegin(GL_TRIANGLE_FAN);
+		glVertex2i(x1, y1);
+		glVertex2i(x1, y2);
+		glVertex2i(x2, y2);
+		glVertex2i(x2, y1);
+	glEnd();
+#endif
+#else
 HRESULT hr;
 D3DRECT rect;
 IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
@@ -1074,5 +1132,6 @@ IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
 	rect.x2 = x2+1;
 	rect.y2 = y2+1;
 	V( pd3dDevice->Clear(1, &rect, D3DCLEAR_TARGET, colour, 0, 0) );
+#endif
 	return;
 }

@@ -138,9 +138,10 @@ extern void LockViewpointToTarget( long viewpoint_x,
 								   long *viewpoint_x_angle,
 								   long *viewpoint_y_angle );
 
+#ifndef linux
 extern HRESULT CreatePolygonVertexBuffer (IDirect3DDevice9 *pd3dDevice);
-
 extern void FreePolygonVertexBuffer (void);
+#endif
 
 extern void DrawPolygon( POINT *pptr,
 						 long sides );

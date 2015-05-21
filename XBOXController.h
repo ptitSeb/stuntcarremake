@@ -5,8 +5,13 @@
 #define WIN32_LEAN_AND_MEAN
 
 // We need the Windows Header and the XInput Header
+#ifdef linux
+#include <SDL/SDL.h>
+#define XINPUT_STATE int
+#else
 #include <windows.h>
 #include <XInput.h>
+#endif
 
 // Now, the XInput Library
 // NOTE: COMMENT THIS OUT IF YOU ARE NOT USING A COMPILER THAT SUPPORTS THIS METHOD OF LINKING LIBRARIES

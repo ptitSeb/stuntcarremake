@@ -43,16 +43,20 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 
 #include <stdlib.h>
 
 #include "StuntCarRacer.h"
-#include "Car Behaviour.h"
-#include "Opponent Behaviour.h"
+#include "Car_Behaviour.h"
+#include "Opponent_Behaviour.h"
 #include "Track.h"
-#include "3D Engine.h"
-#include "XBOXCOntroller.h"
+#include "3D_Engine.h"
+#include "XBOXController.h"
 
 /*	===== */
 /*	Debug */
@@ -70,8 +74,10 @@ extern bool bTestKey;
 /*	========= */
 /*	Constants */
 /*	========= */
+#ifndef linux
 #define	FALSE	0
 #define	TRUE	1
+#endif
 
 #define	MAX_AMIGA_VOLUME	64
 #define DIRECTX_VOLUME_FACTOR	100		// Volume units are in hundredths of decibels
@@ -790,6 +796,9 @@ static void CarControl (DWORD input)
 		}
 
 	// if none of the resulting keys are pressed then read joystick
+#ifdef linux
+#warning TODO
+#else
 	if( !input )
 	{
 		if(P1Controller.IsConnected())
@@ -818,7 +827,7 @@ static void CarControl (DWORD input)
 			}
 		}
 	}
-
+#endif
 	left_right_value = 0;
 	if ((touching_road) && (! on_chains))
 		{
