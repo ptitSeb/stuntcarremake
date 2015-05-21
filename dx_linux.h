@@ -27,6 +27,10 @@ typedef float FLOAT;
 #define TRUE true
 #define FALSE false
 
+#define S_OK	0x00000000
+#define E_ABORT	0x80004004
+#define E_FAIL	0x80004005
+
 // taken from d3d9.h
 typedef DWORD COLOR; // bgra
 

@@ -17,10 +17,18 @@
 /*	============================== */
 /*	External function declarations */
 /*	============================== */
+#ifdef linux
+extern HRESULT CreateCarVertexBuffer ();
+#else
 extern HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice);
+#endif
 
 extern void FreeCarVertexBuffer (void);
 
+#ifdef linux
+extern void DrawCar ();
+#else
 extern void DrawCar (IDirect3DDevice9 *pd3dDevice);
+#endif
 
 #endif	/* _CAR */

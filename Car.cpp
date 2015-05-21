@@ -526,12 +526,19 @@ static void DrawCarLeftWheelTread( long offset )	// offset into co-ordinates
 /*																							*/
 /*	Description:	Draw the car using the supplied viewpoint								*/
 /*	======================================================================================= */
-
+#ifdef linux
+static GLfloat *pCarVtx = NULL;
+static GLfloat *pCarCol = NULL;
+#else
 static IDirect3DVertexBuffer9 *pCarVB = NULL;
+#endif
 static long numCarVertices = 0;
 
-
+#ifdef linux
+static void StoreCarTriangle( COORD_3D *c1, COORD_3D *c2, COORD_3D *c3, GLfloat *pVtx, GLfloat *pCol, DWORD colour )
+#else
 static void StoreCarTriangle( COORD_3D *c1, COORD_3D *c2, COORD_3D *c3, UTVERTEX *pVertices, DWORD colour )
+#endif
 {
 D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 
@@ -552,6 +559,24 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	D3DXVec3Normalize( &surface_normal, &surface_normal );
 	*/
 
+	#ifdef linux
+	GLfloat col[4];
+	col[0] = RGBA_GETRED(colour)/255.0f;
+	col[1] = RGBA_GETGREEN(colour)/255.0f;
+	col[2] = RGBA_GETBLUE(colour)/255.0f;
+	col[3] = RGBA_GETALPHA(colour)/255.0f;
+	memcpy(pVtx+numCarVertices*3, &v1, sizeof(GLfloat)*3);
+	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
+	++numCarVertices;
+	
+	memcpy(pVtx+numCarVertices*3, &v2, sizeof(GLfloat)*3);
+	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
+	++numCarVertices;
+
+	memcpy(pVtx+numCarVertices*3, &v3, sizeof(GLfloat)*3);
+	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
+	++numCarVertices;
+	#else
 	pVertices[numCarVertices].pos = v1;
 //	pVertices[numCarVertices].normal = surface_normal;
 	pVertices[numCarVertices].color = colour;
@@ -566,10 +591,15 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 //	pVertices[numCarVertices].normal = surface_normal;
 	pVertices[numCarVertices].color = colour;
 	++numCarVertices;
+	#endif
 }
 
 
+#ifdef linux
+static void CreateCarInVB( GLfloat *pVtx, GLfloat *pCol )
+#else
 static void CreateCarInVB( UTVERTEX *pVertices )
+#endif
 {
 static long first_time = TRUE;
 // car co-ordinates
@@ -624,68 +654,83 @@ static COORD_3D car[16+8] = {
 	// rear left wheel
 	DWORD colour = SCRGB(SCR_BASE_COLOUR+0);
 /**/
+	#ifdef linux
+	#define vertices pVtx, pCol
+	#else
+	#define vertices pVertices
+	#endif
 	// viewing from back
-	StoreCarTriangle(&car[0], &car[1], &car[2], pVertices, colour);
-	StoreCarTriangle(&car[0], &car[2], &car[3], pVertices, colour);
+	StoreCarTriangle(&car[0], &car[1], &car[2], vertices, colour);
+	StoreCarTriangle(&car[0], &car[2], &car[3], vertices, colour);
 	// viewing from front
-	StoreCarTriangle(&car[3], &car[2], &car[1], pVertices, colour);
-	StoreCarTriangle(&car[3], &car[1], &car[0], pVertices, colour);
+	StoreCarTriangle(&car[3], &car[2], &car[1], vertices, colour);
+	StoreCarTriangle(&car[3], &car[1], &car[0], vertices, colour);
 
 	// rear right wheel
 	// viewing from back
-	StoreCarTriangle(&car[0+4], &car[1+4], &car[2+4], pVertices, colour);
-	StoreCarTriangle(&car[0+4], &car[2+4], &car[3+4], pVertices, colour);
+	StoreCarTriangle(&car[0+4], &car[1+4], &car[2+4], vertices, colour);
+	StoreCarTriangle(&car[0+4], &car[2+4], &car[3+4], vertices, colour);
 	// viewing from front
-	StoreCarTriangle(&car[3+4], &car[2+4], &car[1+4], pVertices, colour);
-	StoreCarTriangle(&car[3+4], &car[1+4], &car[0+4], pVertices, colour);
+	StoreCarTriangle(&car[3+4], &car[2+4], &car[1+4], vertices, colour);
+	StoreCarTriangle(&car[3+4], &car[1+4], &car[0+4], vertices, colour);
 /**/
 /**/
 	// front left wheel
 	// viewing from back
-	StoreCarTriangle(&car[0+8], &car[1+8], &car[2+8], pVertices, colour);
-	StoreCarTriangle(&car[0+8], &car[2+8], &car[3+8], pVertices, colour);
+	StoreCarTriangle(&car[0+8], &car[1+8], &car[2+8], vertices, colour);
+	StoreCarTriangle(&car[0+8], &car[2+8], &car[3+8], vertices, colour);
 	// viewing from front
-	StoreCarTriangle(&car[3+8], &car[2+8], &car[1+8], pVertices, colour);
-	StoreCarTriangle(&car[3+8], &car[1+8], &car[0+8], pVertices, colour);
+	StoreCarTriangle(&car[3+8], &car[2+8], &car[1+8], vertices, colour);
+	StoreCarTriangle(&car[3+8], &car[1+8], &car[0+8], vertices, colour);
 
 	// front right wheel
 	// viewing from back
-	StoreCarTriangle(&car[0+12], &car[1+12], &car[2+12], pVertices, colour);
-	StoreCarTriangle(&car[0+12], &car[2+12], &car[3+12], pVertices, colour);
+	StoreCarTriangle(&car[0+12], &car[1+12], &car[2+12], vertices, colour);
+	StoreCarTriangle(&car[0+12], &car[2+12], &car[3+12], vertices, colour);
 	// viewing from front
-	StoreCarTriangle(&car[3+12], &car[2+12], &car[1+12], pVertices, colour);
-	StoreCarTriangle(&car[3+12], &car[1+12], &car[0+12], pVertices, colour);
+	StoreCarTriangle(&car[3+12], &car[2+12], &car[1+12], vertices, colour);
+	StoreCarTriangle(&car[3+12], &car[1+12], &car[0+12], vertices, colour);
 /**/
 
 	// car left side
 	colour = SCRGB(SCR_BASE_COLOUR+12);
-	StoreCarTriangle(&car[4+16], &car[5+16], &car[1+16], pVertices, colour);
-	StoreCarTriangle(&car[4+16], &car[1+16], &car[0+16], pVertices, colour);
+	StoreCarTriangle(&car[4+16], &car[5+16], &car[1+16], vertices, colour);
+	StoreCarTriangle(&car[4+16], &car[1+16], &car[0+16], vertices, colour);
 	// car right side
-	StoreCarTriangle(&car[3+16], &car[2+16], &car[6+16], pVertices, colour);
-	StoreCarTriangle(&car[3+16], &car[6+16], &car[7+16], pVertices, colour);
+	StoreCarTriangle(&car[3+16], &car[2+16], &car[6+16], vertices, colour);
+	StoreCarTriangle(&car[3+16], &car[6+16], &car[7+16], vertices, colour);
 
 	// car back
 	colour = SCRGB(SCR_BASE_COLOUR+10);
-	StoreCarTriangle(&car[0+16], &car[1+16], &car[2+16], pVertices, colour);
-	StoreCarTriangle(&car[0+16], &car[2+16], &car[3+16], pVertices, colour);
+	StoreCarTriangle(&car[0+16], &car[1+16], &car[2+16], vertices, colour);
+	StoreCarTriangle(&car[0+16], &car[2+16], &car[3+16], vertices, colour);
 	// car front
-	StoreCarTriangle(&car[7+16], &car[6+16], &car[5+16], pVertices, colour);
-	StoreCarTriangle(&car[7+16], &car[5+16], &car[4+16], pVertices, colour);
+	StoreCarTriangle(&car[7+16], &car[6+16], &car[5+16], vertices, colour);
+	StoreCarTriangle(&car[7+16], &car[5+16], &car[4+16], vertices, colour);
 
 	// car top
 	colour = SCRGB(SCR_BASE_COLOUR+15);
-	StoreCarTriangle(&car[1+16], &car[5+16], &car[6+16], pVertices, colour);
-	StoreCarTriangle(&car[1+16], &car[6+16], &car[2+16], pVertices, colour);
+	StoreCarTriangle(&car[1+16], &car[5+16], &car[6+16], vertices, colour);
+	StoreCarTriangle(&car[1+16], &car[6+16], &car[2+16], vertices, colour);
 	// car bottom
 	colour = SCRGB(SCR_BASE_COLOUR+9);
-	StoreCarTriangle(&car[3+16], &car[7+16], &car[4+16], pVertices, colour);
-	StoreCarTriangle(&car[3+16], &car[4+16], &car[0+16], pVertices, colour);
+	StoreCarTriangle(&car[3+16], &car[7+16], &car[4+16], vertices, colour);
+	StoreCarTriangle(&car[3+16], &car[4+16], &car[0+16], vertices, colour);
+	#undef vertices
 }
 
-
+#ifdef linux
+HRESULT CreateCarVertexBuffer ()
+#else
 HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice)
+#endif
 {
+#ifdef linux
+	if (pCarVtx == NULL)
+		pCarVtx = (GLfloat*)malloc(sizeof(GLfloat)*3*MAX_VERTICES_PER_CAR);
+	if (pCarCol == NULL)
+		pCarCol = (GLfloat*)malloc(sizeof(GLfloat)*4*MAX_VERTICES_PER_CAR);
+#else
 	if (pCarVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_CAR*sizeof(UTVERTEX),
@@ -696,21 +741,47 @@ HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	UTVERTEX *pVertices;
 	if( FAILED( pCarVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-
+#endif
 	numCarVertices = 0;
+#ifdef linux
+	CreateCarInVB(pCarVtx, pCarCol);
+#else
 	CreateCarInVB(pVertices);
-
 	pCarVB->Unlock();
+#endif
 	return S_OK;
 }
 
 
 void FreeCarVertexBuffer (void)
 {
+#ifdef linux
+	if (pCarVtx) {
+		free(pCarVtx);
+		pCarVtx = NULL;
+	}
+	if (pCarCol) {
+		free(pCarCol);
+		pCarCol = NULL;
+	}
+#else
 	if (pCarVB) pCarVB->Release(), pCarVB = NULL;
+#endif
 }
 
 
+#ifdef linux
+void DrawCar ()
+{
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glColorPointer(4, GL_FLOAT, 0, pCarCol);
+	glVertexPointer(4, GL_FLOAT, 0, pCarVtx);
+	glDrawArrays(GL_TRIANGLES, 0, numCarVertices);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+}
+#else
 void DrawCar (IDirect3DDevice9 *pd3dDevice)
 {
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
@@ -720,3 +791,5 @@ void DrawCar (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numCarVertices/3 );	// 3 points per triangle
 }
+#endif
+
