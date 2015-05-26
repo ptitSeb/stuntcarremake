@@ -45,17 +45,19 @@ endif
 
 SDL=1
 ifeq ($(SDL),1)
-	SDL_=sdl
+	SDL_=
 	CFLAGS+=`sdl-config --cflags`
+	TTF_ = SDL_ttf
 else
 	SDL_=sdl$(SDL)
+	TTF_ = SDL$(SDL)_ttf
 endif
 
 # library headers
 ifeq ($(PANDORA),1)
-	CFLAGS+= `pkg-config --cflags $(SDL_) libpng zlib openal`
+	CFLAGS+= `pkg-config --cflags $(SDL_) $(TTF_) libpng zlib openal`
 else
-	CFLAGS+= `pkg-config --cflags $(SDL_) libpng zlib openal`
+	CFLAGS+= `pkg-config --cflags $(SDL_) $(TTF_) libpng zlib openal`
 endif
 
 # dynamic only libraries
@@ -64,6 +66,8 @@ ifeq ($(PANDORA),1)
 else
 	LIB+= `pkg-config --libs $(SDL_)`
 endif
+
+LIB+= `pkg-config --libs $(TTF_)`
 
 ifeq ($(MINGW),1)
 	LIB += -L./mingw/bin

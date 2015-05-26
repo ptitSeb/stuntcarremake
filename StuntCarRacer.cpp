@@ -7,17 +7,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 #include "resource.h"
 
 #include "StuntCarRacer.h"
-#include "3D Engine.h"
+#include "3D_Engine.h"
 #include "Backdrop.h"
 #include "Track.h"
 #include "Car.h"
-#include "Car Behaviour.h"
-#include "Opponent Behaviour.h"
-#include "Wavefunctions.h"
+#include "Car_Behaviour.h"
+#include "Opponent_Behaviour.h"
+#include "wavefunctions.h"
 
 
 //-----------------------------------------------------------------------------
@@ -282,11 +286,17 @@ static void FreeData( void )
 void GetScreenDimensions( long *screen_width,
 						  long *screen_height )
 	{
+#ifdef linux
+	const SDL_VideoInfo* info = SDL_GetVideoInfo();
+	*screen_width = info->current_w;
+	*screen_height = info->current_h; 
+#else
 	const D3DSURFACE_DESC *desc;
 	desc = DXUTGetBackBufferSurfaceDesc();
 
 	*screen_width = desc->Width;
 	*screen_height = desc->Height;
+#endif
 	}
 
 //--------------------------------------------------------------------------------------
@@ -440,10 +450,16 @@ static void EnforceConstantFrameRate( long max_frame_rate )
 //--------------------------------------------------------------------------------------
 // Global variables
 //--------------------------------------------------------------------------------------
+#ifdef linux
+TTF_Font *g_pFont = NULL;
+TTF_Font *g_pFontLarge = NULL;
+#else
 ID3DXFont *g_pFont = NULL;         // Font for drawing text
 ID3DXFont *g_pFontLarge = NULL;    // Font for drawing large text
 ID3DXSprite *g_pSprite = NULL;       // Sprite for batching draw text calls
+#endif
 
+#ifndef linux
 //--------------------------------------------------------------------------------------
 // Rejects any devices that aren't acceptable by returning false
 //--------------------------------------------------------------------------------------
@@ -573,8 +589,26 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 
 	return S_OK;
 }
+#else
+// some helper functions....
+void CreateFonts()
+{
+	if(!TTF_WasInit() && TTF_Init()==-1) {
+		printf("TTF_Init: %s\n", TTF_GetError());
+		exit(1);
+	}
 
+	if (g_pFont==NULL)
+	{
+		g_pFont = TTF_OpenFont("LiberationSans-Bold.ttf", 15);
+	}
+	if (g_pFontLarge==NULL)
+	{
+		g_pFont = TTF_OpenFont("LiberationSans-Bold.ttf", 25);
+	}
+}
 
+#endif	//!linux
 /*	======================================================================================= */
 /*	Function:		CalcTrackMenuViewpoint													*/
 /*																							*/
