@@ -2,10 +2,17 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+
+#include "wavefunctions.h"
+
+
+#else
 #include "dxstdafx.h"
 
 #include "WaveFunctions.h"
-
+#endif
 /*********************************************************************************
 /
 /	Function:	MakeSoundBuffer
@@ -210,4 +217,4 @@ BOOL UnpackWAVChunk( void *pRIFFBytes, LPWAVEFORMATEX *lpwfmx, LPBYTE *lpChunkDa
 		} // while dwChunkBitsPtr
 	return FALSE;
 	}
-
+#endif
