@@ -8,6 +8,8 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 #include <string.h>
 #include <SDL/SDL.h>
 #include <AL/al.h>
@@ -21,6 +23,11 @@
 typedef u_int32_t DWORD;
 typedef u_int8_t BYTE;
 typedef u_int16_t WORD;
+typedef u_int32_t BOOL;
+
+typedef const wchar_t* LPCWSTR;
+
+typedef void* HMODULE;
 
 typedef int32_t LONG;
 typedef float FLOAT;
@@ -30,6 +37,66 @@ typedef float FLOAT;
 #define S_OK	0x00000000
 #define E_ABORT	0x80004004
 #define E_FAIL	0x80004005
+
+#define	_FACDS 0x878
+#define	MAKE_DSHRESULT(code)	MAKE_HRESULT(1,_FACDS,code)
+
+#define DS_OK 			0
+#define DSERR_ALLOCATED 	MAKE_DSHRESULT(10)
+#define DSERR_CONTROLUNAVAIL 	MAKE_DSHRESULT(30)
+#define DSERR_INVALIDPARAM 	E_INVALIDARG
+#define DSERR_INVALIDCALL M	AKE_DSHRESULT(50)
+#define DSERR_GENERIC 		E_FAIL
+#define DSERR_PRIOLEVELNEEDED 	MAKE_DSHRESULT(70)
+#define DSERR_OUTOFMEMORY 	E_OUTOFMEMORY
+#define DSERR_BADFORMAT 	MAKE_DSHRESULT(100)
+#define DSERR_UNSUPPORTED 	E_NOTIMPL
+#define DSERR_NODRIVER 		MAKE_DSHRESULT(120)
+#define DSERR_ALREADYINITIALIZED MAKE_DSHRESULT(130)
+#define DSERR_NOAGGREGATION 	CLASS_E_NOAGGREGATION
+#define DSERR_BUFFERLOST 	MAKE_DSHRESULT(150)
+#define DSERR_OTHERAPPHASPRIO 	MAKE_DSHRESULT(160)
+#define DSERR_UNINITIALIZED 	MAKE_DSHRESULT(170)
+
+#define DSCAPS_PRIMARYMONO 	0x00000001
+#define DSCAPS_PRIMARYSTEREO 	0x00000002
+#define DSCAPS_PRIMARY8BIT 	0x00000004
+#define DSCAPS_PRIMARY16BIT 	0x00000008
+#define DSCAPS_CONTINUOUSRATE 	0x00000010
+#define DSCAPS_EMULDRIVER 	0x00000020
+#define DSCAPS_CERTIFIED 	0x00000040
+#define DSCAPS_SECONDARYMONO 	0x00000100
+#define DSCAPS_SECONDARYSTEREO 	0x00000200
+#define DSCAPS_SECONDARY8BIT 	0x00000400
+#define DSCAPS_SECONDARY16BIT 	0x00000800
+
+#define	DSSCL_NORMAL 		1
+#define	DSSCL_PRIORITY 		2
+#define	DSSCL_EXCLUSIVE 	3
+#define	DSSCL_WRITEPRIMARY 	4
+
+#define DSBPLAY_LOOPING 	0x00000001
+#define DSBSTATUS_PLAYING 	0x00000001
+#define DSBSTATUS_BUFFERLOST 	0x00000002
+#define DSBSTATUS_LOOPING 	0x00000004
+
+#define DSBLOCK_FROMWRITECURSOR 0x00000001
+
+#define DSBCAPS_PRIMARYBUFFER 	0x00000001
+#define DSBCAPS_STATIC 		0x00000002
+#define DSBCAPS_LOCHARDWARE 	0x00000004
+#define DSBCAPS_LOCSOFTWARE 	0x00000008
+#define DSBCAPS_CTRLFREQUENCY 	0x00000020
+#define DSBCAPS_CTRLPAN 	0x00000040
+#define DSBCAPS_CTRLVOLUME 	0x00000080
+#define DSBCAPS_CTRLDEFAULT 	0x000000E0 /* Pan + volume + frequency. */
+#define DSBCAPS_CTRLALL 	0x000000E0 /* All control capabilities */
+#define DSBCAPS_STICKYFOCUS 	0x00004000
+#define DSBCAPS_GETCURRENTPOSITION2 0x00010000 /* More accurate play cursor under emulation*/
+
+#define DSBPAN_RIGHT		 10000
+#define DSBPAN_LEFT		-10000
+#define DSBPAN_CENTER		 0
 
 // taken from d3d9.h
 typedef DWORD COLOR; // bgra
@@ -43,6 +110,14 @@ typedef DWORD COLOR; // bgra
 #define RGBA_GETGREEN(rgb) (((rgb) >> 8) & 0xff)
 #define RGBA_GETBLUE(rgb) ((rgb) & 0xff)
 #define RENDERVAL(val) ((float)val)
+
+
+typedef struct tagPALETTEENTRY {
+  BYTE peRed;
+  BYTE peGreen;
+  BYTE peBlue;
+  BYTE peFlags;
+} PALETTEENTRY;
 
 /*
 Pre-DX8 vertex formats
@@ -208,6 +283,17 @@ typedef struct PLANE {
 	VECTOR Normal;
 	float Offset;
 } PLANE;
+
+// Textures
+class IDirect3DTexture9 {
+ protected:
+  GLuint texID;
+ public:
+  IDirect3DTexture9() {texID = 0;}
+  ~IDirect3DTexture9() {if (texID) glDeleteTextures(1, &texID);}
+};
+
+typedef struct IDirect3DTexture9 *LPDIRECT3DTEXTURE9, *PDIRECT3DTEXTURE9;
 /*============================================================
 
 
@@ -242,56 +328,87 @@ typedef wchar_t WCHAR;
 typedef unsigned int HRESULT;
 typedef DWORD* LPDWORD;
 
-sound_buffer_t * sound_load(char* file);
-sound_source_t * sound_source( sound_buffer_t * buffer );
-void sound_play( sound_source_t * s );
-void sound_play_looping( sound_source_t * s );
-bool sound_is_playing( sound_source_t * s );
-void sound_stop( sound_source_t * s );
-void sound_release_source( sound_source_t * s );
-void sound_release_buffer( sound_buffer_t * s );
-void sound_set_pitch( sound_source_t * s, float freq );
-void sound_volume( sound_source_t * s, long decibels );
-void sound_pan( sound_source_t * s, long pan );
-void sound_position( sound_source_t * s, float x, float y, float z, float min_distance, float max_distance );
-
-void sound_set_position( sound_source_t * s, long newpos );
-long sound_get_position( sound_source_t * s );
-
-#define MAX_PATH 500
-
-struct sound_buffer_t {
-	ALuint id;
-	char path[MAX_PATH];
-};
-
-struct sound_source_t {
-	ALuint id;
-	ALuint buffer;
-	bool playing;
-	char path[MAX_PATH];
-};
-
-#define DSBPLAY_LOOPING  1
+typedef sound_source_t sound_source_t;
 
 class IDirectSoundBuffer8 {
  public:
-  sound_source_t source;
-  IDirectSoundBuffer8() {};
+  sound_source_t* source;
+  IDirectSoundBuffer8();
+  ~IDirectSoundBuffer8();
 
-  HRESULT SetVolume(LONG lVolume) {sound_volume(&source, lVolume); return 0;}
-  HRESULT Play(DWORD dwReserved1, DWORD dwPriority, DWORD dwFlags) {if (dwFlags&DSBPLAY_LOOPING) sound_play_looping(&source); else sound_play(&source); return 0;}
-  HRESULT SetFrequency(DWORD dwFrequency) {sound_set_pitch(&source, dwFrequency); return 0;}
-  HRESULT SetCurrentPosition(DWORD dwNewPosition) {sound_set_pitch(&source, dwNewPosition); return 0;}
-  HRESULT GetCurrentPosition(LPDWORD pdwCurrentPlayCursor, LPDWORD pdwCurrentWriteCursor) 
-  {
-	if (pdwCurrentPlayCursor)
-		*pdwCurrentPlayCursor = sound_get_position(&source);
-	return 0;
-  }
-  HRESULT Stop() {sound_stop(&source); return 0;}
+  HRESULT SetVolume(LONG lVolume);
+  HRESULT Play(DWORD dwReserved1, DWORD dwPriority, DWORD dwFlags);
+  HRESULT SetFrequency(DWORD dwFrequency);
+  HRESULT SetCurrentPosition(DWORD dwNewPosition);
+  HRESULT GetCurrentPosition(LPDWORD pdwCurrentPlayCursor, LPDWORD pdwCurrentWriteCursor);
+  HRESULT Stop();
+  HRESULT SetPan(LONG lPan);
+  HRESULT Release();
 };
 
+typedef IDirectSoundBuffer8* LPDIRECTSOUNDBUFFER8;
+
+typedef struct {
+ WORD wFormatTag;	/* format type */
+ WORD nChannels;	/* number of channels */
+ DWORD nSamplesPerSec;	/* sample rate */
+ DWORD nAvgBytesPerSec;	/* for buffer estimation */
+ WORD nBlockAlign; 	/* block size of data */
+} WAVEFORMAT, *LPWAVEFORMAT;
+
+#define WAVE_FORMAT_PCM 1
+
+typedef struct {
+ WAVEFORMAT wf;
+ WORD wBitsPerSample;
+} PCMWAVEFORMAT, *LPPCMWAVEFORMAT;
+
+typedef struct {
+ WORD wFormatTag;	/* format type */
+ WORD nChannels;	/* number of channels (i.e. mono, stereo...) */
+ DWORD nSamplesPerSec;	/* sample rate */
+ DWORD nAvgBytesPerSec;	/* for buffer estimation */
+ WORD nBlockAlign;	/* block size of data */
+ WORD wBitsPerSample;	/* number of bits per sample of mono data */
+ WORD cbSize;		/* the count in bytes of the size of */
+			/* extra information (after cbSize) */
+} WAVEFORMATEX,*LPWAVEFORMATEX;
+
+typedef struct {
+ uint32_t f1;
+ uint16_t f2;
+ uint16_t f3;
+ uint8_t f4[8];
+} GUID;
+typedef const GUID* LPCGUID;
+
+typedef void* LPUNKNOWN;
+
+typedef uint32_t HWND;
+
+typedef struct DSBUFFERDESC {
+    DWORD dwSize;
+    DWORD dwFlags;
+    DWORD dwBufferBytes;
+    DWORD dwReserved;
+    LPWAVEFORMATEX lpwfxFormat;
+    GUID guid3DAlgorithm;
+} DSBUFFERDESC;
+
+class IDirectSound8 {
+ public:
+  IDirectSound8();
+  ~IDirectSound8();
+  HRESULT SetCooperativeLevel(HWND hwnd, DWORD dwFlags);
+  HRESULT Release();
+};
+typedef IDirectSound8* LPDIRECTSOUND8;
+
+HRESULT DirectSoundCreate8(
+         LPCGUID lpcGuidDevice,
+         LPDIRECTSOUND8 * ppDS8,
+         LPUNKNOWN pUnkOuter
+);
 
 /*============================================================
 
@@ -303,5 +420,9 @@ class IDirectSoundBuffer8 {
 #define MB_OK 1
 
 #define MessageBox(a, text, type, button) printf("%ls: %ls\n", text, type)
+
+#define UINT uint32_t
+
+#define DXUTGetHWND() 0
 
 #endif //_DX_LINUX_H_
