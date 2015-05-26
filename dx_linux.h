@@ -102,15 +102,16 @@ typedef float FLOAT;
 typedef DWORD COLOR; // bgra
 
 // bjd - taken from d3dtypes.h
-#define RGBA_MAKE(r, g, b, a) ((COLOR) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))
-#define	RGB_MAKE(r, g, b) ((COLOR) (((r) << 16) | ((g) << 8) | (b)))
+#define RGBA_MAKE(r, g, b, a) 	((COLOR) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))
+#define	RGB_MAKE(r, g, b) 	((COLOR) (((r) << 16) | ((g) << 8) | (b)))
 // COLOR is packed bgra
-#define RGBA_GETALPHA(rgb) ((rgb) >> 24)
-#define RGBA_GETRED(rgb) (((rgb) >> 16) & 0xff)
-#define RGBA_GETGREEN(rgb) (((rgb) >> 8) & 0xff)
-#define RGBA_GETBLUE(rgb) ((rgb) & 0xff)
-#define RENDERVAL(val) ((float)val)
+#define RGBA_GETALPHA(rgb) 	((rgb) >> 24)
+#define RGBA_GETRED(rgb) 	(((rgb) >> 16) & 0xff)
+#define RGBA_GETGREEN(rgb) 	(((rgb) >> 8) & 0xff)
+#define RGBA_GETBLUE(rgb) 	((rgb) & 0xff)
+#define RENDERVAL(val) 		((float)val)
 
+#define D3DCOLOR_XRGB(r, g, b) 	RGB_MAKE(r, g, b)
 
 typedef struct tagPALETTEENTRY {
   BYTE peRed;
