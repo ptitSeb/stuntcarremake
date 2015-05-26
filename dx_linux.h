@@ -12,6 +12,7 @@
 #include <time.h>
 #include <string.h>
 #include <SDL/SDL.h>
+#include <SDL/SDL_ttf.h>
 #include <AL/al.h>
 
 #ifdef HAVE_GLES
@@ -99,19 +100,24 @@ typedef float FLOAT;
 #define DSBPAN_CENTER		 0
 
 // taken from d3d9.h
-typedef DWORD COLOR; // bgra
+typedef DWORD COLOR; // bgra originaly, rgba for OpenGL
 
 // bjd - taken from d3dtypes.h
-#define RGBA_MAKE(r, g, b, a) 	((COLOR) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))
-#define	RGB_MAKE(r, g, b) 	((COLOR) (((r) << 16) | ((g) << 8) | (b)))
-// COLOR is packed bgra
+//#define RGBA_MAKE(r, g, b, a) 	((COLOR) (((a) << 24) | ((r) << 16) | ((g) << 8) | (b)))
+//#define	RGB_MAKE(r, g, b) 	((COLOR) (((r) << 16) | ((g) << 8) | (b)))
+#define RGBA_MAKE(r, g, b, a) 	((COLOR) (((a) << 24) | ((b) << 16) | ((g) << 8) | (r)))
+#define	RGB_MAKE(r, g, b) 	((COLOR) (((b) << 16) | ((g) << 8) | (r)))
+// COLOR is packed bgra, but converted to rgba for OpenGL
 #define RGBA_GETALPHA(rgb) 	((rgb) >> 24)
-#define RGBA_GETRED(rgb) 	(((rgb) >> 16) & 0xff)
+//#define RGBA_GETRED(rgb) 	(((rgb) >> 16) & 0xff)
+#define RGBA_GETRED(rgb) 	((rgb) & 0xff)
 #define RGBA_GETGREEN(rgb) 	(((rgb) >> 8) & 0xff)
-#define RGBA_GETBLUE(rgb) 	((rgb) & 0xff)
+//#define RGBA_GETBLUE(rgb) 	((rgb) & 0xff)
+#define RGBA_GETBLUE(rgb) 	(((rgb) >> 16) & 0xff)
+
 #define RENDERVAL(val) 		((float)val)
 
-#define D3DCOLOR_XRGB(r, g, b) 	RGB_MAKE(r, g, b)
+#define D3DCOLOR_XRGB(r, g, b) 	RGBA_MAKE(r, g, b, 255)
 
 typedef struct tagPALETTEENTRY {
   BYTE peRed;
