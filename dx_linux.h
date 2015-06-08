@@ -13,6 +13,7 @@
 #include <string.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
+#include <SDL/SDL_image.h>
 #include <AL/al.h>
 
 #ifdef HAVE_GLES
@@ -291,13 +292,44 @@ typedef struct PLANE {
 	float Offset;
 } PLANE;
 
+int NP2(int a)
+{
+  int j = 1;
+  while (j<a) j=j*2;
+  return j;
+}
+
 // Textures
 class IDirect3DTexture9 {
  protected:
   GLuint texID;
+  int w, h;	// real size
+  int w2, h2;	// pow2 size
  public:
-  IDirect3DTexture9() {texID = 0;}
+  float wf, hf;	// ratio...
+  IDirect3DTexture9() {texID = 0; w=h=w2=h2=0; wf=hf=1.0f;}
   ~IDirect3DTexture9() {if (texID) glDeleteTextures(1, &texID);}
+  void LoadTexture(const char* name) 
+  {
+   if (texID) glDeleteTextures(1, &texID);
+   glGenTextures(1, &texID);
+   SDL_Surface *img = IMG_Load(name);
+   w = img->w;
+   h = img->h;
+   w2 = NP2(w);
+   h2 = NP2(h);
+   wf = (float)w2 / (float)w;
+   hf = (float)h2 / (float)h;
+   Bind();
+   // ugly... Just blindly load the texture without much check!
+   glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+   UnBind();
+   if (img) SDL_FreeSurface(img);
+  }
+  void Bind() {glBindTexture(GL_TEXTURE_2D, texID);}
+  void UnBind() {glBindTexture(GL_TEXTURE_2D, 0);}
 };
 
 typedef struct IDirect3DTexture9 *LPDIRECT3DTEXTURE9, *PDIRECT3DTEXTURE9;

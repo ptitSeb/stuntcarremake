@@ -43,15 +43,15 @@ UINT keyPress = '\0';
 DWORD lastInput = 0;
 
 static IDirectSound8 *ds;
-IDirectSoundBuffer8 *WreckSoundBuffer;
-IDirectSoundBuffer8 *HitCarSoundBuffer;
-IDirectSoundBuffer8 *GroundedSoundBuffer;
-IDirectSoundBuffer8 *CreakSoundBuffer;
-IDirectSoundBuffer8 *SmashSoundBuffer;
-IDirectSoundBuffer8 *OffRoadSoundBuffer;
-IDirectSoundBuffer8 *EngineSoundBuffers[8];
+IDirectSoundBuffer8 *WreckSoundBuffer = NULL;
+IDirectSoundBuffer8 *HitCarSoundBuffer = NULL;
+IDirectSoundBuffer8 *GroundedSoundBuffer = NULL;
+IDirectSoundBuffer8 *CreakSoundBuffer = NULL;
+IDirectSoundBuffer8 *SmashSoundBuffer = NULL;
+IDirectSoundBuffer8 *OffRoadSoundBuffer = NULL;
+IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
-IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES];
+IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES] = {NULL};
 
 
 static long frameGap = DEFAULT_FRAME_GAP;
@@ -607,7 +607,16 @@ void CreateFonts()
 		g_pFont = TTF_OpenFont("LiberationSans-Bold.ttf", 25);
 	}
 }
-
+void LoadTextures()
+{
+	for (int i=0; i<6; i++) if (!g_pRoadTexture[i]) g_pRoadTexture[i] = new IDirect3DTexture9();
+	g_pRoadTexture[0]->LoadTexture("RoadYellowDark");
+	g_pRoadTexture[1]->LoadTexture("RoadYellowLight");
+	g_pRoadTexture[2]->LoadTexture("RoadRedDark");
+	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
+	g_pRoadTexture[4]->LoadTexture("RoadBlack");
+	g_pRoadTexture[5]->LoadTexture("RoadWhite");
+}
 #endif	//!linux
 /*	======================================================================================= */
 /*	Function:		CalcTrackMenuViewpoint													*/
