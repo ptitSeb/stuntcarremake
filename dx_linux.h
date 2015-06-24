@@ -33,6 +33,10 @@ typedef void* HMODULE;
 
 typedef int32_t LONG;
 typedef float FLOAT;
+
+#define D3DX_PI PI
+#define CALLBACK 
+
 #define TRUE true
 #define FALSE false
 
