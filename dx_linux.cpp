@@ -1,5 +1,7 @@
 #ifdef linux
 #include "dx_linux.h"
+#define GL_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
 
 #define MAX_PATH 500
 
@@ -111,4 +113,57 @@ HRESULT IDirectSoundBuffer8::Release()
 	free(source);
 	source = NULL;
 }
+
+/*
+ * Matrix
+*/
+
+D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf)
+{
+	float yScale = 1.0f / tanf(fovy/2.0f);
+	float xScale = yScale / Aspect;
+	float zfzn = zf/(zf-zn);
+	*pOut = glm::mat4(
+		xScale, 0.0f, 0.0f, 0.0f,
+		0.0f, yScale, 0.0f, 0.0f,
+		0.0f, 0.0f, zfzn, 1.0f,
+		0.0f, 0.0f, -zn*zfzn, 0.0f);
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut)
+{
+	*pOut=glm::mat4(1.0f);
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixRotationX(D3DXMATRIX* pOut, FLOAT Angle)
+{
+	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(1.0f, 0.0f, 0.0f));
+	return pOut;
+}
+D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle)
+{
+	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 1.0f, 0.0f));
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle)
+{
+	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
+{
+	*pOut=glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2)
+{
+	*pOut=(*pM1)*(*pM2);
+	return pOut;
+}
+
 #endif

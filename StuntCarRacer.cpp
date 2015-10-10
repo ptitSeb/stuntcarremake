@@ -818,29 +818,17 @@ long x_offset, y_offset, z_offset;
 //--------------------------------------------------------------------------------------
 // Handle updates to the scene
 //--------------------------------------------------------------------------------------
-#ifndef linux
 static D3DXMATRIX matWorldTrack, matWorldCar, matWorldOpponentsCar;
-#endif
 
 
 static void SetCarWorldTransform( void )
 {
-#ifdef linux
-	glLoadIdentity();
-#else	
 D3DXMATRIX matRot, matTemp, matTrans;
 
 	D3DXMatrixIdentity(&matRot);
-#endif
 	float xa = (((float)player1_x_angle * 2 * D3DX_PI) / 65536.0f);
 	float ya = (((float)player1_y_angle * 2 * D3DX_PI) / 65536.0f);
 	float za = (((float)player1_z_angle * 2 * D3DX_PI) / 65536.0f);
-#ifdef linux
-	glRotatef(za, 0.0f, 0.0f, 1.0f);
-	glRotatef(xa, 1.0f, 0.0f, 0.0f);
-	glRotatef(ya, 0.0f, 1.0f, 0.0f);
-	glTranslatef((float)(player1_x>>LOG_PRECISION), (float)(-player1_y>>LOG_PRECISION)+VCAR_HEIGHT/3, (float)(player1_z>>LOG_PRECISION));
-#else
 	// Produce and combine the rotation matrices
 	D3DXMatrixRotationZ(&matTemp, za);
 	D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
@@ -853,19 +841,11 @@ D3DXMATRIX matRot, matTemp, matTrans;
 	D3DXMatrixTranslation( &matTrans, (float)(player1_x>>LOG_PRECISION), (float)(-player1_y>>LOG_PRECISION)+VCAR_HEIGHT/3, (float)(player1_z>>LOG_PRECISION) );
 	// Combine the rotation and translation matrices to complete the world matrix
 	D3DXMatrixMultiply(&matWorldCar, &matRot, &matTrans);
-#endif
 }
 
 
 static void SetOpponentsCarWorldTransform( void )
 {
-#ifdef linux
-	glLoadIdentity();
-	glRotatef(opponent_z_angle, 0.0f, 0.0f, 1.0f);
-	glRotatef(opponent_x_angle, 1.0f, 0.0f, 0.0f);
-	glRotatef(opponent_y_angle, 0.0f, 1.0f, 0.0f);
-	glTranslatef( (float)(opponent_x>>LOG_PRECISION), (float)(-opponent_y>>LOG_PRECISION)+VCAR_HEIGHT/4, (float)(opponent_z>>LOG_PRECISION) );
-#else
 D3DXMATRIX matRot, matTemp, matTrans;
 
 	D3DXMatrixIdentity(&matRot);
@@ -884,7 +864,6 @@ D3DXMATRIX matRot, matTemp, matTrans;
 	D3DXMatrixTranslation( &matTrans, (float)(opponent_x>>LOG_PRECISION), (float)(-opponent_y>>LOG_PRECISION)+VCAR_HEIGHT/4, (float)(opponent_z>>LOG_PRECISION) );
 	// Combine the rotation and translation matrices to complete the world matrix
 	D3DXMatrixMultiply(&matWorldOpponentsCar, &matRot, &matTrans);
-#endif
 }
 
 
