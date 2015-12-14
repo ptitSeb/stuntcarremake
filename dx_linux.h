@@ -15,6 +15,7 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_image.h>
 #include <AL/al.h>
+#define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 #ifdef HAVE_GLES
@@ -484,4 +485,33 @@ D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle);
 D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle);
 D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z);
 D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2);
+D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const D3DXVECTOR3* pAt, const D3DXVECTOR3* pUp);
+/*=============================================================
+ * 
+ * IDirect3DDevice9
+ * 
+===============================================================*/
+typedef enum D3DTRANSFORMSTATETYPE { 
+  D3DTS_VIEW         = 2,
+  D3DTS_PROJECTION   = 3,
+  D3DTS_TEXTURE0     = 16,
+  D3DTS_TEXTURE1     = 17,
+  D3DTS_TEXTURE2     = 18,
+  D3DTS_TEXTURE3     = 19,
+  D3DTS_TEXTURE4     = 20,
+  D3DTS_TEXTURE5     = 21,
+  D3DTS_TEXTURE6     = 22,
+  D3DTS_TEXTURE7     = 23,
+  D3DTS_FORCE_DWORD  = 0x7fffffff
+} D3DTRANSFORMSTATETYPE, *LPD3DTRANSFORMSTATETYPE;
+
+
+class IDirect3DDevice9
+{
+public:
+	IDirect3DDevice9();
+	~IDirect3DDevice9();
+	HRESULT SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX *pMatrix);
+};
+
 #endif //_DX_LINUX_H_

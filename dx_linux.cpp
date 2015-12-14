@@ -1,6 +1,8 @@
 #ifdef linux
 #include "dx_linux.h"
 #define GL_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define MAX_PATH 500
@@ -117,7 +119,7 @@ HRESULT IDirectSoundBuffer8::Release()
 /*
  * Matrix
 */
-
+// Try to keep everything column-major to make OpenGL happy...
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf)
 {
 	float yScale = 1.0f / tanf(fovy/2.0f);
@@ -165,5 +167,61 @@ D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3
 	*pOut=(*pM1)*(*pM2);
 	return pOut;
 }
+
+glm::vec3 FromVector(const D3DXVECTOR3* vec)
+{
+	glm::vec3 ret;
+	ret[0]=vec->x;
+	ret[1]=vec->y;
+	ret[2]=vec->z;
+	return ret;
+}
+
+D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const D3DXVECTOR3* pAt, const D3DXVECTOR3* pUp)
+{
+	glm::vec3 eye=FromVector(pEye);
+	glm::vec3 at=FromVector(pAt);
+	glm::vec3 up=FromVector(pUp);
+	*pOut=glm::lookAt(eye, at, up);
+	return pOut;
+}
+
+
+// IDirect3DDevice9
+IDirect3DDevice9::IDirect3DDevice9()
+{
+}
+
+IDirect3DDevice9::~IDirect3DDevice9()
+{
+}
+
+HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* pMatrix)
+{
+	switch (State) 
+	{
+		case D3DTS_VIEW:
+			glMatrixMode(GL_MODELVIEW);
+			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			break;
+		case D3DTS_PROJECTION:
+			glMatrixMode(GL_PROJECTION);
+			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			break;
+		case D3DTS_TEXTURE0:
+		case D3DTS_TEXTURE1:
+		case D3DTS_TEXTURE2:
+		case D3DTS_TEXTURE3:
+		case D3DTS_TEXTURE4:
+			#warning TODO change active texture...
+			glMatrixMode(GL_TEXTURE);
+			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			break;
+		default:
+			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
+	}
+	return S_OK;
+}
+
 
 #endif
