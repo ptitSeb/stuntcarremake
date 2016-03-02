@@ -514,4 +514,15 @@ public:
 	HRESULT SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX *pMatrix);
 };
 
+class CDXUTTextHelper
+{
+public:
+	CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size);
+	~CDXUTTextHelper();
+private:
+	TTF_Font* 	m_font;
+	GLuint 		m_sprite;
+	int 		m_size;
+};
+
 #endif //_DX_LINUX_H_

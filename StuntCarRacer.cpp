@@ -453,6 +453,7 @@ static void EnforceConstantFrameRate( long max_frame_rate )
 #ifdef linux
 TTF_Font *g_pFont = NULL;
 TTF_Font *g_pFontLarge = NULL;
+GLuint   g_pSprite = 0;	// Texture for batching text calls
 #else
 ID3DXFont *g_pFont = NULL;         // Font for drawing text
 ID3DXFont *g_pFontLarge = NULL;    // Font for drawing large text

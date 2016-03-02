@@ -223,5 +223,15 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 	return S_OK;
 }
 
+CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) : 
+	m_font(font), m_sprite(sprite), m_size(size)
+{
+	// nothing...
+}
+
+CDXUTTextHelper::~CDXUTTextHelper()
+{
+	// nothing
+}
 
 #endif
