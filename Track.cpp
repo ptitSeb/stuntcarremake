@@ -10,11 +10,15 @@
 /*	============= */
 /*	Include files */
 /*	============= */
+#ifdef linux
+#include "dx_linux.h"
+#else
 #include "dxstdafx.h"
+#endif
 
 #include "Track.h"
 #include "StuntCarRacer.h"
-#include "3D Engine.h"
+#include "3D_Engine.h"
 
 /*	===== */
 /*	Debug */
@@ -1736,12 +1740,16 @@ typedef enum
 	NUM_TRACK_FACES
 	} TrackFaceType;
 
+#ifdef linux
+static UTBuffer pTrackVB = {0};
+static UTBuffer pShadowVB = {0};
+#else
 static IDirect3DVertexBuffer9 *pTrackVB = NULL, *pShadowVB = NULL;
+#endif
 static long trackVertices, trackSegments;
 static long numShadowVertices;
 static long PieceFirstVertex[NUM_TRACK_FACES][MAX_PIECES_PER_TRACK];
 static long SegmentRoadTexture[MAX_PIECES_PER_TRACK * MAX_SEGMENTS_PER_PIECE];
-
 
 static void SetSegmentTextures (void)
 {
@@ -1916,8 +1924,12 @@ void StoreShadowTriangle( D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3DXVECTOR3 v3, long o
 DWORD colour;
 
 	UTVERTEX *pVertices;
+	#ifdef linux
+	pVertices = pShadowVB.buffer;
+	#else
 	if( FAILED( pShadowVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return;
+	#endif
 
 	/*
 	// Calculate surface normal
@@ -1931,6 +1943,9 @@ DWORD colour;
 	else
 		colour = SCRGB(SCR_BASE_COLOUR + 5);
 
+	#ifdef linux
+	pVertices = CheckUTBuffer(pShadowVB, numShadowVertices+3);
+	#endif
 	pVertices[numShadowVertices].pos = v1;
 //	pVertices[numShadowVertices].normal = surface_normal;
 	pVertices[numShadowVertices].color = colour;
@@ -1946,7 +1961,9 @@ DWORD colour;
 	pVertices[numShadowVertices].color = colour;
 	++numShadowVertices;
 
+	#ifndef linux
 	pShadowVB->Unlock();
+	#endif
 }
 
 
@@ -2161,6 +2178,11 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
  */
 HRESULT CreateShadowVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
+	#ifdef linux
+	if (pShadowVB.capacity < MAX_VERTICES_PER_SHADOW)
+		CheckUTBuffer(pShadowVB, MAX_VERTICES_PER_SHADOW);
+	numShadowVertices = 0;
+	#else
 	if (pShadowVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_SHADOW*sizeof(UTVERTEX),
@@ -2175,28 +2197,38 @@ HRESULT CreateShadowVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	numShadowVertices = 0;
 
 	pShadowVB->Unlock();
+	#endif
 	return S_OK;
 }
 
 
 void FreeShadowVertexBuffer (void)
 {
+	#ifdef linux
+	FreeUTBuffer(pShadowVB);
+	#else
 	if (pShadowVB) pShadowVB->Release(), pShadowVB = NULL;
+	#endif
 }
 
 HRESULT CreateTrackVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
+	#ifndef linux
 	if (pTrackVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_TRACK*sizeof(UTVERTEX),
 				D3DUSAGE_WRITEONLY, D3DFVF_UTVERTEX, D3DPOOL_DEFAULT, &pTrackVB, NULL ) ) )
 			return E_FAIL;
 	}
+	#endif
 
 	UTVERTEX *pVertices;
+	#ifdef linux
+	pVertices = CheckUTBuffer(pTrackVB, MAX_VERTICES_PER_TRACK);
+	#else
 	if( FAILED( pTrackVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-
+	#endif
 	SetSegmentTextures();
 
 	long face, piece;
@@ -2219,14 +2251,20 @@ HRESULT CreateTrackVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 #endif
 */
 
+	#ifndef linux
 	pTrackVB->Unlock();
+	#endif
 	return S_OK;
 }
 
 
 void FreeTrackVertexBuffer (void)
 {
+	#ifdef linux
+	FreeUTBuffer(pTrackVB);
+	#else
 	if (pTrackVB) pTrackVB->Release(), pTrackVB = NULL;
+	#endif
 }
 
 
@@ -2236,11 +2274,15 @@ HRESULT UpdatePieceInVB (IDirect3DDevice9 *pd3dDevice, long piece)
 long firstVertex, face;//, numVertices;
 long savedTrackVertices = trackVertices;
 
+#ifdef linux
+	if(!pTrackVB.capacity)
+		return E_FAIL;
+#else
 	if (pTrackVB == NULL)
 	{
 		return E_FAIL;
 	}
-
+#endif
 	/*
 	if (piece == (NumTrackPieces-1))
 		numVertices = trackVertices - firstVertex;
@@ -2257,9 +2299,12 @@ long savedTrackVertices = trackVertices;
 
 	// Simpler just to lock the whole VB
 	UTVERTEX *pVertices;
+	#ifdef linux
+	pVertices = pTrackVB.buffer;
+	#else
 	if( FAILED( pTrackVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-
+	#endif
 	for (face = LEFT_SIDE; face < NUM_TRACK_FACES; face++)
 	{
 		firstVertex = PieceFirstVertex[face][piece];
@@ -2272,7 +2317,9 @@ long savedTrackVertices = trackVertices;
 	}
 
 	trackVertices = savedTrackVertices;
+	#ifndef linux
 	pTrackVB->Unlock();
+	#endif
 	return S_OK;
 }
 
@@ -2296,8 +2343,12 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );
 
+	#ifdef linux
+	pd3dDevice->SetUTBuffer(pTrackVB);
+	#else
 	pd3dDevice->SetStreamSource( 0, pTrackVB, 0, sizeof(UTVERTEX) );
 	pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
+	#endif
 	if ((GameMode == TRACK_MENU) || (GameMode == TRACK_PREVIEW))
 	{
 		/*
@@ -2419,8 +2470,12 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 	/* Finally draw the opponent's car shadow */
 	if ((GameMode != TRACK_MENU) && (numShadowVertices > 0))
 	{
+		#ifdef linux
+		pd3dDevice->SetUTBuffer(pShadowVB);
+		#else
 		pd3dDevice->SetStreamSource( 0, pShadowVB, 0, sizeof(UTVERTEX) );
 		pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
+		#endif
 		pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numShadowVertices/3 );
 	}
 }
@@ -2453,6 +2508,7 @@ static unsigned char TAB5a9a6[16] = {0xf7,0xf7,0xf6,0xf6,0xf5,0xf5,0xf6,0xf7,0xf
 void MoveDrawBridge( void )
 {
 long f, i, height, y, yinc;
+	IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
 
 	if (TrackID != DRAW_BRIDGE)
 		return;
@@ -2513,7 +2569,6 @@ not_on_draw_bridge:	// neither player or opponent are on Draw Bridge section
 	UpdateDrawBridgeYCoords(55, 0,7, (NUM_DRAW_BRIDGE_Y_VALUES-1-7), -1);
 
 	// 29/06/2007 also update pieces in Direct3D vertex buffer
-	IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
 	UpdatePieceInVB(pd3dDevice, 51);
 	UpdatePieceInVB(pd3dDevice, 52);
 	UpdatePieceInVB(pd3dDevice, 54);
@@ -2708,9 +2763,18 @@ static long ReadAmigaTrackData( long track )
 
 static void *GetTRACKResource( HMODULE hModule, LPCWSTR lpResName )
 	{
+	void		*pTRACKBytes;
+#ifdef linux
+const WCHAR* resname[] = {L"LITTLERAMP", L"STEPPINGSTONES", L"HUMPBACK", L"BIGRAMP", L"SKIJUMP", L"DRAWBRIDGE", L"HIGHJUMP", L"ROLLERCOASTER", 0};
+const char* filename[] = {"Tracks\\LittleRamp.bin", "Tracks\\SteppingStones.bin", "Tracks\\HumpBack.bin", "Tracks\\BigRamp.bin", "Tracks\\SkiJump.bin", "Tracks\\DrawBridge.bin", "Tracks\\HighJump.bin", "Tracks\\RollerCoaster.bin"};
+	int i = 0;
+	while(resname[i] && wstrncmp(resname[i], lpResName)) i++;
+	if(!resname[i]) return NULL;
+	// file found, get size, alloc size and read binary file
+	
+#else
 	HRSRC		hResInfo;
 	HGLOBAL		hResData;
-	void		*pTRACKBytes;
 
 	if ((hResInfo = FindResource(hModule, lpResName, L"TRACK")) == NULL)
 		return NULL;
@@ -2720,6 +2784,6 @@ static void *GetTRACKResource( HMODULE hModule, LPCWSTR lpResName )
 
 	if	((pTRACKBytes = LockResource(hResData))==NULL)
 		return NULL;
-
+#endif
 	return (void*)pTRACKBytes;
 	}

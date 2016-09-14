@@ -34,6 +34,7 @@ struct UTVERTEX
     DWORD color;		// The vertex diffuse color value
 };
 */
+#ifndef linux
 // Untransformed coloured textured vertex
 struct UTVERTEX
 {
@@ -41,6 +42,7 @@ struct UTVERTEX
     DWORD color;		// The vertex diffuse color value
 	FLOAT tu,tv;		// The texture co-ordinates
 };
+#endif
 
 /*	============================== */
 /*	External function declarations */

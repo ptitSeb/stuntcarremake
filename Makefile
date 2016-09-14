@@ -17,7 +17,7 @@ ifeq ($(PANDORA),1)
 	LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp
 	HAVE_GLES=1
 endif
-FLAGS+= -pipe
+FLAGS+= -pipe -fpermissive
 CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings
 LDFLAGS=$(FLAGS)
 
@@ -90,7 +90,7 @@ ifneq ($(MINGW),1)
 endif
 
 
-# ProjectX-specific includes
+# specific includes
 CFLAGS += -I.
 CFLAGS += -DSOUND_OPENAL
 
