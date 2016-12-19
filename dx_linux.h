@@ -15,6 +15,7 @@
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_image.h>
 #include <AL/al.h>
+#include <wchar.h>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
