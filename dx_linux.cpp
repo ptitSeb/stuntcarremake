@@ -500,8 +500,6 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 	m_sizew = w; m_sizeh = w;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp);
 	free(tmp);
-	m_sizew = npot(size*10);
-	m_sizeh = npot(size);
 	SDL_Color forecol = {255,255,255,255};
 	for(int i=0; i<16; i++) {
 		for(int j=0; j<16; j++) {
@@ -536,13 +534,13 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	glPushMatrix();
 	glLoadIdentity();
 
-	int oldvp[4];
-	glGetIntegerv(GL_VIEWPORT, oldvp);
-
-	gluOrtho2D(0, oldvp[2], 0, oldvp[3]); // m_Width and m_Height is the resolution of window
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
+	int oldvp[4];
+	glGetIntegerv(GL_VIEWPORT, oldvp);
+
+	glOrtho(0, oldvp[2], oldvp[3], 0, -1, 1); // m_Width and m_Height is the resolution of window
 
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
