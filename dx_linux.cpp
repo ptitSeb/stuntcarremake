@@ -5,21 +5,47 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define MAX_PATH 500
+const char* BitMapRessourceName(const char* name)
+{
+static const char* resname[] = {"RoadYellowDark", "RoadYellowLight", "RoadRedDark", "RoadRedLight", "RoadBlack", "RoadWhite", 0};
+static const char* filename[] = {"Bitmap/RoadYellowDark.bmp", "Bitmap/RoadYellowLight.bmp", "Bitmap/RoadRedDark.bmp", "Bitmap/RoadRedLight.bmp", "Bitmap/RoadBlack.bmp", "Bitmap/RoadWhite.bmp", 0};
+	int i = 0;
+	while(resname[i] && strcmp(resname[i], name)) i++;
+	return filename[i];
+}
+
+void IDirect3DTexture9::LoadTexture(const char* name) 
+{
+	if (texID) glDeleteTextures(1, &texID);
+	glGenTextures(1, &texID);
+	SDL_Surface *img = IMG_Load(BitMapRessourceName(name));
+	w = img->w;
+	h = img->h;
+	w2 = NP2(w);
+	h2 = NP2(h);
+	wf = (float)w2 / (float)w;
+	hf = (float)h2 / (float)h;
+	Bind();
+	// ugly... Just blindly load the texture without much check!
+	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+	UnBind();
+	if (img) SDL_FreeSurface(img);
+}
+
 
 struct sound_buffer_t {
 	ALuint id;
-	char path[MAX_PATH];
 };
 
 struct sound_source_t {
 	ALuint id;
 	ALuint buffer;
 	bool playing;
-	char path[MAX_PATH];
 };
 
-sound_buffer_t * sound_load(char* file);
+sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channels, int freq);
 sound_source_t * sound_source( sound_buffer_t * buffer );
 void sound_play( sound_source_t * s );
 void sound_play_looping( sound_source_t * s );
@@ -34,6 +60,12 @@ void sound_position( sound_source_t * s, float x, float y, float z, float min_di
 
 void sound_set_position( sound_source_t * s, long newpos );
 long sound_get_position( sound_source_t * s );
+
+int npot(int n) {
+	int i= 1;
+	while(i<n) i<<=1;
+	return i;
+}
 
 IDirectSoundBuffer8::IDirectSoundBuffer8()
 {
@@ -109,11 +141,47 @@ IDirectSoundBuffer8::~IDirectSoundBuffer8()
 
 HRESULT IDirectSoundBuffer8::Release()
 {
-	if (!source)
+	if (!buffer || !source)
 		return DSERR_GENERIC;
-#warning TODO: free OpenAL buffer...
+	sound_release_buffer(buffer);
+	sound_release_source(source);
+	free(buffer);
 	free(source);
+	buffer = NULL;
 	source = NULL;
+}
+
+HRESULT IDirectSoundBuffer8::Lock(DWORD dwOffset, DWORD dwBytes, LPVOID * ppvAudioPtr1, LPDWORD  pdwAudioBytes1, LPVOID * ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags)
+{
+	if(dwOffset != 0) return E_FAIL;
+	*ppvAudioPtr2 = NULL;
+	*pdwAudioBytes2 = 0;
+	*ppvAudioPtr1 = malloc(dwBytes);
+	*pdwAudioBytes1 = dwBytes;
+	return S_OK;
+}
+HRESULT IDirectSoundBuffer8::Unlock(LPVOID pvAudioPtr1, DWORD dwAudioBytes1, LPVOID pvAudioPtr2, DWORD dwAudioBytes2)
+{
+	if(dwAudioBytes2!=0) return E_FAIL;
+	if(source || buffer) Release();
+	buffer = sound_load(pvAudioPtr1, dwAudioBytes1, 8, 0, 1, 11025);
+	source = sound_source(buffer);
+	free(pvAudioPtr1);
+	return S_OK;
+}
+
+
+HRESULT IDirectSound8::CreateSoundBuffer(LPCDSBUFFERDESC pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter)
+{
+	IDirectSoundBuffer8 *tmp = new IDirectSoundBuffer8();
+	*ppDSBuffer = tmp;
+	return S_OK;
+}
+
+HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKNOWN pUnkOuter)
+{
+	*ppDS8 = new IDirectSound8();
+	return DS_OK;
 }
 
 /*
@@ -196,6 +264,10 @@ IDirect3DDevice9::IDirect3DDevice9()
 		colorarg2[i] = 0;
 		alphaop[i] = 0;
 	}
+	mView = glm::mat4(1.0f);
+	mWorld = glm::mat4(1.0f);
+	mProj = glm::mat4(1.0f);
+	mText = glm::mat4(1.0f);
 }
 
 IDirect3DDevice9::~IDirect3DDevice9()
@@ -208,11 +280,18 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 	{
 		case D3DTS_VIEW:
 			glMatrixMode(GL_MODELVIEW);
-			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			mView = *pMatrix;
+			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
 		case D3DTS_PROJECTION:
 			glMatrixMode(GL_PROJECTION);
+			mProj = *pMatrix;
 			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			break;
+		case D3DTS_WORLD:
+			glMatrixMode(GL_PROJECTION);
+			mWorld = *pMatrix;
+			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
 		case D3DTS_TEXTURE0:
 		case D3DTS_TEXTURE1:
@@ -221,7 +300,35 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 		case D3DTS_TEXTURE4:
 			#warning TODO change active texture...
 			glMatrixMode(GL_TEXTURE);
+			mText = *pMatrix;
 			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			break;
+		default:
+			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
+	}
+	return S_OK;
+}
+
+HRESULT IDirect3DDevice9::GetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* pMatrix)
+{
+	switch (State) 
+	{
+		case D3DTS_VIEW:
+			*pMatrix = mView;
+			break;
+		case D3DTS_PROJECTION:
+			*pMatrix = mProj;
+			break;
+		case D3DTS_WORLD:
+			*pMatrix = mWorld;
+			break;
+		case D3DTS_TEXTURE0:
+		case D3DTS_TEXTURE1:
+		case D3DTS_TEXTURE2:
+		case D3DTS_TEXTURE3:
+		case D3DTS_TEXTURE4:
+			#warning TODO change active texture...
+			*pMatrix = mText;
 			break;
 		default:
 			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
@@ -345,10 +452,62 @@ HRESULT IDirect3DDevice9::SetTexture(DWORD Sampler, IDirect3DTexture9 *pTexture)
 	return S_OK;
 }
 
-CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) : 
-	m_font(font), m_sprite(sprite), m_size(size)
+HRESULT IDirect3DDevice9::Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
 {
-	// nothing...
+	GLbitfield clearval = 0;
+	if(Flags&D3DCLEAR_STENCIL) {
+		glClearStencil(Stencil);
+		clearval |= GL_STENCIL_BUFFER_BIT;
+	}
+	if(Flags&D3DCLEAR_ZBUFFER) {
+		glClearDepth(Z);
+		clearval |= GL_DEPTH_BUFFER_BIT;
+	}
+	if(Flags&D3DCLEAR_TARGET) {
+		float r,g,b,a;
+		r = ((Color>>0 )&0xff)/255.0f;
+		g = ((Color>>8 )&0xff)/255.0f;
+		b = ((Color>>16)&0xff)/255.0f;
+		a = ((Color>>24)&0xff)/255.0f;
+		glClearColor(r, g, b, a);
+		clearval |= GL_COLOR_BUFFER_BIT;
+	}
+	assert(Count==0);
+	if(clearval)
+		glClear(clearval);
+	return S_OK;
+}
+
+CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) : 
+	m_font(font), m_sprite(sprite), m_size(size), m_posx(0), m_posy(0)
+{
+	// set colors
+	m_forecol[0] = m_forecol[1] = m_forecol[2] = m_forecol[3] = 1.0f;
+	// setup texture
+	glGenTextures(1, &m_texture);
+	glBindTexture(GL_TEXTURE_2D, m_texture);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	int w = npot(16*size);
+	void* tmp = malloc(w*w*4); memset(tmp, 0, w*w*4);
+	m_sizew = w; m_sizeh = w;
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp);
+	free(tmp);
+	m_sizew = npot(size*10);
+	m_sizeh = npot(size);
+	SDL_Color forecol = {255,255,255,255};
+	for(int i=0; i<16; i++) {
+		for(int j=0; j<16; j++) {
+			char text[2] = {i*16+j, 0};
+			SDL_Surface* surf = TTF_RenderText_Blended(m_font, text, forecol);
+			if(surf) {
+				glTexSubImage2D(GL_TEXTURE_2D, 0, j*size, i*size, surf->w, surf->h, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
+				SDL_FreeSurface(surf);
+			}
+		}
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 CDXUTTextHelper::~CDXUTTextHelper()
@@ -356,6 +515,81 @@ CDXUTTextHelper::~CDXUTTextHelper()
 	// nothing
 }
 
+void CDXUTTextHelper::SetInsertionPos(int x, int y)
+{
+	m_posx = x*m_size;
+	m_posy = y*m_size;
+}
+
+void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
+{
+	m_w = ((float)m_size)/m_sizew; m_h = ((float)m_size)/m_sizeh;
+
+	// Draw it
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	int oldvp[4];
+	glGetIntegerv(GL_VIEWPORT, oldvp);
+
+	gluOrtho2D(0, oldvp[2], 0, oldvp[3]); // m_Width and m_Height is the resolution of window
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBindTexture(GL_TEXTURE_2D, m_texture);
+	glColor4fv(m_forecol);
+	glBegin(GL_QUADS);
+	char ch;
+	int i=0;
+	while((ch=line[i]))
+	{
+		float col = ch%16, lin = ch/16;
+		glTexCoord2f(col*m_w+0,lin*m_h+0); glVertex2f(m_posx+i*m_size, m_posy);
+		glTexCoord2f(col*m_w+m_w,lin*m_h+0); glVertex2f(m_posx+i*m_size+m_size, m_posy);
+		glTexCoord2f(col*m_w+m_w,lin*m_h+m_h); glVertex2f(m_posx+i*m_size+m_size, m_posy + m_size);
+		glTexCoord2f(col*m_w+0,lin*m_h+m_h); glVertex2f(m_posx+i*m_size, m_posy + m_size);
+
+		i++;
+	}
+	glEnd();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	m_posy += m_size;
+
+	glDisable(GL_BLEND);
+	glDisable(GL_TEXTURE_2D);
+	glEnable(GL_DEPTH_TEST);
+
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+
+}
+
+void CDXUTTextHelper::DrawFormattedTextLine(const wchar_t* line, ...)
+{
+	wchar_t buff[1000];
+	va_list args;
+  	va_start (args, line);
+	vswprintf(buff, 1000, line, args);
+	DrawTextLine(buff);
+	va_end (args);
+}
+
+void CDXUTTextHelper::SetForegroundColor(D3DXCOLOR clr)
+{
+	m_forecol[0] = clr.r;
+	m_forecol[1] = clr.g;
+	m_forecol[2] = clr.b;
+	m_forecol[3] = clr.a;
+}
 
 UTVERTEX* CheckUTBuffer(UTBuffer& a, uint32_t s)
 {
@@ -383,6 +617,26 @@ IDirect3DDevice9 *DXUTGetD3DDevice()
 	if (!device)
 		device = new IDirect3DDevice9();
 	return device;
+}
+
+static D3DSURFACE_DESC d3dsurface_desc = {0}; 
+const D3DSURFACE_DESC * DXUTGetBackBufferSurfaceDesc()
+{
+	int vp[4];
+	glGetIntegerv(GL_VIEWPORT, vp);
+	d3dsurface_desc.Width = vp[2];
+	d3dsurface_desc.Height = vp[3];
+	return &d3dsurface_desc;
+}
+
+DOUBLE DXUTGetTime()
+{
+	return ((DOUBLE)SDL_GetTicks())/1000.0;
+}
+
+void DXUTReset3DEnvironment()
+{
+	// NOTHING?
 }
 
 #endif

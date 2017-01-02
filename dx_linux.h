@@ -22,6 +22,8 @@
 #ifdef HAVE_GLES
 #define glColor4ubv(a) glColor4ub((a)[0], (a)[1], (a)[2], (a)[3])
 #define gluOrtho2D(a, b, c, d) glOrthof(a, b, c, d, -1, 1)
+#else
+#define gluOrtho2D(a, b, c, d) glOrtho(a, b, c, d, -1, 1)
 #endif
 
 // DX -> OpenGL inspired by forsaken project
@@ -36,6 +38,10 @@ typedef void* HMODULE;
 
 typedef int32_t LONG;
 typedef float FLOAT;
+typedef double DOUBLE;
+typedef int32_t INT;
+
+typedef BYTE *LPBYTE;
 
 #define D3DX_PI PI
 #define CALLBACK 
@@ -46,6 +52,8 @@ typedef float FLOAT;
 #define S_OK	0x00000000
 #define E_ABORT	0x80004004
 #define E_FAIL	0x80004005
+
+#define ERROR_SUCCESS 0
 
 #define	_FACDS 0x878
 #define	MAKE_DSHRESULT(code)	MAKE_HRESULT(1,_FACDS,code)
@@ -299,7 +307,7 @@ typedef struct PLANE {
 	float Offset;
 } PLANE;
 
-int NP2(int a)
+static int NP2(int a)
 {
   int j = 1;
   while (j<a) j=j*2;
@@ -316,25 +324,7 @@ class IDirect3DTexture9 {
   float wf, hf;	// ratio...
   IDirect3DTexture9() {texID = 0; w=h=w2=h2=0; wf=hf=1.0f;}
   ~IDirect3DTexture9() {if (texID) glDeleteTextures(1, &texID);}
-  void LoadTexture(const char* name) 
-  {
-   if (texID) glDeleteTextures(1, &texID);
-   glGenTextures(1, &texID);
-   SDL_Surface *img = IMG_Load(name);
-   w = img->w;
-   h = img->h;
-   w2 = NP2(w);
-   h2 = NP2(h);
-   wf = (float)w2 / (float)w;
-   hf = (float)h2 / (float)h;
-   Bind();
-   // ugly... Just blindly load the texture without much check!
-   glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
-   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
-   UnBind();
-   if (img) SDL_FreeSurface(img);
-  }
+  void LoadTexture(const char* name);
   void Bind() {glBindTexture(GL_TEXTURE_2D, texID);}
   void UnBind() {glBindTexture(GL_TEXTURE_2D, 0);}
 };
@@ -348,10 +338,6 @@ typedef struct IDirect3DTexture9 *LPDIRECT3DTEXTURE9, *PDIRECT3DTEXTURE9;
 ===============================================================*/
 
 
-// this will eventually be removed but is required right now
-bool Sound3D;
-// the game appears to need this probably wont in openAL
-int sound_minimum_volume;
 //
 // Generic Functions
 //
@@ -373,12 +359,14 @@ typedef struct sound_buffer_t sound_buffer_t;
 typedef wchar_t WCHAR;
 typedef unsigned int HRESULT;
 typedef DWORD* LPDWORD;
+typedef void* LPVOID;
 
 typedef sound_source_t sound_source_t;
 
 class IDirectSoundBuffer8 {
  public:
   sound_source_t* source;
+  sound_buffer_t* buffer;
   IDirectSoundBuffer8();
   ~IDirectSoundBuffer8();
 
@@ -390,9 +378,12 @@ class IDirectSoundBuffer8 {
   HRESULT Stop();
   HRESULT SetPan(LONG lPan);
   HRESULT Release();
+  HRESULT Lock(DWORD dwOffset, DWORD dwBytes, LPVOID * ppvAudioPtr1, LPDWORD  pdwAudioBytes1, LPVOID * ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags);
+  HRESULT Unlock(LPVOID pvAudioPtr1, DWORD dwAudioBytes1, LPVOID pvAudioPtr2, DWORD dwAudioBytes2);
 };
 
 typedef IDirectSoundBuffer8* LPDIRECTSOUNDBUFFER8;
+#define LPDIRECTSOUNDBUFFER LPDIRECTSOUNDBUFFER8
 
 typedef struct {
  WORD wFormatTag;	/* format type */
@@ -439,22 +430,19 @@ typedef struct DSBUFFERDESC {
     DWORD dwReserved;
     LPWAVEFORMATEX lpwfxFormat;
     GUID guid3DAlgorithm;
-} DSBUFFERDESC;
+} DSBUFFERDESC, *LPDSBUFFERDESC, *const LPCDSBUFFERDESC;
 
 class IDirectSound8 {
  public:
-  IDirectSound8();
-  ~IDirectSound8();
-  HRESULT SetCooperativeLevel(HWND hwnd, DWORD dwFlags);
-  HRESULT Release();
+  IDirectSound8() {};
+  ~IDirectSound8() {};
+  HRESULT SetCooperativeLevel(HWND hwnd, DWORD dwFlags) {return DS_OK;};
+  HRESULT Release() {return DS_OK;};
+  HRESULT CreateSoundBuffer(LPCDSBUFFERDESC pcDSBufferDesc, LPDIRECTSOUNDBUFFER * ppDSBuffer, LPUNKNOWN pUnkOuter);
 };
 typedef IDirectSound8* LPDIRECTSOUND8;
 
-HRESULT DirectSoundCreate8(
-         LPCGUID lpcGuidDevice,
-         LPDIRECTSOUND8 * ppDS8,
-         LPUNKNOWN pUnkOuter
-);
+HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKNOWN pUnkOuter);
 
 /*============================================================
 
@@ -495,6 +483,7 @@ D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const 
 typedef enum D3DTRANSFORMSTATETYPE { 
   D3DTS_VIEW         = 2,
   D3DTS_PROJECTION   = 3,
+  D3DTS_WORLD        = 4,
   D3DTS_TEXTURE0     = 16,
   D3DTS_TEXTURE1     = 17,
   D3DTS_TEXTURE2     = 18,
@@ -682,9 +671,41 @@ typedef enum D3DTEXTUREOP {
   D3DTOP_FORCE_DWORD                = 0x7fffffff
 } D3DTEXTUREOP, *LPD3DTEXTUREOP;
 
+typedef struct D3DSURFACE_DESC {
+//  D3DFORMAT           Format;
+//  D3DRESOURCETYPE     Type;
+//  DWORD               Usage;
+//  D3DPOOL             Pool;
+//  D3DMULTISAMPLE_TYPE MultiSampleType;
+//  DWORD               MultiSampleQuality;
+  UINT                Width;
+  UINT                Height;
+} D3DSURFACE_DESC, *LPD3DSURFACE_DESC;
+
+typedef struct D3DXCOLOR {
+  FLOAT r;
+  FLOAT g;
+  FLOAT b;
+  FLOAT a;
+  D3DXCOLOR(float a_r, float a_g, float a_b, float a_a) : r(a_r), g(a_g), b(a_b), a(a_a) {};
+} D3DXCOLOR, *LPD3DXCOLOR;
+
+typedef DWORD D3DCOLOR;
+
+typedef struct D3DRECT {
+  LONG x1;
+  LONG y1;
+  LONG x2;
+  LONG y2;
+} D3DRECT;
+
 #define D3DTA_TEXTURE 				1
 #define D3DTA_CURRENT				2
 #define D3DTA_DIFFUSE				3
+
+#define D3DCLEAR_STENCIL  1
+#define D3DCLEAR_TARGET   2
+#define D3DCLEAR_ZBUFFER  4
 
 struct UTVERTEX
 {
@@ -708,10 +729,14 @@ public:
 	IDirect3DDevice9();
 	~IDirect3DDevice9();
 	HRESULT SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX *pMatrix);
+  HRESULT GetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX *pMatrix);
 	HRESULT SetRenderState(D3DRENDERSTATETYPE State, int Value);
 	HRESULT DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT StartVertex,UINT PrimitiveCount);
 	HRESULT SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value);
 	HRESULT SetTexture(DWORD Sampler, IDirect3DTexture9 *pTexture);
+  HRESULT Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
+  HRESULT BeginScene() {return S_OK;};
+  HRESULT EndScene() {return S_OK;};
 
 	// not DX9 function, but easier here
 	HRESULT SetUTBuffer(UTBuffer& a);
@@ -720,6 +745,7 @@ private:
 	UINT alphaop[8];
 	UINT colorarg1[8];
 	UINT colorarg2[8];
+  D3DXMATRIX mWorld, mView, mProj, mText;
 };
 
 class CDXUTTextHelper
@@ -727,13 +753,43 @@ class CDXUTTextHelper
 public:
 	CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size);
 	~CDXUTTextHelper();
+  void SetInsertionPos(int x, int y);
+  void DrawTextLine(const wchar_t* line);
+  void DrawFormattedTextLine(const wchar_t* line, ...);
+  void Begin() {};
+  void End() {};
+  void SetForegroundColor(D3DXCOLOR clr);
 private:
 	TTF_Font* 	m_font;
-	GLuint 		m_sprite;
-	int 		m_size;
+	GLuint 		  m_sprite;
+	int 		    m_size;
+  int         m_posx, m_posy;
+  float       m_w, m_h;
+  float       m_forecol[4];
+  GLuint      m_texture;
+  int         m_sizew, m_sizeh;
 };
 
 IDirect3DDevice9 *DXUTGetD3DDevice();
 
+const D3DSURFACE_DESC * DXUTGetBackBufferSurfaceDesc();
+
+DOUBLE DXUTGetTime();
+
+#define StringCchPrintf swprintf
+// V macro should test the result...
+#define V(a) a
+#define SUCCEEDED(a) a == S_OK
+
+void DXUTReset3DEnvironment();
+
+#define mmioFOURCC(ch0, ch1, ch2, ch3) \
+    MAKEFOURCC(ch0, ch1, ch2, ch3)
+#define MAKEFOURCC(ch0, ch1, ch2, ch3)  \
+    ((DWORD)(BYTE)(ch0) | ((DWORD)(BYTE)(ch1) << 8) |  \
+    ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
+
+#define ZeroMemory(a, b) memset(a, 0, b)
+#define CopyMemory(a, b, c) memcpy(a, c, b)
 
 #endif //_DX_LINUX_H_

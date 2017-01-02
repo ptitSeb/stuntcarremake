@@ -82,6 +82,7 @@ else
 	else
 		LIB += -lGL -lGLU
 	endif
+	LIB += -lopenal
 endif
 ifneq ($(MINGW),1)
 	# apparently on some systems -ldl is explicitly required

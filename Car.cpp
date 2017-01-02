@@ -719,11 +719,7 @@ static COORD_3D car[16+8] = {
 	#undef vertices
 }
 
-#ifdef linux
-HRESULT CreateCarVertexBuffer ()
-#else
 HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice)
-#endif
 {
 #ifdef linux
 	if (pCarVtx == NULL)
@@ -771,8 +767,9 @@ void FreeCarVertexBuffer (void)
 
 
 #ifdef linux
-void DrawCar ()
+void DrawCar (IDirect3DDevice9 *pd3dDevice)
 {
+	(void)pd3dDevice;
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glColorPointer(4, GL_FLOAT, 0, pCarCol);

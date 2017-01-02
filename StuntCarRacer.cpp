@@ -601,12 +601,13 @@ void CreateFonts()
 
 	if (g_pFont==NULL)
 	{
-		g_pFont = TTF_OpenFont("LiberationSans-Bold.ttf", 15);
+		g_pFont = TTF_OpenFont("MSX-Screen1.ttf", 15);
 	}
 	if (g_pFontLarge==NULL)
 	{
-		g_pFont = TTF_OpenFont("LiberationSans-Bold.ttf", 25);
+		g_pFontLarge = TTF_OpenFont("MSX-Screen1.ttf", 25);
 	}
+	printf("Font created (%p / %p)\n", g_pFont, g_pFontLarge);
 }
 void LoadTextures()
 {
@@ -617,6 +618,7 @@ void LoadTextures()
 	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
 	g_pRoadTexture[4]->LoadTexture("RoadBlack");
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
+	printf("Texture loaded\n");
 }
 #endif	//!linux
 /*	======================================================================================= */
@@ -1191,11 +1193,14 @@ void RenderText( double fTime )
 	if (bShowStats)
 	{
 		txtHelper.SetInsertionPos( 2, 0 );
+#ifndef linux
 		txtHelper.DrawTextLine( DXUTGetFrameStats(true) );
 		txtHelper.DrawTextLine( DXUTGetDeviceStats() );
-		/*
+#else
+		
 		txtHelper.DrawFormattedTextLine( L"fTime: %0.1f  sin(fTime): %0.4f", fTime, sin(fTime) );
-		*/
+#endif
+
 #if defined(DEBUG) || defined(_DEBUG)
 		// Output VALUE1, VALUE, VALUE3
 		txtHelper.DrawFormattedTextLine( L"V1: %08x, V2: %08x, V3: %08x", VALUE1, VALUE2, VALUE3 );
@@ -1452,7 +1457,7 @@ HRESULT hr;
 	}
 }
 
-
+#ifndef linux
 //--------------------------------------------------------------------------------------
 // Handle messages to the application 
 //--------------------------------------------------------------------------------------
@@ -1461,7 +1466,6 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 {
     return 0;
 }
-
 
 //--------------------------------------------------------------------------------------
 // As a convenience, DXUT inspects the incoming windows messages for
@@ -1695,3 +1699,183 @@ INT WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 
     return DXUTGetExitCode();
 }
+
+#else
+bool process_events()
+{
+    SDL_Event event;
+    while( SDL_PollEvent( &event ) ) {
+        switch( event.type ) {
+        case SDL_KEYDOWN:
+            switch( event.key.keysym.sym ) {
+#if defined(DEBUG) || defined(_DEBUG)
+				case SDLK_F1:
+					bTestKey = !bTestKey;
+					break;
+#endif
+				case SDLK_F2:
+					++bTrackDrawMode;
+					if (bTrackDrawMode > 1) bTrackDrawMode = 0;
+					DXUTReset3DEnvironment();
+					break;
+
+				case SDLK_F4:
+					NextSceneryType();
+					break;
+
+				case SDLK_F5:
+					bShowStats = !bShowStats;
+					break;
+
+				case SDLK_F6:
+					bPlayerPaused = !bPlayerPaused;
+					break;
+
+				case SDLK_F7:
+					bOpponentPaused = !bOpponentPaused;
+					break;
+
+				case SDLK_F9:
+					if (frameGap > 1) frameGap--;
+					break;
+
+				case SDLK_F10:
+					frameGap++;
+					break;
+
+#if defined(DEBUG) || defined(_DEBUG)
+				case SDLK_BACK:
+					bOutsideView = !bOutsideView;
+					break;
+#endif
+				case SDLK_m:
+					if (GameMode != TRACK_MENU)
+					{
+						GameMode = TRACK_MENU;
+
+						opponentsID = NO_OPPONENT;
+
+						// reset all animated objects
+						ResetDrawBridge();
+					}
+					break;
+
+				case SDLK_0:
+					bPaused = FALSE;
+					break;
+
+				case SDLK_p:
+					bPaused = TRUE;
+					break;
+
+				case SDLK_z:
+					bNewGame = TRUE;		// for testing to try stopping car positioning bug
+					break;
+
+				// controls for Car Behaviour, Player 1
+				case SDLK_s:
+					lastInput |= KEY_P1_LEFT;
+					break;
+
+				case SDLK_d:
+					lastInput |= KEY_P1_RIGHT;
+					break;
+
+				case SDLK_HASH:	// couldn't find VK_ definition for HASH key
+					lastInput |= KEY_P1_HASH;
+					break;
+
+				case SDLK_SPACE:
+					lastInput |= KEY_P1_BRAKE_BOOST;
+					break;
+
+				case SDLK_RETURN:
+					lastInput |= KEY_P1_ACCEL_BOOST;
+					break;
+				}
+            break;
+        case SDL_KEYUP:
+            switch( event.key.keysym.sym ) {
+				// controls for Car Behaviour, Player 1
+				case SDLK_s:
+					lastInput &= ~KEY_P1_LEFT;
+					break;
+
+				case SDLK_d:
+					lastInput &= ~KEY_P1_RIGHT;
+					break;
+
+				case SDLK_HASH:	// couldn't find VK_ definition for HASH key
+					lastInput &= ~KEY_P1_HASH;
+					break;
+
+				case SDLK_SPACE:
+					lastInput &= ~KEY_P1_BRAKE_BOOST;
+					break;
+
+				case SDLK_RETURN:
+					lastInput &= ~KEY_P1_ACCEL_BOOST;
+					break;
+				}
+			break;
+        case SDL_QUIT:
+            return false;
+        }
+    }
+	
+	return true;
+}
+
+int main(int argc, const char** argv)
+{
+	SDL_Surface *screen = NULL;
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_EVENTTHREAD)==-1) {
+		printf("Could not initialise SDL: %s\n", SDL_GetError());
+		exit(-1);
+	}
+	atexit(SDL_Quit);
+
+	TTF_Init();
+
+    SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
+    SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
+    SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+	int flags = 0;
+	flags = SDL_OPENGL | SDL_DOUBLEBUF;
+	screen = SDL_SetVideoMode( 640, 480, 32, flags );
+    if ( screen == NULL ) {
+        printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
+        exit(-2);
+    }
+	glViewport(0, 0, 640, 480);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 640, 0, 480);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	IDirect3DDevice9 pd3dDevice;
+
+	sound_init();
+
+	double fLastTime = DXUTGetTime();
+
+	CreateFonts();
+	LoadTextures();
+
+    while( process_events( ) ) {
+		double fTime = DXUTGetTime();
+        OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
+		SDL_GL_SwapBuffers();
+		fLastTime = fTime;
+    }
+
+	sound_destroy();
+	TTF_Quit();
+	SDL_Quit();
+	
+	exit(0);
+}
+#endif

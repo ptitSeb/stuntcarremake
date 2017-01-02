@@ -2766,7 +2766,7 @@ static void *GetTRACKResource( HMODULE hModule, LPCWSTR lpResName )
 	void		*pTRACKBytes;
 #ifdef linux
 const WCHAR* resname[] = {L"LITTLERAMP", L"STEPPINGSTONES", L"HUMPBACK", L"BIGRAMP", L"SKIJUMP", L"DRAWBRIDGE", L"HIGHJUMP", L"ROLLERCOASTER", 0};
-const char* filename[] = {"Tracks\\LittleRamp.bin", "Tracks\\SteppingStones.bin", "Tracks\\HumpBack.bin", "Tracks\\BigRamp.bin", "Tracks\\SkiJump.bin", "Tracks\\DrawBridge.bin", "Tracks\\HighJump.bin", "Tracks\\RollerCoaster.bin"};
+const char* filename[] = {"Tracks/LittleRamp.bin", "Tracks/SteppingStones.bin", "Tracks/HumpBack.bin", "Tracks/BigRamp.bin", "Tracks/SkiJump.bin", "Tracks/DrawBridge.bin", "Tracks/HighJump.bin", "Tracks/RollerCoaster.bin"};
 	int i = 0;
 	while(resname[i] && wcscmp(resname[i], lpResName)) i++;
 	if(!resname[i]) return NULL;
