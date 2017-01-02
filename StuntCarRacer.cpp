@@ -1184,6 +1184,9 @@ void RenderText( double fTime )
     // and then it calls pFont->DrawText( m_pSprite, strMsg, -1, &rc, DT_NOCLIP, m_clr );
     // If NULL is passed in as the sprite object, then it will work fine however the 
     // pFont->DrawText() will not be batched together.  Batching calls will improve perf.
+#ifdef linux
+	static
+#endif
     CDXUTTextHelper txtHelper( g_pFont, g_pSprite, 15 );
 
     // Output statistics

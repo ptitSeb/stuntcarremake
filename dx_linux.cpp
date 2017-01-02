@@ -523,8 +523,8 @@ CDXUTTextHelper::~CDXUTTextHelper()
 
 void CDXUTTextHelper::SetInsertionPos(int x, int y)
 {
-	m_posx = x*m_size;
-	m_posy = y*m_size;
+	m_posx = x;
+	m_posy = y;
 }
 
 void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
@@ -574,9 +574,8 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
-	glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-
 }
 
 void CDXUTTextHelper::DrawFormattedTextLine(const wchar_t* line, ...)
