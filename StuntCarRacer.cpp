@@ -1763,7 +1763,7 @@ bool process_events()
 					}
 					break;
 
-				case SDLK_0:
+				case SDLK_o:
 					bPaused = FALSE;
 					break;
 
@@ -1868,12 +1868,19 @@ int main(int argc, const char** argv)
 	CreateFonts();
 	LoadTextures();
 
+	if (!InitialiseData()) {
+		printf("Error initialising data\n");
+		exit(-3);
+	}
+
     while( process_events( ) ) {
 		double fTime = DXUTGetTime();
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
 		SDL_GL_SwapBuffers();
 		fLastTime = fTime;
     }
+
+	FreeData();
 
 	sound_destroy();
 	TTF_Quit();
