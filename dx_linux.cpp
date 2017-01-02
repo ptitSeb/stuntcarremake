@@ -19,6 +19,11 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	if (texID) glDeleteTextures(1, &texID);
 	glGenTextures(1, &texID);
 	SDL_Surface *img = IMG_Load(BitMapRessourceName(name));
+	if(!img) {
+		printf("Warning, image \"%s\" => \"%s\" not loaded\n", name, BitMapRessourceName(name));
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		return;
+	}
 	w = img->w;
 	h = img->h;
 	w2 = NP2(w);
@@ -29,7 +34,8 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	// ugly... Just blindly load the texture without much check!
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, img->pixels);
 	UnBind();
 	if (img) SDL_FreeSurface(img);
 }
