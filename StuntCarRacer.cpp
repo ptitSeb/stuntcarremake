@@ -1855,7 +1855,7 @@ int main(int argc, const char** argv)
 	glViewport(0, 0, 640, 480);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, 640, 0, 480);
+	gluOrtho2D(0, 640, 480, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 

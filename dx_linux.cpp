@@ -35,7 +35,7 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, img->pixels);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, (img->format->BytesPerPixel==3)?GL_BGR:GL_BGRA, GL_UNSIGNED_BYTE, img->pixels);
 	UnBind();
 	if (img) SDL_FreeSurface(img);
 }

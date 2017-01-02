@@ -3,7 +3,7 @@
 #
 
 CC=g++
-PANDORA=0
+PANDORA=1
 DEBUG=1
 
 # general compiler settings
@@ -15,7 +15,7 @@ ifeq ($(PANDORA),1)
 	FLAGS+= -DPANDORA
 	FLAGS+= -DARM
 	LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp
-	HAVE_GLES=1
+	#HAVE_GLES=1
 endif
 FLAGS+= -pipe -fpermissive
 CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings
@@ -24,7 +24,7 @@ LDFLAGS=$(FLAGS)
 ifeq ($(PANDORA),1)
 	PROFILE=0
 else
-	PROFILE=1
+	PROFILE=0
 endif
 
 
