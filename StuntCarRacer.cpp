@@ -1704,11 +1704,13 @@ INT WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 }
 
 #else
+
 bool process_events()
 {
     SDL_Event event;
     while( SDL_PollEvent( &event ) ) {
         switch( event.type ) {
+		keyPress = event.key.keysym.sym;
         case SDL_KEYDOWN:
             switch( event.key.keysym.sym ) {
 #if defined(DEBUG) || defined(_DEBUG)
@@ -1798,6 +1800,7 @@ bool process_events()
 				}
             break;
         case SDL_KEYUP:
+			keyPress = 0;
             switch( event.key.keysym.sym ) {
 				// controls for Car Behaviour, Player 1
 				case SDLK_s:
@@ -1875,6 +1878,7 @@ int main(int argc, const char** argv)
 
     while( process_events( ) ) {
 		double fTime = DXUTGetTime();
+		OnFrameMove( &pd3dDevice, fTime, fTime - fLastTime, NULL );
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
 		SDL_GL_SwapBuffers();
 		fLastTime = fTime;
