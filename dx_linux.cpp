@@ -197,15 +197,19 @@ HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKN
 // Try to keep everything column-major to make OpenGL happy...
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf)
 {
+	#if 0
 	float yScale = 1.0f / tanf(fovy/2.0f);
 	float xScale = yScale / Aspect;
 	if(zn == 0) zn = -1.0f; else if(zn==0.5f) zn=0.0f;	// DX -> OpenGL near is different
-	float zfzn = zf/(zf-zn);
+	float nf = zn - zf;
 	*pOut = glm::mat4(
 		xScale, 0.0f, 0.0f, 0.0f,
 		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, zfzn, 1.0f,
-		0.0f, 0.0f, -zn*zfzn, 0.0f);
+		0.0f, 0.0f, (zf+zn)/nf, -1.0f,
+		0.0f, 0.0f, 2*zf*zn/nf,  0.0f);
+	#else
+	*pOut = glm::perspective(fovy * 180.0f / 3.1415926535f, Aspect, zn, zf);
+	#endif
 	return pOut;
 }
 
