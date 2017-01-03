@@ -626,6 +626,18 @@ void LoadTextures()
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
 	printf("Texture loaded\n");
 }
+void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
+{
+	/*if (CreatePolygonVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating PolygonVertexBuffer\n");*/
+	if (CreateTrackVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating TrackVertexBuffer\n");
+	if (CreateShadowVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating ShadowVertexBuffer\n");
+	if (CreateCarVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating CarVertexBuffer\n");
+
+}
 #endif	//!linux
 /*	======================================================================================= */
 /*	Function:		CalcTrackMenuViewpoint													*/
@@ -1884,6 +1896,7 @@ int main(int argc, const char** argv)
 
 	CreateFonts();
 	LoadTextures();
+	CreateBuffers(&pd3dDevice);
 
 	if (!InitialiseData()) {
 		printf("Error initialising data\n");

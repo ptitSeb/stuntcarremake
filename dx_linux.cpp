@@ -285,9 +285,10 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 	switch (State) 
 	{
 		case D3DTS_VIEW:
-			glMatrixMode(GL_MODELVIEW);
+			// Strange, it seem I need to do nothing with this one...
 			mView = *pMatrix;
-			glLoadMatrixf(glm::value_ptr(mView * mWorld));
+			/*glMatrixMode(GL_MODELVIEW);
+			glLoadMatrixf(glm::value_ptr(mView * mWorld));*/
 			break;
 		case D3DTS_PROJECTION:
 			glMatrixMode(GL_PROJECTION);
@@ -297,14 +298,14 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 		case D3DTS_WORLD:
 			glMatrixMode(GL_MODELVIEW);
 			mWorld = *pMatrix;
-			glLoadMatrixf(glm::value_ptr(mView * mWorld));
+			glLoadMatrixf(glm::value_ptr(/*mView * */ mWorld));
 			break;
 		case D3DTS_TEXTURE0:
 		case D3DTS_TEXTURE1:
 		case D3DTS_TEXTURE2:
 		case D3DTS_TEXTURE3:
 		case D3DTS_TEXTURE4:
-			#warning TODO change active texture...
+			//TODO change active texture...
 			glMatrixMode(GL_TEXTURE);
 			mText = *pMatrix;
 			glLoadMatrixf(glm::value_ptr(*pMatrix));
