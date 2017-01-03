@@ -7,11 +7,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 
-#ifdef linux
-#include "dx_linux.h"
-#else
 #include "dxstdafx.h"
-#endif
+
 #include "resource.h"
 
 #include "StuntCarRacer.h"
@@ -26,7 +23,7 @@
 #ifdef linux
 #define STRING "%S"
 #else
-#define STRING "%s"
+#define STRING L"%s"
 #endif
 
 
@@ -1096,7 +1093,7 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*8 );
-	txtHelper.DrawFormattedTextLine( L"Current track - " STRING ".  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawFormattedTextLine( L"Current track - " STRING L".  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 
 	if ((keyPress >= firstMenuOption) && (keyPress <= lastMenuOption))
 		{
@@ -1147,7 +1144,7 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*9 );
-	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING ".  Press 'S' to start game, 'M' for track menu, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING L".  Press 'S' to start game, 'M' for track menu, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 	txtHelper.DrawTextLine( L"(Press F4 to change scenery, F9 / F10 to adjust frame rate)" );
 
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*6 );
@@ -1244,7 +1241,7 @@ void RenderText( double fTime )
 			txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*2 );
 			if (lapNumber[PLAYER] > 0)
 				StringCchPrintf( lapText, 3, L"%d", lapNumber[PLAYER] );
-			txtHelper.DrawFormattedTextLine( L"Lap: " STRING "   Boost: %d", lapText, boostReserve );
+			txtHelper.DrawFormattedTextLine( L"Lap: " STRING L"   Boost: %d", lapText, boostReserve );
 			txtHelper.DrawFormattedTextLine( L"Opponent Distance: %d", CalculateOpponentsDistance() );
 			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
 			txtHelper.DrawFormattedTextLine( L"Speed: %d", CalculateDisplaySpeed() );

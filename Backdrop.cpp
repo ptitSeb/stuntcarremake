@@ -7,11 +7,7 @@
 /*	============= */
 /*	Include files */
 /*	============= */
-#ifdef linux
-#include "dx_linux.h"
-#else
 #include "dxstdafx.h"
-#endif
 
 #include "StuntCarRacer.h"
 #include "Backdrop.h"

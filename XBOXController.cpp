@@ -1,8 +1,5 @@
-#ifdef linux
-#include "dx_linux.h"
-#else
 #include "dxstdafx.h"
-#endif
+
 #include "XBOXController.h"
 
 // ctor - playerNumber 1<>4
