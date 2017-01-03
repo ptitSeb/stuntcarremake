@@ -1890,11 +1890,16 @@ int main(int argc, const char** argv)
 		exit(-3);
 	}
 
-    while( process_events( ) ) {
+	bool run = true;
+    while( run ) {
 		double fTime = DXUTGetTime();
+		run = process_events();
 		OnFrameMove( &pd3dDevice, fTime, fTime - fLastTime, NULL );
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
 		SDL_GL_SwapBuffers();
+		glClearColor(0,0,0,1);
+		glClear(GL_COLOR_BUFFER_BIT);
+
 		fLastTime = fTime;
     }
 

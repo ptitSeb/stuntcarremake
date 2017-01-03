@@ -295,7 +295,7 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 			glLoadMatrixf(glm::value_ptr(*pMatrix));
 			break;
 		case D3DTS_WORLD:
-			glMatrixMode(GL_PROJECTION);
+			glMatrixMode(GL_MODELVIEW);
 			mWorld = *pMatrix;
 			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
@@ -571,7 +571,7 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 
-	glMatrixMode(GL_PROJECTION);
+	//glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
