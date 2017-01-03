@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{ec475ab3-8049-4a5f-bfa9-5a89f7acd582}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{4349be7e-177c-4678-bd12-c1701ab3d85d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Tracks\BigRamp.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\DrawBridge.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\HighJump.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\HumpBack.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\LittleRamp.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\RollerCoaster.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\SkiJump.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Tracks\SteppingStones.bin">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Common\directx.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\dxstdafx.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXUT.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXUTenum.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXUTmisc.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\DXUTRes.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Backdrop.h" />
+    <ClInclude Include="Car.h" />
+    <ClInclude Include="StuntCarRacer.h" />
+    <ClInclude Include="Track.h" />
+    <ClInclude Include="wavefunctions.h" />
+    <ClInclude Include="XBOXController.h" />
+    <ClInclude Include="3D_Engine.h" />
+    <ClInclude Include="Car_Behaviour.h" />
+    <ClInclude Include="Opponent_Behaviour.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="StuntCarRacer.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Common\dxstdafx.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DXUT.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DXUTenum.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DXUTmisc.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\DXUTRes.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Backdrop.cpp" />
+    <ClCompile Include="Car.cpp" />
+    <ClCompile Include="StuntCarRacer.cpp" />
+    <ClCompile Include="Track.cpp" />
+    <ClCompile Include="wavefunctions.cpp" />
+    <ClCompile Include="XBOXController.cpp" />
+    <ClCompile Include="3D_Engine.cpp" />
+    <ClCompile Include="Car_Behaviour.cpp" />
+    <ClCompile Include="Opponent_Behaviour.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="Sounds\Creak.wav" />
+    <Media Include="Sounds\EnginePitch2.wav" />
+    <Media Include="Sounds\EnginePitch3.wav" />
+    <Media Include="Sounds\EnginePitch4.wav" />
+    <Media Include="Sounds\EnginePitch5.wav" />
+    <Media Include="Sounds\EnginePitch6.wav" />
+    <Media Include="Sounds\EnginePitch7.wav" />
+    <Media Include="Sounds\EnginePitch8.wav" />
+    <Media Include="Sounds\Grounded.wav" />
+    <Media Include="Sounds\HitCar.wav" />
+    <Media Include="Sounds\OffRoad.wav" />
+    <Media Include="Sounds\Smash.wav" />
+    <Media Include="Sounds\TickOver.wav" />
+    <Media Include="Sounds\Wreck.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="StuntCarRacer.manifest">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Reference only\StuntCarRacer.s" />
+  </ItemGroup>
+</Project>

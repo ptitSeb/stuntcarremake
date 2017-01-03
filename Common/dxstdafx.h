@@ -6,6 +6,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 //--------------------------------------------------------------------------------------
 #pragma once
+#ifdef linux
+#include "dx_linux.h"
+#else
 #ifndef DXSDK_STDAFX_H
 #define DXSDK_STDAFX_H
 
@@ -132,3 +135,5 @@
 #endif
 
 #endif // !defined(DXSDK_STDAFX_H)
+
+#endif
