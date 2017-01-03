@@ -790,6 +790,6 @@ void DXUTReset3DEnvironment();
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
 
 #define ZeroMemory(a, b) memset(a, 0, b)
-#define CopyMemory(a, b, c) memcpy(a, c, b)
+#define CopyMemory(a, b, c) memcpy(a, b, c)
 
 #endif //_DX_LINUX_H_

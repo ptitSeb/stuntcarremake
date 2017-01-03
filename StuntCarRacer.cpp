@@ -1917,6 +1917,9 @@ int main(int argc, const char** argv)
 	LoadTextures();
 	CreateBuffers(&pd3dDevice);
 
+	DSInit();
+	DSSetMode();
+
 	if (!InitialiseData()) {
 		printf("Error initialising data\n");
 		exit(-3);
