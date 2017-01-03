@@ -3,7 +3,7 @@
 #
 
 CC=g++
-PANDORA=1
+PANDORA=0
 DEBUG=1
 
 # general compiler settings
@@ -18,7 +18,7 @@ ifeq ($(PANDORA),1)
 	#HAVE_GLES=1
 endif
 FLAGS+= -pipe -fpermissive
-CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings
+CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings -ICommon
 LDFLAGS=$(FLAGS)
 
 ifeq ($(PANDORA),1)
