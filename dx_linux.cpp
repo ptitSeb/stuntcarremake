@@ -76,6 +76,7 @@ int npot(int n) {
 IDirectSoundBuffer8::IDirectSoundBuffer8()
 {
 	source = NULL;
+	buffer = NULL;
 }
 
 HRESULT IDirectSoundBuffer8::SetVolume(LONG lVolume)
@@ -147,14 +148,14 @@ IDirectSoundBuffer8::~IDirectSoundBuffer8()
 
 HRESULT IDirectSoundBuffer8::Release()
 {
-	if (!buffer || !source)
-		return DSERR_GENERIC;
-	sound_release_buffer(buffer);
-	sound_release_source(source);
-	free(buffer);
-	free(source);
-	buffer = NULL;
-	source = NULL;
+	if(buffer) {
+		sound_release_buffer(buffer);
+		buffer = NULL;
+	}
+	if(source) {
+		sound_release_source(source);
+		source = NULL;
+	}
 }
 
 HRESULT IDirectSoundBuffer8::Lock(DWORD dwOffset, DWORD dwBytes, LPVOID * ppvAudioPtr1, LPDWORD  pdwAudioBytes1, LPVOID * ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags)
@@ -414,10 +415,13 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 
 HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
 {
-	if(Stage>0) {
+	if(Stage>7) {
 		printf("Unhandled SetTextureStageState(%d, 0x%X, 0x%X)\n", Stage, Type, Value);
 		return S_OK;
 	}
+
+	glActiveTexture(GL_TEXTURE0+Stage);
+	glClientActiveTexture(GL_TEXTURE0+Stage);
 
 	switch(Type)
 	{
@@ -449,9 +453,15 @@ HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATE
 			if(Value==D3DTA_TEXTURE && colorop[Stage]==D3DTOP_SELECTARG2)
 				glEnable(GL_TEXTURE_2D);
 			break;
+		case D3DTSS_ALPHAOP:
+			//TODO probably
+			break;
 		default:
 			printf("Unhandled SetTextureStageState(%d, 0x%X, 0x%X)\n", Stage, Type, Value);
 	}
+
+	glActiveTexture(GL_TEXTURE0+0);
+	glClientActiveTexture(GL_TEXTURE0+0);
 
 	return S_OK;
 }
