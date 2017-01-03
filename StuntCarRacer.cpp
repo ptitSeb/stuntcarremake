@@ -1087,20 +1087,26 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 /*																							*/
 /*	Description:	Output track menu text													*/
 /*	======================================================================================= */
+#ifdef linux
+#define FIRSTMENU SDLK_1
+#define STARTMENU SDLK_s
+#else
+#define FIRSTMENU '1'
+#define STARTMENU 'S'
+#endif
 
 static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 	{
 	long i, track_number;
 	UINT firstMenuOption, lastMenuOption;
-
 	txtHelper.SetInsertionPos( 2, 15*8 );
 	txtHelper.DrawTextLine( L"Choose track :-" );
 
-	for (i = 0, firstMenuOption = '1'; i < NUM_TRACKS; i++)
+	for (i = 0, firstMenuOption = FIRSTMENU; i < NUM_TRACKS; i++)
 		{
 		txtHelper.DrawFormattedTextLine( L"'%d' -  " STRING, (i+1), GetTrackName(i) );
 		}
-	lastMenuOption = i + '1' - 1;
+	lastMenuOption = i + FIRSTMENU - 1;
 
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
@@ -1132,7 +1138,7 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 		keyPress = '\0';
 		}
 
-	if ((keyPress == 'S') && (TrackID != NO_TRACK))
+	if ((keyPress == STARTMENU) && (TrackID != NO_TRACK))
 		{
 		bNewGame = TRUE;	// Used here just to reset the opponent's car, which is then shown during the track preview
 		ResetPlayer();		// Also reset player to clear values if there was a previous game (CarBehaviour normally does this, but isn't called for track preview)
@@ -1165,7 +1171,7 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 	txtHelper.DrawTextLine( L"  R = Point car in opposite direction, P = Pause, O = Unpause" );
 	txtHelper.DrawTextLine( L"  M = Back to track menu, Escape = Quit" );
 
-	if (keyPress == 'S')
+	if (keyPress == STARTMENU)
 		{
 		bNewGame = TRUE;
         GameMode = GAME_IN_PROGRESS;
@@ -1724,9 +1730,23 @@ bool process_events()
     SDL_Event event;
     while( SDL_PollEvent( &event ) ) {
         switch( event.type ) {
-		keyPress = event.key.keysym.sym;
         case SDL_KEYDOWN:
-            switch( event.key.keysym.sym ) {
+			keyPress = event.key.keysym.sym;
+			// some special cases for French keyboards
+			if((event.key.keysym.mod & KMOD_SHIFT) == 0)
+			switch(event.key.keysym.sym) {
+				case SDLK_AMPERSAND:	keyPress = SDLK_1; break;
+				case 233:				keyPress = SDLK_2; break;
+				case SDLK_QUOTEDBL:		keyPress = SDLK_3; break;
+				case SDLK_QUOTE:		keyPress = SDLK_4; break;
+				case SDLK_LEFTPAREN:	keyPress = SDLK_5; break;
+				case SDLK_MINUS:		keyPress = SDLK_6; break;
+				case 232:				keyPress = SDLK_7; break;
+				case SDLK_UNDERSCORE:	keyPress = SDLK_8; break;
+				case 231:				keyPress = SDLK_9; break;
+				case 224:				keyPress = SDLK_0; break;
+			}
+            switch( keyPress ) {
 #if defined(DEBUG) || defined(_DEBUG)
 				case SDLK_F1:
 					bTestKey = !bTestKey;
@@ -1811,6 +1831,9 @@ bool process_events()
 				case SDLK_RETURN:
 					lastInput |= KEY_P1_ACCEL_BOOST;
 					break;
+
+				case SDLK_ESCAPE:
+					return false;
 				}
             break;
         case SDL_KEYUP:
@@ -1842,7 +1865,6 @@ bool process_events()
             return false;
         }
     }
-	
 	return true;
 }
 

@@ -198,6 +198,7 @@ D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspec
 {
 	float yScale = 1.0f / tanf(fovy/2.0f);
 	float xScale = yScale / Aspect;
+	if(zn == 0) zn = -1.0f; else if(zn==0.5f) zn=0.0f;	// DX -> OpenGL near is different
 	float zfzn = zf/(zf-zn);
 	*pOut = glm::mat4(
 		xScale, 0.0f, 0.0f, 0.0f,
@@ -256,7 +257,19 @@ D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const 
 	glm::vec3 eye=FromVector(pEye);
 	glm::vec3 at=FromVector(pAt);
 	glm::vec3 up=FromVector(pUp);
+	#if 1
 	*pOut=glm::lookAt(eye, at, up);
+	#else
+	// checked, same as DX9
+	glm::vec3 vZ = glm::normalize(at - eye);
+	glm::vec3 vX = glm::normalize(glm::cross(up, vZ));
+	glm::vec3 vY = glm::cross(vZ, vX);
+
+	*pOut = glm::mat4(	vX.x,			vY.x,			vZ.x,			0.0f,
+						vX.y,			vY.y,			vZ.y,			0.0f,
+						vX.z,			vY.z,			vZ.z,			0.0f,
+						glm::dot(-vX, eye), glm::dot(-vY, eye),	glm::dot(-vZ, eye),	1.0f);
+	#endif
 	return pOut;
 }
 
@@ -285,20 +298,20 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 	switch (State) 
 	{
 		case D3DTS_VIEW:
-			// Strange, it seem I need to do nothing with this one...
+			// something is still wrong here...
 			mView = *pMatrix;
-			/*glMatrixMode(GL_MODELVIEW);
-			glLoadMatrixf(glm::value_ptr(mView * mWorld));*/
-			break;
-		case D3DTS_PROJECTION:
-			glMatrixMode(GL_PROJECTION);
-			mProj = *pMatrix;
-			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			glMatrixMode(GL_MODELVIEW);
+			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
 		case D3DTS_WORLD:
-			glMatrixMode(GL_MODELVIEW);
 			mWorld = *pMatrix;
-			glLoadMatrixf(glm::value_ptr(/*mView * */ mWorld));
+			glMatrixMode(GL_MODELVIEW);
+			glLoadMatrixf(glm::value_ptr(mView * mWorld));
+			break;
+		case D3DTS_PROJECTION:
+			mProj = *pMatrix;
+			glMatrixMode(GL_PROJECTION);
+			glLoadMatrixf(glm::value_ptr(mProj));
 			break;
 		case D3DTS_TEXTURE0:
 		case D3DTS_TEXTURE1:
@@ -306,9 +319,9 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 		case D3DTS_TEXTURE3:
 		case D3DTS_TEXTURE4:
 			//TODO change active texture...
-			glMatrixMode(GL_TEXTURE);
 			mText = *pMatrix;
-			glLoadMatrixf(glm::value_ptr(*pMatrix));
+			glMatrixMode(GL_TEXTURE);
+			glLoadMatrixf(glm::value_ptr(mText));
 			break;
 		default:
 			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
