@@ -2768,7 +2768,7 @@ static void *GetTRACKResource( HMODULE hModule, LPCWSTR lpResName )
 const WCHAR* resname[] = {L"LITTLERAMP", L"STEPPINGSTONES", L"HUMPBACK", L"BIGRAMP", L"SKIJUMP", L"DRAWBRIDGE", L"HIGHJUMP", L"ROLLERCOASTER", 0};
 const char* filename[] = {"Tracks/LittleRamp.bin", "Tracks/SteppingStones.bin", "Tracks/HumpBack.bin", "Tracks/BigRamp.bin", "Tracks/SkiJump.bin", "Tracks/DrawBridge.bin", "Tracks/HighJump.bin", "Tracks/RollerCoaster.bin"};
 	int i = 0;
-	while(resname[i] && wcscmp(resname[i], lpResName)) i++;
+	while(resname[i] && wcscasecmp(resname[i], lpResName)) i++;
 	if(!resname[i]) return NULL;
 	// file found, get size, alloc size and read binary file
 	FILE* f = fopen(filename[i], "rb");
