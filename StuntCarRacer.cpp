@@ -23,6 +23,12 @@
 #include "Opponent_Behaviour.h"
 #include "wavefunctions.h"
 
+#ifdef linux
+#define STRING "%S"
+#else
+#define STRING "%s"
+#endif
+
 
 //-----------------------------------------------------------------------------
 // Defines, constants, and global variables
@@ -601,11 +607,11 @@ void CreateFonts()
 
 	if (g_pFont==NULL)
 	{
-		g_pFont = TTF_OpenFont("MSX-Screen1.ttf", 15);
+		g_pFont = TTF_OpenFont("MSX-Screen1.ttf", 8/*15*/);
 	}
 	if (g_pFontLarge==NULL)
 	{
-		g_pFontLarge = TTF_OpenFont("MSX-Screen1.ttf", 25);
+		g_pFontLarge = TTF_OpenFont("MSX-Screen1.ttf", 16/*25*/);
 	}
 	printf("Font created (%p / %p)\n", g_pFont, g_pFontLarge);
 }
@@ -1078,20 +1084,19 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 	long i, track_number;
 	UINT firstMenuOption, lastMenuOption;
 
-
 	txtHelper.SetInsertionPos( 2, 15*8 );
 	txtHelper.DrawTextLine( L"Choose track :-" );
 
 	for (i = 0, firstMenuOption = '1'; i < NUM_TRACKS; i++)
 		{
-		txtHelper.DrawFormattedTextLine( L"'%d' -  %s", (i+1), GetTrackName(i) );
+		txtHelper.DrawFormattedTextLine( L"'%d' -  " STRING, (i+1), GetTrackName(i) );
 		}
 	lastMenuOption = i + '1' - 1;
 
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*8 );
-	txtHelper.DrawFormattedTextLine( L"Current track - %s.  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawFormattedTextLine( L"Current track - " STRING ".  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 
 	if ((keyPress >= firstMenuOption) && (keyPress <= lastMenuOption))
 		{
@@ -1142,7 +1147,7 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*9 );
-	txtHelper.DrawFormattedTextLine( L"Selected track - %s.  Press 'S' to start game, 'M' for track menu, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING ".  Press 'S' to start game, 'M' for track menu, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 	txtHelper.DrawTextLine( L"(Press F4 to change scenery, F9 / F10 to adjust frame rate)" );
 
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*6 );
@@ -1234,12 +1239,12 @@ void RenderText( double fTime )
 			if (((DXUTGetTime() - gameStartTime) < 4.0) && (opponentsID != NO_OPPONENT))
 			{
 				txtHelper.SetInsertionPos( 250, pd3dsdBackBuffer->Height-15*20 );
-				txtHelper.DrawFormattedTextLine( L"Opponent: %s", opponentNames[opponentsID] );
+				txtHelper.DrawFormattedTextLine( L"Opponent: " STRING, opponentNames[opponentsID] );
 			}
 			txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*2 );
 			if (lapNumber[PLAYER] > 0)
 				StringCchPrintf( lapText, 3, L"%d", lapNumber[PLAYER] );
-			txtHelper.DrawFormattedTextLine( L"Lap: %s   Boost: %d", lapText, boostReserve );
+			txtHelper.DrawFormattedTextLine( L"Lap: " STRING "   Boost: %d", lapText, boostReserve );
 			txtHelper.DrawFormattedTextLine( L"Opponent Distance: %d", CalculateOpponentsDistance() );
 			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
 			txtHelper.DrawFormattedTextLine( L"Speed: %d", CalculateDisplaySpeed() );
@@ -1850,12 +1855,21 @@ int main(int argc, const char** argv)
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	int flags = 0;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
+#ifdef PANDORA
+	flags |= SDL_FULLSCREEN;
+	screen = SDL_SetVideoMode( 800, 480, 32, flags );
+#else
 	screen = SDL_SetVideoMode( 640, 480, 32, flags );
+#endif
     if ( screen == NULL ) {
         printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
         exit(-2);
     }
+#ifdef PANDORA
+	glViewport(80, 0, 640, 480);
+#else
 	glViewport(0, 0, 640, 480);
+#endif
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, 640, 480, 0);

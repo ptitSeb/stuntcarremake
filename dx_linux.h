@@ -760,9 +760,9 @@ public:
   void End() {};
   void SetForegroundColor(D3DXCOLOR clr);
 private:
-	TTF_Font* 	m_font;
 	GLuint 		  m_sprite;
 	int 		    m_size;
+  int         m_fontsize;
   int         m_posx, m_posy;
   float       m_w, m_h;
   float       m_forecol[4];

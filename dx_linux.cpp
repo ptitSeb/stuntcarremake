@@ -485,17 +485,18 @@ HRESULT IDirect3DDevice9::Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, 
 }
 
 CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) : 
-	m_font(font), m_sprite(sprite), m_size(size), m_posx(0), m_posy(0)
+	m_sprite(sprite), m_size(size), m_posx(0), m_posy(0)
 {
 	// set colors
 	m_forecol[0] = m_forecol[1] = m_forecol[2] = m_forecol[3] = 1.0f;
 	// setup texture
+	m_fontsize = TTF_FontHeight(font);
 	glGenTextures(1, &m_texture);
 	glBindTexture(GL_TEXTURE_2D, m_texture);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
-	int w = npot(16*size);
+	int w = npot(16*m_fontsize);
 	void* tmp = malloc(w*w*4); memset(tmp, 0, w*w*4);
 	m_sizew = w; m_sizeh = w;
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp);
@@ -503,10 +504,10 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 	SDL_Color forecol = {255,255,255,255};
 	for(int i=0; i<16; i++) {
 		for(int j=0; j<16; j++) {
-			char text[2] = {i*16+j, 0};
-			SDL_Surface* surf = TTF_RenderText_Blended(m_font, text, forecol);
+			char text[2] = {(char)(i*16+j), 0};
+			SDL_Surface* surf = TTF_RenderText_Blended(font, text, forecol);
 			if(surf) {
-				glTexSubImage2D(GL_TEXTURE_2D, 0, j*size, i*size, surf->w, surf->h, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, j*m_fontsize, i*m_fontsize, surf->w, surf->h, GL_BGRA, GL_UNSIGNED_BYTE, surf->pixels);
 				SDL_FreeSurface(surf);
 			}
 		}
@@ -516,7 +517,7 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 
 CDXUTTextHelper::~CDXUTTextHelper()
 {
-	// nothing
+	glDeleteTextures(1, &m_texture);
 }
 
 void CDXUTTextHelper::SetInsertionPos(int x, int y)
@@ -527,7 +528,7 @@ void CDXUTTextHelper::SetInsertionPos(int x, int y)
 
 void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 {
-	m_w = ((float)m_size)/m_sizew; m_h = ((float)m_size)/m_sizeh;
+	m_w = ((float)m_fontsize)/m_sizew; m_h = ((float)m_fontsize)/m_sizeh;
 
 	// Draw it
 	glMatrixMode(GL_MODELVIEW);
@@ -555,10 +556,10 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	while((ch=line[i]))
 	{
 		float col = ch%16, lin = ch/16;
-		glTexCoord2f(col*m_w+0,lin*m_h+0); glVertex2f(m_posx+i*m_size, m_posy);
-		glTexCoord2f(col*m_w+m_w,lin*m_h+0); glVertex2f(m_posx+i*m_size+m_size, m_posy);
-		glTexCoord2f(col*m_w+m_w,lin*m_h+m_h); glVertex2f(m_posx+i*m_size+m_size, m_posy + m_size);
-		glTexCoord2f(col*m_w+0,lin*m_h+m_h); glVertex2f(m_posx+i*m_size, m_posy + m_size);
+		glTexCoord2f(col*m_w+0,lin*m_h+0); glVertex2f(m_posx+i*m_fontsize, m_posy);
+		glTexCoord2f(col*m_w+m_w,lin*m_h+0); glVertex2f(m_posx+i*m_fontsize+m_size-1, m_posy);
+		glTexCoord2f(col*m_w+m_w,lin*m_h+m_h); glVertex2f(m_posx+i*m_fontsize+m_fontsize-1, m_posy + m_fontsize-1);
+		glTexCoord2f(col*m_w+0,lin*m_h+m_h); glVertex2f(m_posx+i*m_fontsize, m_posy + m_fontsize-1);
 
 		i++;
 	}
