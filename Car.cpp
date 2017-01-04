@@ -765,14 +765,20 @@ void FreeCarVertexBuffer (void)
 #ifdef linux
 void DrawCar (IDirect3DDevice9 *pd3dDevice)
 {
-	(void)pd3dDevice;
+	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
+	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );
+	pd3dDevice->ActivateWorldMatrix();
+
 	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glColorPointer(4, GL_FLOAT, 0, pCarCol);
 	glVertexPointer(4, GL_FLOAT, 0, pCarVtx);
 	glDrawArrays(GL_TRIANGLES, 0, numCarVertices);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
+
+	pd3dDevice->DeactivateWorldMatrix();
 }
 #else
 void DrawCar (IDirect3DDevice9 *pd3dDevice)

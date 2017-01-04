@@ -1285,7 +1285,6 @@ long ConvertAmigaTrack( long track )
 	COORD_XZ *pieceXZ;
 
 	BYTE roadColour, sidesColour;
-
 	if ( first_time )
 	    {
 		ConvertAmigaPieceData();
@@ -2670,7 +2669,6 @@ static long ReadAmigaTrackData( long track )
 	char	h, l;
 	long	i, j;
 	short	s;
-
 	// read all tracks on first call
 	if (first_time)
 		{
@@ -2678,8 +2676,10 @@ static long ReadAmigaTrackData( long track )
 
 		for (i = 0; i < NUM_TRACKS; i++)
 			{
-			if ((buffer = (char *)GetTRACKResource(NULL, track_resource_names[i])) == NULL)
+			if ((buffer = (char *)GetTRACKResource(NULL, track_resource_names[i])) == NULL) {
+				printf("Error loading Track %S\n", track_resource_names[i]);
 				return(FALSE);
+			}
 
 			track_buffer_ptrs[i] = buffer;
 			}
@@ -2712,7 +2712,6 @@ static long ReadAmigaTrackData( long track )
 	NumTrackPieces = (long)buffer[i++] & 0xff;
 	PlayersStartPiece = (long)buffer[i++] & 0xff;
 	StartLinePiece = PlayersStartPiece;
-
 	HalfALapPiece = StartLinePiece + NumTrackPieces/2;
 	if (HalfALapPiece > NumTrackPieces) HalfALapPiece -= NumTrackPieces;
 //	VALUE2 = HalfALapPiece;

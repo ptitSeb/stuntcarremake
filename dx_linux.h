@@ -711,7 +711,7 @@ struct UTVERTEX
 {
     D3DXVECTOR3 pos;	// The untransformed position for the vertex
     DWORD color;		// The vertex diffuse color value
-	FLOAT tu,tv;		// The texture co-ordinates
+	  FLOAT tu,tv;		// The texture co-ordinates
 };
 // UTBuffer, used for IDirect3DVertexBuffer9 limited simulation (there are better way of courss to do that)
 struct UTBuffer {
@@ -737,6 +737,8 @@ public:
   HRESULT Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
   HRESULT BeginScene() {return S_OK;};
   HRESULT EndScene() {return S_OK;};
+  void ActivateWorldMatrix();
+  void DeactivateWorldMatrix();
 
 	// not DX9 function, but easier here
 	HRESULT SetUTBuffer(UTBuffer& a);

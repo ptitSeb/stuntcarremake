@@ -303,15 +303,10 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 	switch (State) 
 	{
 		case D3DTS_VIEW:
-			// something is still wrong here...
 			mView = *pMatrix;
-			glMatrixMode(GL_MODELVIEW);
-			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
 		case D3DTS_WORLD:
 			mWorld = *pMatrix;
-			glMatrixMode(GL_MODELVIEW);
-			glLoadMatrixf(glm::value_ptr(mView * mWorld));
 			break;
 		case D3DTS_PROJECTION:
 			mProj = *pMatrix;
@@ -366,10 +361,13 @@ HRESULT IDirect3DDevice9::SetRenderState(D3DRENDERSTATETYPE State, int Value)
 	switch (State)
 	{
 		case D3DRS_ZENABLE:
-			if(Value)
+			if(Value) {
 				glDepthMask(GL_TRUE);
-			else
+				glEnable(GL_DEPTH_TEST);
+			} else {
 				glDepthMask(GL_FALSE);
+				glDisable(GL_DEPTH_TEST);
+			}
 			break;
 		case D3DRS_CULLMODE:
 			switch(Value)
@@ -397,24 +395,46 @@ HRESULT IDirect3DDevice9::SetRenderState(D3DRENDERSTATETYPE State, int Value)
 
 HRESULT IDirect3DDevice9::SetUTBuffer(UTBuffer& a)
 {
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(UTVERTEX), &a.buffer[0].pos);
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(UTVERTEX), &a.buffer[0].color);
-	glTexCoordPointer(2, GL_FLOAT, sizeof(UTVERTEX), &a.buffer[0].tu);
+	glVertexPointer(3, GL_FLOAT, sizeof(UTVERTEX), &(a.buffer[0].pos));
+	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(UTVERTEX), &(a.buffer[0].color));
+	glTexCoordPointer(2, GL_FLOAT, sizeof(UTVERTEX), &(a.buffer[0].tu));
 	return S_OK;
 }
 
 HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT StartVertex,UINT PrimitiveCount)
 {
 	const GLenum primgl[] = {GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN};
-	if(PrimitiveType<D3DPT_POINTLIST || PrimitiveType>D3DPT_TRIANGLEFAN)
+	if(PrimitiveType<D3DPT_POINTLIST || PrimitiveType>D3DPT_TRIANGLEFAN) {
+		printf("Unsupported Primitive %d\n", PrimitiveType);
 		return E_FAIL;
+	}
 	GLenum mode = primgl[PrimitiveType-1];
+	ActivateWorldMatrix();
+	if(colorop[0] == D3DTOP_DISABLE) {
+		glDisable(GL_TEXTURE_2D);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	} else {
+		glEnable(GL_TEXTURE_2D);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	}
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
 	glDrawArrays(mode, StartVertex, PrimitiveCount);
+	DeactivateWorldMatrix();
 	return S_OK;
+}
+
+void IDirect3DDevice9::ActivateWorldMatrix()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadMatrixf(glm::value_ptr(mWorld * mView));
+}
+void IDirect3DDevice9::DeactivateWorldMatrix()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
@@ -630,6 +650,7 @@ UTVERTEX* CheckUTBuffer(UTBuffer& a, uint32_t s)
 		a.capacity = ((s+(FACTOR-1))/FACTOR)*FACTOR;
 		#undef FACTOR
 		a.buffer = (UTVERTEX*)realloc(a.buffer, sizeof(UTVERTEX)*a.capacity);
+		memset(a.buffer, 0, sizeof(UTVERTEX)*a.capacity);
 	}
 	return a.buffer;
 }

@@ -1060,7 +1060,7 @@ TRANSFORMEDVERTEX *pVertices;
         {
 #if defined(linux) && !defined(HAVE_GLES)
 		glColor4ubv((GLubyte*)&Fill_Colour);
-		glVertex3f((float)pptr[i].x, (float)pptr[i].y, 0.5f);
+		glVertex2f((float)pptr[i].x, (float)pptr[i].y);
 #else
 		pVertices[i].x = (float)pptr[i].x;      // screen x
 		pVertices[i].y = (float)pptr[i].y;      // screen y
