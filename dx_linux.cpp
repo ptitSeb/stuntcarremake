@@ -208,37 +208,37 @@ D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspec
 		0.0f, 0.0f, (zf+zn)/nf, -1.0f,
 		0.0f, 0.0f, 2*zf*zn/nf,  0.0f);
 	#else
-	*pOut = glm::perspective(fovy * 180.0f / 3.1415926535f, Aspect, zn, zf);
+	*pOut = glm::perspective(fovy, Aspect, zn, zf);
 	#endif
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut)
 {
-	*pOut=glm::mat4(1.0f);
+	*pOut = glm::mat4(1.0f);
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixRotationX(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(1.0f, 0.0f, 0.0f));
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(1.0f, 0.0f, 0.0f));
 	return pOut;
 }
 D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 1.0f, 0.0f));
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 1.0f, 0.0f));
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut=glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 0.0f, 1.0f));
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
 {
-	*pOut=glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+	*pOut = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
 	return pOut;
 }
 
@@ -263,7 +263,7 @@ D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const 
 	glm::vec3 at=FromVector(pAt);
 	glm::vec3 up=FromVector(pUp);
 	#if 1
-	*pOut=glm::lookAt(eye, at, up);
+	*pOut = glm::lookAt(eye, at, up);
 	#else
 	// checked, same as DX9
 	glm::vec3 vZ = glm::normalize(at - eye);
