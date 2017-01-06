@@ -1735,12 +1735,7 @@ typedef enum
 	NUM_TRACK_FACES
 	} TrackFaceType;
 
-#ifdef linux
-static UTBuffer pTrackVB = {0};
-static UTBuffer pShadowVB = {0};
-#else
 static IDirect3DVertexBuffer9 *pTrackVB = NULL, *pShadowVB = NULL;
-#endif
 static long trackVertices, trackSegments;
 static long numShadowVertices;
 static long PieceFirstVertex[NUM_TRACK_FACES][MAX_PIECES_PER_TRACK];
@@ -1919,12 +1914,8 @@ void StoreShadowTriangle( D3DXVECTOR3 v1, D3DXVECTOR3 v2, D3DXVECTOR3 v3, long o
 DWORD colour;
 
 	UTVERTEX *pVertices;
-	#ifdef linux
-	pVertices = pShadowVB.buffer;
-	#else
 	if( FAILED( pShadowVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return;
-	#endif
 
 	/*
 	// Calculate surface normal
@@ -1938,9 +1929,6 @@ DWORD colour;
 	else
 		colour = SCRGB(SCR_BASE_COLOUR + 5);
 
-	#ifdef linux
-	pVertices = CheckUTBuffer(pShadowVB, numShadowVertices+3);
-	#endif
 	pVertices[numShadowVertices].pos = v1;
 //	pVertices[numShadowVertices].normal = surface_normal;
 	pVertices[numShadowVertices].color = colour;
@@ -1956,9 +1944,7 @@ DWORD colour;
 	pVertices[numShadowVertices].color = colour;
 	++numShadowVertices;
 
-	#ifndef linux
 	pShadowVB->Unlock();
-	#endif
 }
 
 
@@ -2173,11 +2159,6 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
  */
 HRESULT CreateShadowVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
-	#ifdef linux
-	if (pShadowVB.capacity < MAX_VERTICES_PER_SHADOW)
-		CheckUTBuffer(pShadowVB, MAX_VERTICES_PER_SHADOW);
-	numShadowVertices = 0;
-	#else
 	if (pShadowVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_SHADOW*sizeof(UTVERTEX),
@@ -2192,38 +2173,28 @@ HRESULT CreateShadowVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	numShadowVertices = 0;
 
 	pShadowVB->Unlock();
-	#endif
 	return S_OK;
 }
 
 
 void FreeShadowVertexBuffer (void)
 {
-	#ifdef linux
-	FreeUTBuffer(pShadowVB);
-	#else
 	if (pShadowVB) pShadowVB->Release(), pShadowVB = NULL;
-	#endif
 }
 
 HRESULT CreateTrackVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
-	#ifndef linux
 	if (pTrackVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_TRACK*sizeof(UTVERTEX),
 				D3DUSAGE_WRITEONLY, D3DFVF_UTVERTEX, D3DPOOL_DEFAULT, &pTrackVB, NULL ) ) )
 			return E_FAIL;
 	}
-	#endif
 
 	UTVERTEX *pVertices;
-	#ifdef linux
-	pVertices = CheckUTBuffer(pTrackVB, MAX_VERTICES_PER_TRACK);
-	#else
 	if( FAILED( pTrackVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-	#endif
+
 	SetSegmentTextures();
 
 	long face, piece;
@@ -2246,20 +2217,14 @@ HRESULT CreateTrackVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 #endif
 */
 
-	#ifndef linux
 	pTrackVB->Unlock();
-	#endif
 	return S_OK;
 }
 
 
 void FreeTrackVertexBuffer (void)
 {
-	#ifdef linux
-	FreeUTBuffer(pTrackVB);
-	#else
 	if (pTrackVB) pTrackVB->Release(), pTrackVB = NULL;
-	#endif
 }
 
 
@@ -2269,15 +2234,10 @@ HRESULT UpdatePieceInVB (IDirect3DDevice9 *pd3dDevice, long piece)
 long firstVertex, face;//, numVertices;
 long savedTrackVertices = trackVertices;
 
-#ifdef linux
-	if(!pTrackVB.capacity)
-		return E_FAIL;
-#else
 	if (pTrackVB == NULL)
 	{
 		return E_FAIL;
 	}
-#endif
 	/*
 	if (piece == (NumTrackPieces-1))
 		numVertices = trackVertices - firstVertex;
@@ -2294,12 +2254,8 @@ long savedTrackVertices = trackVertices;
 
 	// Simpler just to lock the whole VB
 	UTVERTEX *pVertices;
-	#ifdef linux
-	pVertices = pTrackVB.buffer;
-	#else
 	if( FAILED( pTrackVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-	#endif
 	for (face = LEFT_SIDE; face < NUM_TRACK_FACES; face++)
 	{
 		firstVertex = PieceFirstVertex[face][piece];
@@ -2312,9 +2268,7 @@ long savedTrackVertices = trackVertices;
 	}
 
 	trackVertices = savedTrackVertices;
-	#ifndef linux
 	pTrackVB->Unlock();
-	#endif
 	return S_OK;
 }
 
@@ -2338,12 +2292,8 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );
 
-	#ifdef linux
-	pd3dDevice->SetUTBuffer(pTrackVB);
-	#else
 	pd3dDevice->SetStreamSource( 0, pTrackVB, 0, sizeof(UTVERTEX) );
 	pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
-	#endif
 	if ((GameMode == TRACK_MENU) || (GameMode == TRACK_PREVIEW))
 	{
 		/*
@@ -2465,12 +2415,8 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 	/* Finally draw the opponent's car shadow */
 	if ((GameMode != TRACK_MENU) && (numShadowVertices > 0))
 	{
-		#ifdef linux
-		pd3dDevice->SetUTBuffer(pShadowVB);
-		#else
 		pd3dDevice->SetStreamSource( 0, pShadowVB, 0, sizeof(UTVERTEX) );
 		pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
-		#endif
 		pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numShadowVertices/3 );
 	}
 }

@@ -16,8 +16,7 @@
 #include <SDL/SDL_image.h>
 #include <AL/al.h>
 #include <wchar.h>
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
+#include "matvec.h"
 
 #ifdef HAVE_GLES
 #define glColor4ubv(a) glColor4ub((a)[0], (a)[1], (a)[2], (a)[3])
@@ -465,7 +464,10 @@ HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKN
  * 
 ===============================================================*/
 
-#define D3DXMATRIX glm::mat4
+typedef struct _D3DXMATRIX {
+ float  m[16];
+} D3DXMATRIX;
+
 
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf);
 D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut);
@@ -707,6 +709,25 @@ typedef struct D3DRECT {
 #define D3DCLEAR_TARGET   2
 #define D3DCLEAR_ZBUFFER  4
 
+#define D3DUSAGE_WRITEONLY 1
+
+#define D3DFVF_DIFFUSE    (1<<0)
+#define D3DFVF_NORMAL     (1<<1)
+#define D3DFVF_XYZ        (1<<2)
+#define D3DFVF_XYZRHW     (1<<3)
+#define D3DFVF_XYZW       (1<<4)
+#define D3DFVF_TEX0       (1<<5)
+#define D3DFVF_TEX1       (1<<6)
+
+
+typedef enum D3DPOOL { 
+  D3DPOOL_DEFAULT      = 0,
+  D3DPOOL_MANAGED      = 1,
+  D3DPOOL_SYSTEMMEM    = 2,
+  D3DPOOL_SCRATCH      = 3,
+  D3DPOOL_FORCE_DWORD  = 0x7fffffff
+} D3DPOOL, *LPD3DPOOL;
+
 struct UTVERTEX
 {
     D3DXVECTOR3 pos;	// The untransformed position for the vertex
@@ -715,13 +736,25 @@ struct UTVERTEX
 };
 // UTBuffer, used for IDirect3DVertexBuffer9 limited simulation (there are better way of courss to do that)
 struct UTBuffer {
-	UTVERTEX*	buffer;
-	uint32_t  	capacity;
+	void*	    buffer;
+  uint32_t  *colors; // colors in rgba order...
+  uint32_t  fvf;
+  uint32_t  size; // estimated size of the array
 };
-// resize buffer if needed
-UTVERTEX* CheckUTBuffer(UTBuffer& a, uint32_t s);
-void FreeUTBuffer(UTBuffer& a);
 
+typedef void* HANDLE;
+
+class IDirect3DVertexBuffer9
+{
+public:
+  IDirect3DVertexBuffer9(uint32_t capacity, uint32_t fvf);
+  ~IDirect3DVertexBuffer9();
+  HRESULT Release();
+  HRESULT Lock(UINT OffsetToLock, UINT SizeToLock, void **ppbData,DWORD Flags);
+  HRESULT Unlock();
+
+  UTBuffer buffer;
+};
 
 class IDirect3DDevice9
 {
@@ -737,17 +770,23 @@ public:
   HRESULT Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
   HRESULT BeginScene() {return S_OK;};
   HRESULT EndScene() {return S_OK;};
-  void ActivateWorldMatrix();
-  void DeactivateWorldMatrix();
+  HRESULT CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9 **ppVertexBuffer, HANDLE *pSharedHandle);
+  HRESULT SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9 *pStreamData, UINT OffsetInBytes, UINT Stride);
+  HRESULT SetFVF(DWORD FVF);
 
 	// not DX9 function, but easier here
-	HRESULT SetUTBuffer(UTBuffer& a);
+  void ActivateWorldMatrix();
+  void DeactivateWorldMatrix();
 private:
 	UINT colorop[8];
 	UINT alphaop[8];
 	UINT colorarg1[8];
 	UINT colorarg2[8];
   D3DXMATRIX mWorld, mView, mProj, mText;
+  IDirect3DVertexBuffer9 *buffer[8];
+  uint32_t  offset[8];
+  uint32_t  stride[8];
+  DWORD     fvf;
 };
 
 class CDXUTTextHelper
@@ -782,6 +821,7 @@ DOUBLE DXUTGetTime();
 // V macro should test the result...
 #define V(a) a
 #define SUCCEEDED(a) a == S_OK
+#define FAILED(a) a != S_OK
 
 void DXUTReset3DEnvironment();
 

@@ -1,9 +1,6 @@
 #ifdef linux
 #include "dx_linux.h"
-#define GL_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "matvec.h"
 
 const char* BitMapRessourceName(const char* name)
 {
@@ -197,73 +194,81 @@ HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKN
 // Try to keep everything column-major to make OpenGL happy...
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf)
 {
-	#if 0
-	float yScale = 1.0f / tanf(fovy/2.0f);
-	float xScale = yScale / Aspect;
-	if(zn == 0) zn = -1.0f; else if(zn==0.5f) zn=0.0f;	// DX -> OpenGL near is different
+#if 0
+ 	float yScale = 1.0f / tanf(fovy/2.0f);
+ 	float xScale = yScale / Aspect;
 	float nf = zn - zf;
-	*pOut = glm::mat4(
-		xScale, 0.0f, 0.0f, 0.0f,
-		0.0f, yScale, 0.0f, 0.0f,
-		0.0f, 0.0f, (zf+zn)/nf, -1.0f,
-		0.0f, 0.0f, 2*zf*zn/nf,  0.0f);
-	#else
-	*pOut = glm::perspective(fovy, Aspect, zn, zf);
-	#endif
+	pOut->m[0+ 0] = xScale;
+	pOut->m[1+ 4] = yScale;
+	pOut->m[2+ 8] = (zf+zn)/nf;
+	pOut->m[3+ 8] = -1.0f;
+	pOut->m[2+12] = 2*zf*zn/nf;
+#else
+	const float ymax=zn*tanf(fovy*0.5f);
+	const float xmax=ymax*Aspect;
+	const float temp=2.0f*zn;
+	const float temp2=2.0f*xmax;
+	const float temp3=2.0f*ymax;
+	const float temp4=zf-zn;
+	pOut->m[0]=temp/temp2;
+	pOut->m[1]=0.0f;
+	pOut->m[2]=0.0f;
+	pOut->m[3]=0.0f;
+	pOut->m[4]=0.0f;
+	pOut->m[5]=temp/temp3;
+	pOut->m[6]=0.0f;
+	pOut->m[7]=0.0f;
+	pOut->m[8]=0.0f;
+	pOut->m[9]=0.0f;
+	pOut->m[10]=zf/temp4;
+	pOut->m[11]=1.0f;
+	pOut->m[12]=0.0f;
+	pOut->m[13]=0.0f;
+	pOut->m[14]=(zn*zf)/(zn-zf);
+	pOut->m[15]=0.0f;	
+#endif
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut)
 {
-	*pOut = glm::mat4(1.0f);
+	set_identity(pOut->m);
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixRotationX(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(1.0f, 0.0f, 0.0f));
+	matrix_rot(Angle, 1.0f, 0.0f, 0.0f, pOut->m);
 	return pOut;
 }
 D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 1.0f, 0.0f));
+	matrix_rot(Angle, 0.0f, 1.0f, 0.0f, pOut->m);
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle)
 {
-	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	matrix_rot(Angle, 0.0f, 0.0f, 1.0f, pOut->m);
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
 {
-	*pOut = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+	matrix_trans(x, y, z, pOut->m);
 	return pOut;
 }
 
 D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2)
 {
-	*pOut=(*pM1)*(*pM2);
+	matrix_mul(pM1->m, pM2->m, pOut->m);
 	return pOut;
-}
-
-glm::vec3 FromVector(const D3DXVECTOR3* vec)
-{
-	glm::vec3 ret;
-	ret[0]=vec->x;
-	ret[1]=vec->y;
-	ret[2]=vec->z;
-	return ret;
 }
 
 D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const D3DXVECTOR3* pAt, const D3DXVECTOR3* pUp)
 {
-	glm::vec3 eye=FromVector(pEye);
-	glm::vec3 at=FromVector(pAt);
-	glm::vec3 up=FromVector(pUp);
 	#if 1
-	*pOut = glm::lookAt(eye, at, up);
+	matrix_lookat(&pEye->x, &pAt->x, &pUp->x, pOut->m);
 	#else
 	// checked, same as DX9
 	glm::vec3 vZ = glm::normalize(at - eye);
@@ -278,6 +283,17 @@ D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const 
 	return pOut;
 }
 
+uint32_t GetStrideFromFVF(DWORD fvf) {
+	uint32_t stride = 0;
+	if(fvf & D3DFVF_DIFFUSE) stride += sizeof(DWORD);
+	if(fvf & D3DFVF_NORMAL) stride +=3*sizeof(float);
+	if(fvf & D3DFVF_XYZ) stride +=3*sizeof(float);
+	if(fvf & D3DFVF_XYZRHW) stride += 4*sizeof(float);
+	if(fvf & D3DFVF_XYZW) stride += 4*sizeof(float);
+	if(fvf & D3DFVF_TEX0) stride += 2*sizeof(float);
+
+	return stride;
+}
 
 // IDirect3DDevice9
 IDirect3DDevice9::IDirect3DDevice9()
@@ -288,10 +304,10 @@ IDirect3DDevice9::IDirect3DDevice9()
 		colorarg2[i] = 0;
 		alphaop[i] = 0;
 	}
-	mView = glm::mat4(1.0f);
-	mWorld = glm::mat4(1.0f);
-	mProj = glm::mat4(1.0f);
-	mText = glm::mat4(1.0f);
+	set_identity(mView.m);
+	set_identity(mWorld.m);
+	set_identity(mProj.m);
+	set_identity(mText.m);
 }
 
 IDirect3DDevice9::~IDirect3DDevice9()
@@ -311,7 +327,7 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 		case D3DTS_PROJECTION:
 			mProj = *pMatrix;
 			glMatrixMode(GL_PROJECTION);
-			glLoadMatrixf(glm::value_ptr(mProj));
+			glLoadMatrixf(mProj.m);
 			break;
 		case D3DTS_TEXTURE0:
 		case D3DTS_TEXTURE1:
@@ -321,7 +337,7 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 			//TODO change active texture...
 			mText = *pMatrix;
 			glMatrixMode(GL_TEXTURE);
-			glLoadMatrixf(glm::value_ptr(mText));
+			glLoadMatrixf(mText.m);
 			break;
 		default:
 			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
@@ -393,35 +409,76 @@ HRESULT IDirect3DDevice9::SetRenderState(D3DRENDERSTATETYPE State, int Value)
 	return S_OK;
 }
 
-HRESULT IDirect3DDevice9::SetUTBuffer(UTBuffer& a)
-{
-	glVertexPointer(3, GL_FLOAT, sizeof(UTVERTEX), &(a.buffer[0].pos));
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(UTVERTEX), &(a.buffer[0].color));
-	glTexCoordPointer(2, GL_FLOAT, sizeof(UTVERTEX), &(a.buffer[0].tu));
-	return S_OK;
-}
-
 HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT StartVertex,UINT PrimitiveCount)
 {
 	const GLenum primgl[] = {GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN};
+	const GLenum prim1[] = {1, 2, 1, 3, 1, 1};
+	const GLenum prim2[] = {0, 0, 1, 0, 2, 2};
 	if(PrimitiveType<D3DPT_POINTLIST || PrimitiveType>D3DPT_TRIANGLEFAN) {
 		printf("Unsupported Primitive %d\n", PrimitiveType);
 		return E_FAIL;
 	}
+	if(PrimitiveCount==0)
+		return S_OK;
+
 	GLenum mode = primgl[PrimitiveType-1];
-	ActivateWorldMatrix();
-	if(colorop[0] == D3DTOP_DISABLE) {
+
+	bool transf = ((fvf & D3DFVF_XYZRHW)==0);
+	char* ptr = (char*)buffer[0]->buffer.buffer;
+	bool vtx = false, col = false, tex0 = false;
+	if(fvf & D3DFVF_XYZ) {
+		glVertexPointer(3, GL_FLOAT, stride[0], ptr);
+		ptr+=3*sizeof(float);
+		vtx = true;
+	};
+	if(fvf & D3DFVF_XYZW) {
+		glVertexPointer(4, GL_FLOAT, stride[0], ptr);
+		ptr+=4*sizeof(float);
+		vtx = true;
+	};
+	if(fvf & D3DFVF_XYZRHW) {
+		glVertexPointer(2, GL_FLOAT, stride[0], ptr);
+		ptr+=4*sizeof(float);
+		vtx = true;
+	};
+	if(fvf & D3DFVF_DIFFUSE) {
+		glColorPointer(4, GL_UNSIGNED_BYTE, 0, buffer[0]->buffer.colors);
+		ptr+=sizeof(DWORD);
+		col = true;
+	}
+	if(fvf & D3DFVF_TEX0) {
+		glTexCoordPointer(2, GL_FLOAT, stride[0], ptr);
+		ptr+=2*sizeof(float);
+		tex0 = true;
+	}
+
+	if (vtx)
+		glEnableClientState(GL_VERTEX_ARRAY);
+	else
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+	if (col)
+		glEnableClientState(GL_COLOR_ARRAY);
+	else
+		glDisableClientState(GL_COLOR_ARRAY);
+
+	if (tex0) {
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		if (colorop[0] <= D3DTOP_DISABLE) {
+			glDisable(GL_TEXTURE_2D);
+		} else {
+			glEnable(GL_TEXTURE_2D);
+		}
+	} else {
 		glDisable(GL_TEXTURE_2D);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	} else {
-		glEnable(GL_TEXTURE_2D);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDrawArrays(mode, StartVertex, PrimitiveCount);
-	DeactivateWorldMatrix();
+
+	if(transf) ActivateWorldMatrix();
+	
+	glDrawArrays(mode, StartVertex, prim1[PrimitiveType-1]*PrimitiveCount+prim2[PrimitiveType-1]);
+
+	if(transf) DeactivateWorldMatrix();
 	return S_OK;
 }
 
@@ -429,7 +486,9 @@ void IDirect3DDevice9::ActivateWorldMatrix()
 {
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glLoadMatrixf(glm::value_ptr(mWorld * mView));
+	float m[16];
+	matrix_mul(mView.m, mWorld.m, m);
+	glLoadMatrixf(m);
 }
 void IDirect3DDevice9::DeactivateWorldMatrix()
 {
@@ -526,11 +585,76 @@ HRESULT IDirect3DDevice9::Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, 
 		glClearColor(r, g, b, a);
 		clearval |= GL_COLOR_BUFFER_BIT;
 	}
-	assert(Count==0);
 	if(clearval)
 		glClear(clearval);
 	return S_OK;
 }
+
+HRESULT IDirect3DDevice9::CreateVertexBuffer(UINT Length, DWORD Usage, DWORD FVF, D3DPOOL Pool, IDirect3DVertexBuffer9 **ppVertexBuffer, HANDLE *pSharedHandle) {
+	*ppVertexBuffer = new IDirect3DVertexBuffer9(Length, FVF);
+
+	return S_OK;
+}
+
+HRESULT IDirect3DDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuffer9 *pStreamData, UINT OffsetInBytes, UINT Stride) {
+	buffer[StreamNumber] = pStreamData;
+	offset[StreamNumber] = OffsetInBytes;
+	stride[StreamNumber] = Stride;
+}
+
+HRESULT IDirect3DDevice9::SetFVF(DWORD FVF) {
+	fvf = FVF;
+}
+
+IDirect3DVertexBuffer9::IDirect3DVertexBuffer9(uint32_t size, uint32_t fvf) {
+	buffer.fvf = fvf;
+	buffer.buffer = malloc(size);
+
+	buffer.size = size/GetStrideFromFVF(fvf);
+	buffer.colors = (uint32_t*)malloc(buffer.size * 4);
+}
+
+IDirect3DVertexBuffer9::~IDirect3DVertexBuffer9() {
+	Release();
+}
+
+HRESULT IDirect3DVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, void **ppbData,DWORD Flags) {
+	// very basic
+	*ppbData = (void*)((char*)buffer.buffer + OffsetToLock);
+	return S_OK;
+}
+
+HRESULT IDirect3DVertexBuffer9::Unlock() {
+	// (I told you, very basic)
+	if(buffer.fvf&D3DFVF_DIFFUSE) {
+		uint32_t stride = GetStrideFromFVF(buffer.fvf);
+		char* ptr = (char*)buffer.buffer;
+		if(buffer.fvf & D3DFVF_XYZ) {
+			ptr+=3*sizeof(float);
+		};
+		if(buffer.fvf & D3DFVF_XYZW) {
+			ptr+=4*sizeof(float);
+		};
+		if(buffer.fvf & D3DFVF_XYZRHW) {
+			ptr+=4*sizeof(float);
+		};
+		uint32_t* dst = buffer.colors;
+		for (int i = 0; i<buffer.size; i++) {
+			uint32_t tmp = *(uint32_t*)(ptr);
+			tmp = (tmp & 0xff00ff00) | ((tmp & 0xff)<<16) | ((tmp & 0xff0000)>>16);
+			*dst = tmp;
+			dst++;
+			ptr+=stride;
+		}
+	}
+	return S_OK;
+}
+
+HRESULT IDirect3DVertexBuffer9::Release() {
+	free(buffer.buffer);
+	return S_OK;
+}
+
 
 CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) : 
 	m_sprite(sprite), m_size(size), m_posx(0), m_posy(0)
@@ -642,27 +766,6 @@ void CDXUTTextHelper::SetForegroundColor(D3DXCOLOR clr)
 	m_forecol[2] = clr.b;
 	m_forecol[3] = clr.a;
 }
-
-UTVERTEX* CheckUTBuffer(UTBuffer& a, uint32_t s)
-{
-	if (s>a.capacity) {
-		#define FACTOR 	128
-		a.capacity = ((s+(FACTOR-1))/FACTOR)*FACTOR;
-		#undef FACTOR
-		a.buffer = (UTVERTEX*)realloc(a.buffer, sizeof(UTVERTEX)*a.capacity);
-		memset(a.buffer, 0, sizeof(UTVERTEX)*a.capacity);
-	}
-	return a.buffer;
-}
-void FreeUTBuffer(UTBuffer& a)
-{
-	if (a.capacity) {
-		free(a.buffer);
-		a.buffer = 0;
-		a.capacity = 0;
-	}
-}
-
 
 static IDirect3DDevice9* device = NULL;
 IDirect3DDevice9 *DXUTGetD3DDevice()

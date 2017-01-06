@@ -522,19 +522,10 @@ static void DrawCarLeftWheelTread( long offset )	// offset into co-ordinates
 /*																							*/
 /*	Description:	Draw the car using the supplied viewpoint								*/
 /*	======================================================================================= */
-#ifdef linux
-static GLfloat *pCarVtx = NULL;
-static GLfloat *pCarCol = NULL;
-#else
 static IDirect3DVertexBuffer9 *pCarVB = NULL;
-#endif
 static long numCarVertices = 0;
 
-#ifdef linux
-static void StoreCarTriangle( COORD_3D *c1, COORD_3D *c2, COORD_3D *c3, GLfloat *pVtx, GLfloat *pCol, DWORD colour )
-#else
 static void StoreCarTriangle( COORD_3D *c1, COORD_3D *c2, COORD_3D *c3, UTVERTEX *pVertices, DWORD colour )
-#endif
 {
 D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 
@@ -555,24 +546,6 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	D3DXVec3Normalize( &surface_normal, &surface_normal );
 	*/
 
-	#ifdef linux
-	GLfloat col[4];
-	col[0] = RGBA_GETRED(colour)/255.0f;
-	col[1] = RGBA_GETGREEN(colour)/255.0f;
-	col[2] = RGBA_GETBLUE(colour)/255.0f;
-	col[3] = RGBA_GETALPHA(colour)/255.0f;
-	memcpy(pVtx+numCarVertices*3, &v1, sizeof(GLfloat)*3);
-	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
-	++numCarVertices;
-	
-	memcpy(pVtx+numCarVertices*3, &v2, sizeof(GLfloat)*3);
-	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
-	++numCarVertices;
-
-	memcpy(pVtx+numCarVertices*3, &v3, sizeof(GLfloat)*3);
-	memcpy(pCol+numCarVertices*3, col, sizeof(GLfloat)*4);
-	++numCarVertices;
-	#else
 	pVertices[numCarVertices].pos = v1;
 //	pVertices[numCarVertices].normal = surface_normal;
 	pVertices[numCarVertices].color = colour;
@@ -587,15 +560,10 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 //	pVertices[numCarVertices].normal = surface_normal;
 	pVertices[numCarVertices].color = colour;
 	++numCarVertices;
-	#endif
 }
 
 
-#ifdef linux
-static void CreateCarInVB( GLfloat *pVtx, GLfloat *pCol )
-#else
 static void CreateCarInVB( UTVERTEX *pVertices )
-#endif
 {
 static long first_time = TRUE;
 // car co-ordinates
@@ -650,11 +618,7 @@ static COORD_3D car[16+8] = {
 	// rear left wheel
 	DWORD colour = SCRGB(SCR_BASE_COLOUR+0);
 /**/
-	#ifdef linux
-	#define vertices pVtx, pCol
-	#else
 	#define vertices pVertices
-	#endif
 	// viewing from back
 	StoreCarTriangle(&car[0], &car[1], &car[2], vertices, colour);
 	StoreCarTriangle(&car[0], &car[2], &car[3], vertices, colour);
@@ -717,12 +681,6 @@ static COORD_3D car[16+8] = {
 
 HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
-#ifdef linux
-	if (pCarVtx == NULL)
-		pCarVtx = (GLfloat*)malloc(sizeof(GLfloat)*3*MAX_VERTICES_PER_CAR);
-	if (pCarCol == NULL)
-		pCarCol = (GLfloat*)malloc(sizeof(GLfloat)*4*MAX_VERTICES_PER_CAR);
-#else
 	if (pCarVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_VERTICES_PER_CAR*sizeof(UTVERTEX),
@@ -733,54 +691,19 @@ HRESULT CreateCarVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	UTVERTEX *pVertices;
 	if( FAILED( pCarVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 		return E_FAIL;
-#endif
 	numCarVertices = 0;
-#ifdef linux
-	CreateCarInVB(pCarVtx, pCarCol);
-#else
 	CreateCarInVB(pVertices);
 	pCarVB->Unlock();
-#endif
 	return S_OK;
 }
 
 
 void FreeCarVertexBuffer (void)
 {
-#ifdef linux
-	if (pCarVtx) {
-		free(pCarVtx);
-		pCarVtx = NULL;
-	}
-	if (pCarCol) {
-		free(pCarCol);
-		pCarCol = NULL;
-	}
-#else
 	if (pCarVB) pCarVB->Release(), pCarVB = NULL;
-#endif
 }
 
 
-#ifdef linux
-void DrawCar (IDirect3DDevice9 *pd3dDevice)
-{
-	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
-	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );
-	pd3dDevice->ActivateWorldMatrix();
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glColorPointer(4, GL_FLOAT, 0, pCarCol);
-	glVertexPointer(4, GL_FLOAT, 0, pCarVtx);
-	glDrawArrays(GL_TRIANGLES, 0, numCarVertices);
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	pd3dDevice->DeactivateWorldMatrix();
-}
-#else
 void DrawCar (IDirect3DDevice9 *pd3dDevice)
 {
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
@@ -790,5 +713,4 @@ void DrawCar (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetFVF( D3DFVF_UTVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numCarVertices/3 );	// 3 points per triangle
 }
-#endif
 

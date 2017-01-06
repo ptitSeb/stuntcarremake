@@ -625,8 +625,8 @@ void LoadTextures()
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
 {
-	/*if (CreatePolygonVertexBuffer(pd3dDevice) != S_OK)
-		printf("Error creating PolygonVertexBuffer\n");*/
+	if (CreatePolygonVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating PolygonVertexBuffer\n");
 	if (CreateTrackVertexBuffer(pd3dDevice) != S_OK)
 		printf("Error creating TrackVertexBuffer\n");
 	if (CreateShadowVertexBuffer(pd3dDevice) != S_OK)
@@ -1908,6 +1908,12 @@ int main(int argc, const char** argv)
 	glLoadIdentity();
 
 	IDirect3DDevice9 pd3dDevice;
+
+	glEnable(GL_DEPTH_TEST);
+	glShadeModel(GL_FLAT);
+	glDisable(GL_LIGHTING);
+	// Disable texture mapping by default (only DrawTrack() enables it)
+	pd3dDevice.SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
 
 	sound_init();
 

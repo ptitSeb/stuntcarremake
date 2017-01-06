@@ -1008,7 +1008,6 @@ struct TRANSFORMEDVERTEX
 };
 #define D3DFVF_TRANSFORMEDVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
 
-#ifndef linux
 static IDirect3DVertexBuffer9 *pPolygonVB = NULL;
 
 HRESULT CreatePolygonVertexBuffer (IDirect3DDevice9 *pd3dDevice)
@@ -1028,67 +1027,39 @@ void FreePolygonVertexBuffer (void)
 {
 	if (pPolygonVB) pPolygonVB->Release(), pPolygonVB = NULL;
 }
-#endif
 
 // Draw flat polygon (no z information)
 void DrawPolygon( POINT *pptr,
 				  long sides)
 {
 long i;
-#ifndef linux
 IDirect3DDevice9 *pd3dDevice = DXUTGetD3DDevice();
-#endif
+
 TRANSFORMEDVERTEX *pVertices;
 
 	// finish if too many sides
 	if (sides > MAX_POLY_SIDES)
 		return;
 
-#ifdef linux
-#ifdef HAVE_GLES
-	pVertices = (TRANSFORMEDVERTEX*)malloc(sides*sizeof(TRANSFORMEDVERTEX));
-	if (!pVertices)
-		return;
-#else
-	glBegin(GL_TRIANGLE_FAN);
-#endif
-#else
 	if( FAILED( pPolygonVB->Lock( 0, sides*sizeof(TRANSFORMEDVERTEX), (void**)&pVertices, 0 ) ) )
 		return;
-#endif
+
     for (i = 0; i < sides; i++)
         {
-#if defined(linux) && !defined(HAVE_GLES)
-		glColor4ubv((GLubyte*)&Fill_Colour);
-		glVertex2f((float)pptr[i].x, (float)pptr[i].y);
-#else
+
 		pVertices[i].x = (float)pptr[i].x;      // screen x
 		pVertices[i].y = (float)pptr[i].y;      // screen y
 		pVertices[i].z = (float)0.5f;			// not needed unless Z buffering
 		pVertices[i].rhw = (float)1.0f;
 		pVertices[i].color = Fill_Colour;
-#endif
+
         }
-	#ifdef linux
-	#ifdef HAVE_GLES
-	// setup arrays
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(TRANSFORMEDVERTEX), &pVertices[0].color);
-	glVertexPointer(4, GL_FLOAT, sizeof(TRANSFORMEDVERTEX), &pVertices[0].x);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, sides-2);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	#else
-	glEnd();
-	#endif
-	#else
 	pPolygonVB->Unlock();
 
 	pd3dDevice->SetStreamSource( 0, pPolygonVB, 0, sizeof(TRANSFORMEDVERTEX) );
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, sides-2 );
-	#endif
+
 	return;
 	}
 
