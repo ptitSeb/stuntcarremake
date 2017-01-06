@@ -442,7 +442,7 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 		vtx = true;
 	};
 	if(fvf & D3DFVF_DIFFUSE) {
-		glColorPointer(4, GL_UNSIGNED_BYTE, 0, buffer[0]->buffer.colors);
+		glColorPointer(4, GL_UNSIGNED_BYTE, stride[0], ptr);
 		ptr+=sizeof(DWORD);
 		col = true;
 	}
@@ -609,9 +609,6 @@ HRESULT IDirect3DDevice9::SetFVF(DWORD FVF) {
 IDirect3DVertexBuffer9::IDirect3DVertexBuffer9(uint32_t size, uint32_t fvf) {
 	buffer.fvf = fvf;
 	buffer.buffer = malloc(size);
-
-	buffer.size = size/GetStrideFromFVF(fvf);
-	buffer.colors = (uint32_t*)malloc(buffer.size * 4);
 }
 
 IDirect3DVertexBuffer9::~IDirect3DVertexBuffer9() {
@@ -626,27 +623,6 @@ HRESULT IDirect3DVertexBuffer9::Lock(UINT OffsetToLock, UINT SizeToLock, void **
 
 HRESULT IDirect3DVertexBuffer9::Unlock() {
 	// (I told you, very basic)
-	if(buffer.fvf&D3DFVF_DIFFUSE) {
-		uint32_t stride = GetStrideFromFVF(buffer.fvf);
-		char* ptr = (char*)buffer.buffer;
-		if(buffer.fvf & D3DFVF_XYZ) {
-			ptr+=3*sizeof(float);
-		};
-		if(buffer.fvf & D3DFVF_XYZW) {
-			ptr+=4*sizeof(float);
-		};
-		if(buffer.fvf & D3DFVF_XYZRHW) {
-			ptr+=4*sizeof(float);
-		};
-		uint32_t* dst = buffer.colors;
-		for (int i = 0; i<buffer.size; i++) {
-			uint32_t tmp = *(uint32_t*)(ptr);
-			tmp = (tmp & 0xff00ff00) | ((tmp & 0xff)<<16) | ((tmp & 0xff0000)>>16);
-			*dst = tmp;
-			dst++;
-			ptr+=stride;
-		}
-	}
 	return S_OK;
 }
 
@@ -703,18 +679,6 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	m_w = ((float)m_fontsize)/m_sizew; m_h = ((float)m_fontsize)/m_sizeh;
 
 	// Draw it
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	int oldvp[4];
-	glGetIntegerv(GL_VIEWPORT, oldvp);
-
-	glOrtho(0, oldvp[2], oldvp[3], 0, -1, 1); // m_Width and m_Height is the resolution of window
-
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
@@ -743,10 +707,6 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	glDisable(GL_TEXTURE_2D);
 	glEnable(GL_DEPTH_TEST);
 
-	//glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 }
 
 void CDXUTTextHelper::DrawFormattedTextLine(const wchar_t* line, ...)

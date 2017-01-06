@@ -737,7 +737,6 @@ struct UTVERTEX
 // UTBuffer, used for IDirect3DVertexBuffer9 limited simulation (there are better way of courss to do that)
 struct UTBuffer {
 	void*	    buffer;
-  uint32_t  *colors; // colors in rgba order...
   uint32_t  fvf;
   uint32_t  size; // estimated size of the array
 };
