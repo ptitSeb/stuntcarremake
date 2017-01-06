@@ -326,8 +326,6 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 			break;
 		case D3DTS_PROJECTION:
 			mProj = *pMatrix;
-			glMatrixMode(GL_PROJECTION);
-			glLoadMatrixf(mProj.m);
 			break;
 		case D3DTS_TEXTURE0:
 		case D3DTS_TEXTURE1:
@@ -422,10 +420,9 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 		return S_OK;
 
 	GLenum mode = primgl[PrimitiveType-1];
-
 	bool transf = ((fvf & D3DFVF_XYZRHW)==0);
 	char* ptr = (char*)buffer[0]->buffer.buffer;
-	bool vtx = false, col = false, tex0 = false;
+	bool vtx = false, col = false, tex0 = false, tex1 = false;
 	if(fvf & D3DFVF_XYZ) {
 		glVertexPointer(3, GL_FLOAT, stride[0], ptr);
 		ptr+=3*sizeof(float);
@@ -451,6 +448,11 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 		ptr+=2*sizeof(float);
 		tex0 = true;
 	}
+	if(fvf & D3DFVF_TEX1) {
+		glTexCoordPointer(2, GL_FLOAT, stride[0], ptr);
+		ptr+=2*sizeof(float);
+		tex1 = true;
+	}
 
 	if (vtx)
 		glEnableClientState(GL_VERTEX_ARRAY);
@@ -462,7 +464,7 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 	else
 		glDisableClientState(GL_COLOR_ARRAY);
 
-	if (tex0) {
+	if (tex0 || tex1) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		if (colorop[0] <= D3DTOP_DISABLE) {
 			glDisable(GL_TEXTURE_2D);
@@ -487,11 +489,17 @@ void IDirect3DDevice9::ActivateWorldMatrix()
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	float m[16];
-	matrix_mul(mView.m, mWorld.m, m);
+	matrix_mul(mProj.m, mView.m, m);
+	matrix_mul(m, mWorld.m, m);
 	glLoadMatrixf(m);
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
 }
 void IDirect3DDevice9::DeactivateWorldMatrix()
 {
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 }

@@ -18,13 +18,6 @@
 #include <wchar.h>
 #include "matvec.h"
 
-#ifdef HAVE_GLES
-#define glColor4ubv(a) glColor4ub((a)[0], (a)[1], (a)[2], (a)[3])
-#define gluOrtho2D(a, b, c, d) glOrthof(a, b, c, d, -1, 1)
-#else
-#define gluOrtho2D(a, b, c, d) glOrtho(a, b, c, d, -1, 1)
-#endif
-
 // DX -> OpenGL inspired by forsaken project
 typedef u_int32_t DWORD;
 typedef u_int8_t BYTE;

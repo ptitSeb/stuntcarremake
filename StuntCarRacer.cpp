@@ -1903,11 +1903,16 @@ int main(int argc, const char** argv)
 #endif
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	gluOrtho2D(0, 640, 480, 0);
+	glOrtho(0, 640, 480, 0, 0, FURTHEST_Z);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
 	IDirect3DDevice9 pd3dDevice;
+
+    D3DXMATRIX matProj;
+	FLOAT fAspect = 640.0f / 480.0f;
+    D3DXMatrixPerspectiveFovLH( &matProj, D3DX_PI/4, fAspect, 0.5f, FURTHEST_Z );
+    pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
 
 	glEnable(GL_DEPTH_TEST);
 	glShadeModel(GL_FLAT);
