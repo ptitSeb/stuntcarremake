@@ -2002,6 +2002,11 @@ int main(int argc, const char** argv)
 		glClearColor(0,0,0,1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
+		int32_t timetowait = (fTime-fLastTime)*1000;
+		timetowait = 1000/60 - timetowait - 5;
+		if (timetowait>0)
+			SDL_Delay(timetowait);
+
 		fLastTime = fTime;
     }
 
