@@ -50,10 +50,12 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	// ugly... Just blindly load the texture without much check!
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
+	/*glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_WRAP_S , GL_CLAMP );
+	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_WRAP_T , GL_CLAMP );*/
 	glTexImage2D(GL_TEXTURE_2D, 0, intfmt, w2, h2, 0, fmt, GL_UNSIGNED_BYTE, NULL);
 	// simple and hugly way to make the texture upside down...
 	for (int i = 0; i< h ; i++) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, h-i, w, 1, fmt, GL_UNSIGNED_BYTE, img->pixels+img->pitch*i);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (h-1)-i, w, 1, fmt, GL_UNSIGNED_BYTE, img->pixels+img->pitch*i);
 	}
 	UnBind();
 	if (img) SDL_FreeSurface(img);
@@ -610,26 +612,27 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 		col = false;
 	if((colorop[0]==D3DTOP_SELECTARG2) && (colorarg2[0]!=D3DTA_DIFFUSE))
 		col = false;
-	if((colorop[0]==D3DTOP_SELECTARG1) && (colorarg1[0]==D3DTA_TEXTURE)) {
+/*	if((colorop[0]==D3DTOP_SELECTARG1) && (colorarg1[0]==D3DTA_TEXTURE)) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	} else {
+	} else*/ {
 		glDisable(GL_BLEND);
 	}
 	
 	if (col)
 		glEnableClientState(GL_COLOR_ARRAY);
 	else {
-		glColor4f(1,1,1,1);
 		glDisableClientState(GL_COLOR_ARRAY);
+		glColor3f(1.0f,1.0f,1.0f);
 	}
 
 	if (tex0 || tex1) {
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		if (colorop[0] <= D3DTOP_DISABLE) {
 			glDisable(GL_TEXTURE_2D);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 		} else {
 			glEnable(GL_TEXTURE_2D);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		}
 	} else {
 		glDisable(GL_TEXTURE_2D);
@@ -651,14 +654,14 @@ HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATE
 		return S_OK;
 	}
 
-	glActiveTexture(GL_TEXTURE0+Stage);
-	glClientActiveTexture(GL_TEXTURE0+Stage);
+/*	glActiveTexture(GL_TEXTURE0+Stage);
+	glClientActiveTexture(GL_TEXTURE0+Stage);*/
 
 	switch(Type)
 	{
 		case D3DTSS_COLOROP:
 			colorop[Stage] = Value;
-			switch(Value)
+/*			switch(Value)
 			{
 				case D3DTOP_DISABLE:
 					glDisable(GL_TEXTURE_2D);
@@ -672,17 +675,17 @@ HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATE
 					break;
 				default:
 					printf("Unhandled SetTextureStageState(%d, D3DTSS_COLOROP, %d)\n", Stage, Value);
-			}
+			}*/
 			break;
 		case D3DTSS_COLORARG1:
 			colorarg1[Stage] = Value;
-			if(Value==D3DTA_TEXTURE && colorop[Stage]==D3DTOP_SELECTARG1)
-				glEnable(GL_TEXTURE_2D);
+		/*	if(Value==D3DTA_TEXTURE && colorop[Stage]==D3DTOP_SELECTARG1)
+				glEnable(GL_TEXTURE_2D);*/
 			break;
 		case D3DTSS_COLORARG2:
 			colorarg2[Stage] = Value;
-			if(Value==D3DTA_TEXTURE && colorop[Stage]==D3DTOP_SELECTARG2)
-				glEnable(GL_TEXTURE_2D);
+		/*	if(Value==D3DTA_TEXTURE && colorop[Stage]==D3DTOP_SELECTARG2)
+				glEnable(GL_TEXTURE_2D);*/
 			break;
 		case D3DTSS_ALPHAOP:
 			//TODO probably
@@ -691,8 +694,8 @@ HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATE
 			printf("Unhandled SetTextureStageState(%d, 0x%X, 0x%X)\n", Stage, Type, Value);
 	}
 
-	glActiveTexture(GL_TEXTURE0+0);
-	glClientActiveTexture(GL_TEXTURE0+0);
+/*	glActiveTexture(GL_TEXTURE0+0);
+	glClientActiveTexture(GL_TEXTURE0+0);*/
 
 	return S_OK;
 }
@@ -726,10 +729,10 @@ HRESULT IDirect3DDevice9::Clear(DWORD Count, const D3DRECT *pRects,DWORD Flags, 
 	}
 	if(Flags&D3DCLEAR_TARGET) {
 		float r,g,b,a;
-		r = ((Color>>0 )&0xff)/255.0f;
-		g = ((Color>>8 )&0xff)/255.0f;
-		b = ((Color>>16)&0xff)/255.0f;
-		a = ((Color>>24)&0xff)/255.0f;
+		a = ((Color>>0 )&0xff)/255.0f;
+		b = ((Color>>8 )&0xff)/255.0f;
+		g = ((Color>>16)&0xff)/255.0f;
+		r = ((Color>>24)&0xff)/255.0f;
 		glClearColor(r, g, b, a);
 		clearval |= GL_COLOR_BUFFER_BIT;
 	}

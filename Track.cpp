@@ -1828,12 +1828,20 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	if (txind == 1)
 	{
 		pVertices[trackVertices].tu = 0.0f;
+#ifdef linux
+		pVertices[trackVertices].tv = 1.0f;
+#else
 		pVertices[trackVertices].tv = 0.0f;//1.0f;
+#endif
 	}
 	else if (txind == 2)
 	{
 		pVertices[trackVertices].tu = 0.0f;
+#ifdef linux
+		pVertices[trackVertices].tv = 1.0f;
+#else
 		pVertices[trackVertices].tv = 0.0f;//1.0f;
+#endif
 	}
 	++trackVertices;
 
@@ -1863,7 +1871,11 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	else if (txind == 2)
 	{
 		pVertices[trackVertices].tu = 1.0f;
+#ifdef linux
+		pVertices[trackVertices].tv = 1.0f;
+#else
 		pVertices[trackVertices].tv = 0.0f;//1.0f;
+#endif
 	}
 	++trackVertices;
 }
