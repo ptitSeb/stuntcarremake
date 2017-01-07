@@ -1281,6 +1281,9 @@ void RenderText( double fTime )
 
 			if (raceFinished)
 			{
+				#ifdef linux
+				static
+				#endif
 				CDXUTTextHelper txtHelperLarge( g_pFontLarge, g_pSprite, 25 );
 
 				txtHelperLarge.Begin();
