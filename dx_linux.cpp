@@ -20,18 +20,41 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		return;
 	}
-	w = img->w;
-	h = img->h;
-	w2 = NP2(w);
+	GLint intfmt = img->format->BytesPerPixel;
+	GLenum fmt = GL_RGBA;
+	switch (intfmt) {
+    case 1:
+        fmt = GL_ALPHA;
+        break;
+    case 3:     // no alpha channel
+        if (img->format->Rmask == 0x000000ff)
+            fmt = GL_RGB;
+        else
+            fmt = GL_BGR;
+        break;
+    case 4:     // contains an alpha channel
+        if (img->format->Rmask == 0x000000ff)
+            fmt = GL_RGBA;
+        else
+            fmt = GL_BGRA;
+        break;
+	}
+	w2 = w = img->w;
+	h2 = h = img->h;
+	// will handle non-pot2 texture later? or resize the texture to POT?
+	/*w2 = NP2(w);
 	h2 = NP2(h);
 	wf = (float)w2 / (float)w;
-	hf = (float)h2 / (float)h;
+	hf = (float)h2 / (float)h;*/
 	Bind();
 	// ugly... Just blindly load the texture without much check!
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MIN_FILTER , GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_MAG_FILTER , GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w2, h2, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, (img->format->BytesPerPixel==3)?GL_BGR:GL_BGRA, GL_UNSIGNED_BYTE, img->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, intfmt, w2, h2, 0, fmt, GL_UNSIGNED_BYTE, NULL);
+	// simple and hugly way to make the texture upside down...
+	for (int i = 0; i< h ; i++) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, h-i, w, 1, fmt, GL_UNSIGNED_BYTE, img->pixels+img->pitch*i);
+	}
 	UnBind();
 	if (img) SDL_FreeSurface(img);
 }
@@ -582,10 +605,24 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 	else
 		glDisableClientState(GL_VERTEX_ARRAY);
 
+	// handles some fixed pipeline  COLOR arg...
+	if((colorop[0]==D3DTOP_SELECTARG1) && (colorarg1[0]!=D3DTA_DIFFUSE))
+		col = false;
+	if((colorop[0]==D3DTOP_SELECTARG2) && (colorarg2[0]!=D3DTA_DIFFUSE))
+		col = false;
+	if((colorop[0]==D3DTOP_SELECTARG1) && (colorarg1[0]==D3DTA_TEXTURE)) {
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	} else {
+		glDisable(GL_BLEND);
+	}
+	
 	if (col)
 		glEnableClientState(GL_COLOR_ARRAY);
-	else
+	else {
+		glColor4f(1,1,1,1);
 		glDisableClientState(GL_COLOR_ARRAY);
+	}
 
 	if (tex0 || tex1) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -758,7 +795,7 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 	int w = npot(16*m_fontsize);
 	void* tmp = malloc(w*w*4); memset(tmp, 0, w*w*4);
 	m_sizew = w; m_sizeh = w;
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_BGRA, GL_UNSIGNED_BYTE, tmp);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
 	free(tmp);
 	SDL_Color forecol = {255,255,255,255};
 	for(int i=0; i<16; i++) {

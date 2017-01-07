@@ -1959,6 +1959,8 @@ int main(int argc, const char** argv)
 	glOrtho(0, 640, 480, 0, 0, FURTHEST_Z);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	IDirect3DDevice9 pd3dDevice;
 
@@ -1968,7 +1970,7 @@ int main(int argc, const char** argv)
     pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
 
 	glEnable(GL_DEPTH_TEST);
-	glShadeModel(GL_FLAT);
+//	glShadeModel(GL_FLAT);
 	glDisable(GL_LIGHTING);
 	// Disable texture mapping by default (only DrawTrack() enables it)
 	pd3dDevice.SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
