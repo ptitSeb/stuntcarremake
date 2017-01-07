@@ -80,7 +80,8 @@ bool sound_is_playing( sound_source_t * s );
 void sound_stop( sound_source_t * s );
 void sound_release_source( sound_source_t * s );
 void sound_release_buffer( sound_buffer_t * s );
-void sound_set_pitch( sound_source_t * s, float freq );
+void sound_set_frequency( sound_source_t * source, long frequency );
+void sound_set_pitch( sound_source_t * s, float pitch );
 void sound_volume( sound_source_t * s, long decibels );
 void sound_pan( sound_source_t * s, long pan );
 void sound_position( sound_source_t * s, float x, float y, float z, float min_distance, float max_distance );
@@ -123,7 +124,7 @@ HRESULT IDirectSoundBuffer8::SetFrequency(DWORD dwFrequency)
 {
 	if (!source)
 		return DSERR_GENERIC;
-	sound_set_pitch(source, dwFrequency); 
+	sound_set_frequency(source, dwFrequency); 
 	return DS_OK;
 }
 
@@ -131,7 +132,7 @@ HRESULT IDirectSoundBuffer8::SetCurrentPosition(DWORD dwNewPosition)
 {
 	if (!source)
 		return DSERR_GENERIC;
-	sound_set_pitch(source, dwNewPosition); 
+	sound_set_position(source, dwNewPosition); 
 	return DS_OK;
 }
 
@@ -163,19 +164,19 @@ HRESULT IDirectSoundBuffer8::SetPan(LONG lPan)
 
 IDirectSoundBuffer8::~IDirectSoundBuffer8()
 {
-	if (source)
+	if (buffer)
 		Release();
 }
 
 HRESULT IDirectSoundBuffer8::Release()
 {
-	if(buffer) {
-		sound_release_buffer(buffer);
-		buffer = NULL;
-	}
 	if(source) {
 		sound_release_source(source);
 		source = NULL;
+	}
+	if(buffer) {
+		sound_release_buffer(buffer);
+		buffer = NULL;
 	}
 }
 

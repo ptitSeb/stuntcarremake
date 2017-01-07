@@ -16,11 +16,13 @@ struct {
 
 struct sound_buffer_t {
 	ALuint id;
+	int freq;
 };
 
 struct sound_source_t {
 	ALuint id;
 	ALuint buffer;
+	sound_buffer_t* buff;
 	bool playing;
 };
 
@@ -197,6 +199,13 @@ void sound_set_pitch( sound_source_t * source, float pitch )
 	//printf("sound_pitch: %f\n",f);
 }
 
+void sound_set_frequency( sound_source_t * source, long frequency )
+{
+	ALfloat f = (float)frequency/source->buff->freq ; // 1.0f is default
+	alSourcef( source->id, AL_PITCH, f );
+	//printf("sound_pitch: %f\n",f);
+}
+
 void sound_volume( sound_source_t * source, long millibels )
 {
 	ALfloat f;
@@ -302,7 +311,7 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 	alGetError();
 
 	// Generate Buffers
-	alGenBuffers(1, &buffer->id);
+	alGenBuffers(1, &(buffer->id));
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
 		printf("alGenBuffers: %s\n", alGetString(error));
@@ -314,7 +323,7 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 
     if(bits == 8) // 8 bit
 	{
-		// openal only supports usigned 8bit
+		// openal only supports unsigned 8bit
 		if(sign)
 		{
 			int i;
@@ -343,8 +352,8 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 			format = AL_FORMAT_MONO16;
 		else
 			format = AL_FORMAT_STEREO16;
-		printf("sound_buffer: format = %s\n",
-			format == AL_FORMAT_MONO16 ? "mono16" : "stereo16" );
+		//printf("sound_buffer: format = %s\n",
+		//	format == AL_FORMAT_MONO16 ? "mono16" : "stereo16" );
 	}
 
 	// Copy data into AL Buffer 0
@@ -359,9 +368,10 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 	}
 
 	stats.buffers++;
-	printf("sound_load: buffers %d sources %d playing %d buffer %d\n",
-				stats.buffers,stats.sources,stats.playing,buffer);
+	//printf("sound_load: buffers %d sources %d playing %d buffer %d\n",
+	//			stats.buffers,stats.sources,stats.playing,buffer);
 
+	buffer->freq = freq;
 	return buffer;
 }
 
@@ -384,6 +394,7 @@ sound_source_t * sound_source( sound_buffer_t * buffer )
 	}
 	source->playing = false;
 	source->buffer = buffer->id;
+	source->buff = buffer;
 
 	// clear errors
 	alGetError();
@@ -458,8 +469,8 @@ void sound_release_buffer( sound_buffer_t * buffer )
 	free(buffer);
 	buffer = NULL;
 	// show stats
-	printf("sound_release_buffer: buffers %d sources %d playing %d\n",
-				stats.buffers,stats.sources,stats.playing);
+	//printf("sound_release_buffer: buffers %d sources %d playing %d\n",
+	//			stats.buffers,stats.sources,stats.playing);
 }
 
 #endif // SOUND_OPENAL
