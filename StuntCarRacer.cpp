@@ -1065,6 +1065,11 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 		float xa = (((float)-viewpoint1_x_angle * 2 * D3DX_PI) / 65536.0f);
 		float ya = (((float)-viewpoint1_y_angle * 2 * D3DX_PI) / 65536.0f);
 		float za = (((float)-viewpoint1_z_angle * 2 * D3DX_PI) / 65536.0f);
+#ifdef linux
+		xa = -xa;
+		ya = -ya;
+		za = -za;
+#endif
 		// Produce and combine the rotation matrices
 		D3DXMatrixRotationY(&matTemp, ya);
 		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);

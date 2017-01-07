@@ -16,7 +16,16 @@
 #include <SDL/SDL_image.h>
 #include <AL/al.h>
 #include <wchar.h>
+#define USEGLM
+#ifdef USEGLM
+#define GL_FORCE_RADIANS
+//#define GLM_LEFT_HANDED 
+#include <glm/glm.hpp>		
+#include <glm/gtc/type_ptr.hpp>		
+#include <glm/gtc/matrix_transform.hpp>
+#else
 #include "matvec.h"
+#endif
 
 // DX -> OpenGL inspired by forsaken project
 typedef u_int32_t DWORD;
@@ -456,11 +465,13 @@ HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKN
  * Matrix functions
  * 
 ===============================================================*/
-
+#ifdef USEGLM
+#define D3DXMATRIX glm::mat4
+#else
 typedef struct _D3DXMATRIX {
  float  m[16];
 } D3DXMATRIX;
-
+#endif
 
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf);
 D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut);
@@ -774,7 +785,7 @@ private:
 	UINT alphaop[8];
 	UINT colorarg1[8];
 	UINT colorarg2[8];
-  D3DXMATRIX mWorld, mView, mProj, mText;
+  D3DXMATRIX mWorld, mView, mProj, mText, mInv;
   IDirect3DVertexBuffer9 *buffer[8];
   uint32_t  offset[8];
   uint32_t  stride[8];

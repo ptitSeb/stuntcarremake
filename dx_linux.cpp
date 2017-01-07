@@ -1,6 +1,5 @@
 #ifdef linux
 #include "dx_linux.h"
-#include "matvec.h"
 
 const char* BitMapRessourceName(const char* name)
 {
@@ -192,8 +191,133 @@ HRESULT DirectSoundCreate8(LPCGUID lpcGuidDevice, LPDIRECTSOUND8 * ppDS8, LPUNKN
  * Matrix
 */
 // Try to keep everything column-major to make OpenGL happy...
+
+D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut)
+{
+#ifdef USEGLM
+	*pOut = glm::mat4(1.0f);
+#else
+	set_identity(pOut->m);
+#endif
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixRotationX(D3DXMATRIX* pOut, FLOAT Angle)
+{
+#ifdef USEGLM
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(1.0f, 0.0f, 0.0f));
+#else
+	matrix_rot(Angle, 1.0f, 0.0f, 0.0f, pOut->m);
+#endif
+	return pOut;
+}
+D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle)
+{
+#ifdef USEGLM
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 1.0f, 0.0f));
+#else
+	matrix_rot(Angle, 0.0f, 1.0f, 0.0f, pOut->m);
+#endif
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle)
+{
+#ifdef USEGLM
+	*pOut = glm::rotate(glm::mat4(1.0f), Angle, glm::vec3(0.0f, 0.0f, 1.0f));
+#else
+	matrix_rot(Angle, 0.0f, 0.0f, 1.0f, pOut->m);
+#endif
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
+{
+#ifdef USEGLM
+	*pOut = glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z));
+#else
+	matrix_trans(x, y, z, pOut->m);
+#endif
+	return pOut;
+}
+
+D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2)
+{
+#ifdef USEGLM
+	*pOut=(*pM2)*(*pM1);	// reverse order because of DX -> OpenGL
+#else
+	matrix_mul(pM1->m, pM2->m, pOut->m);
+#endif
+	return pOut;
+}
+
+#ifdef USEGLM
+glm::vec3 FromVector(const D3DXVECTOR3* vec)		
+{		
+	glm::vec3 ret;		
+	ret[0]=vec->x;		
+	ret[1]=vec->y;		
+	ret[2]=vec->z;		
+	return ret;		
+}
+#endif
+
+D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const D3DXVECTOR3* pAt, const D3DXVECTOR3* pUp)
+{
+#ifdef USEGLM
+	glm::vec3 eye=FromVector(pEye);		
+ 	glm::vec3 at=FromVector(pAt);		
+ 	glm::vec3 up=FromVector(pUp);
+#if 0
+	// checked, same as DX9
+	glm::vec3 vZ = glm::normalize(at - eye);
+	glm::vec3 vX = glm::normalize(glm::cross(up, vZ));
+	glm::vec3 vY = glm::cross(vZ, vX);
+
+	*pOut = glm::mat4(	vX.x,			vY.x,			vZ.x,			0.0f,
+						vX.y,			vY.y,			vZ.y,			0.0f,
+						vX.z,			vY.z,			vZ.z,			0.0f,
+						glm::dot(-vX, eye), glm::dot(-vY, eye),	glm::dot(-vZ, eye),	1.0f);
+#else
+ 	*pOut = glm::lookAt(eye, at, up);
+#endif
+#else
+	matrix_lookat(&pEye->x, &pAt->x, &pUp->x, pOut->m);
+#endif
+	return pOut;
+}
+
 D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspect, FLOAT zn, FLOAT zf)
 {
+#ifdef USEGLM
+#if 0
+	float yScale = 1.0f / tanf(fovy/2.0f);
+	float xScale = yScale / Aspect;
+	float right = -xScale, left = +xScale;
+	float top = -yScale, bottom = +yScale;
+
+	float x1 = ( 2 * zn ) / ( right - left );
+	float z1 = ( right + left ) / ( right - left );
+ 
+	float y2 = ( 2 * zn ) / ( top - bottom );
+	float z2 = ( top + bottom ) / ( top - bottom );
+ 
+	float z3 = -( zf + zn ) / ( zf - zn );
+	float w3 = -( 2 * zf * zn ) / ( zf - zn );
+ 
+	*pOut = glm::mat4(
+		x1,  0.f,   z1, 0.f,
+		0.f,  y2,   z2, 0.f,
+		0.f, 0.f,   z3,  w3,
+		0.f, 0.f, -1.f, 0.f );
+#else
+	float fw, fh;
+	fh = tanf( fovy / 2.0f) * zn;
+	fw = fh * Aspect;
+	*pOut = glm::frustum(-fw, +fw, +fh, -fh, zn, zf);
+#endif
+	//*pOut = glm::perspective(fovy, Aspect, zn, zf);
+#else
 #if 0
  	float yScale = 1.0f / tanf(fovy/2.0f);
  	float xScale = yScale / Aspect;
@@ -227,60 +351,32 @@ D3DXMATRIX* D3DXMatrixPerspectiveFovLH(D3DXMATRIX *pOut, FLOAT fovy, FLOAT Aspec
 	pOut->m[14]=(zn*zf)/(zn-zf);
 	pOut->m[15]=0.0f;	
 #endif
+#endif
 	return pOut;
 }
 
-D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut)
+void IDirect3DDevice9::ActivateWorldMatrix()
 {
-	set_identity(pOut->m);
-	return pOut;
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+#ifdef USEGLM
+	glLoadMatrixf(glm::value_ptr(mInv*mProj*mView*mWorld));
+#else
+	float m[16];
+	matrix_mul(mProj.m, mView.m, m);
+	matrix_mul(m, mWorld.m, m);
+	glLoadMatrixf(m);
+#endif
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
 }
-
-D3DXMATRIX* D3DXMatrixRotationX(D3DXMATRIX* pOut, FLOAT Angle)
+void IDirect3DDevice9::DeactivateWorldMatrix()
 {
-	matrix_rot(Angle, 1.0f, 0.0f, 0.0f, pOut->m);
-	return pOut;
-}
-D3DXMATRIX* D3DXMatrixRotationY(D3DXMATRIX* pOut, FLOAT Angle)
-{
-	matrix_rot(Angle, 0.0f, 1.0f, 0.0f, pOut->m);
-	return pOut;
-}
-
-D3DXMATRIX* D3DXMatrixRotationZ(D3DXMATRIX* pOut, FLOAT Angle)
-{
-	matrix_rot(Angle, 0.0f, 0.0f, 1.0f, pOut->m);
-	return pOut;
-}
-
-D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
-{
-	matrix_trans(x, y, z, pOut->m);
-	return pOut;
-}
-
-D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2)
-{
-	matrix_mul(pM1->m, pM2->m, pOut->m);
-	return pOut;
-}
-
-D3DXMATRIX* D3DXMatrixLookAtLH(D3DXMATRIX* pOut, const D3DXVECTOR3* pEye, const D3DXVECTOR3* pAt, const D3DXVECTOR3* pUp)
-{
-	#if 1
-	matrix_lookat(&pEye->x, &pAt->x, &pUp->x, pOut->m);
-	#else
-	// checked, same as DX9
-	glm::vec3 vZ = glm::normalize(at - eye);
-	glm::vec3 vX = glm::normalize(glm::cross(up, vZ));
-	glm::vec3 vY = glm::cross(vZ, vX);
-
-	*pOut = glm::mat4(	vX.x,			vY.x,			vZ.x,			0.0f,
-						vX.y,			vY.y,			vZ.y,			0.0f,
-						vX.z,			vY.z,			vZ.z,			0.0f,
-						glm::dot(-vX, eye), glm::dot(-vY, eye),	glm::dot(-vZ, eye),	1.0f);
-	#endif
-	return pOut;
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
 }
 
 uint32_t GetStrideFromFVF(DWORD fvf) {
@@ -304,10 +400,22 @@ IDirect3DDevice9::IDirect3DDevice9()
 		colorarg2[i] = 0;
 		alphaop[i] = 0;
 	}
+#ifdef USEGLM
+	mView = glm::mat4(1.0f);
+ 	mWorld = glm::mat4(1.0f);
+ 	mProj = glm::mat4(1.0f);
+ 	mText = glm::mat4(1.0f);
+	mInv = 
+		glm::mat4(-1, 0, 0, 0,
+				   0,-1, 0, 0,
+				   0, 0,+1, 0,
+				   0, 0, 0, 1);
+#else
 	set_identity(mView.m);
 	set_identity(mWorld.m);
 	set_identity(mProj.m);
 	set_identity(mText.m);
+#endif
 }
 
 IDirect3DDevice9::~IDirect3DDevice9()
@@ -335,7 +443,11 @@ HRESULT IDirect3DDevice9::SetTransform(D3DTRANSFORMSTATETYPE State, D3DXMATRIX* 
 			//TODO change active texture...
 			mText = *pMatrix;
 			glMatrixMode(GL_TEXTURE);
+#ifdef USEGLM
+			glLoadMatrixf(glm::value_ptr(mText));
+#else
 			glLoadMatrixf(mText.m);
+#endif
 			break;
 		default:
 			printf("Unhandled Matrix SetTransform(%X, %p)\n", State, pMatrix);
@@ -482,26 +594,6 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 
 	if(transf) DeactivateWorldMatrix();
 	return S_OK;
-}
-
-void IDirect3DDevice9::ActivateWorldMatrix()
-{
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	float m[16];
-	matrix_mul(mProj.m, mView.m, m);
-	matrix_mul(m, mWorld.m, m);
-	glLoadMatrixf(m);
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-}
-void IDirect3DDevice9::DeactivateWorldMatrix()
-{
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
 }
 
 HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATETYPE Type, DWORD Value)
