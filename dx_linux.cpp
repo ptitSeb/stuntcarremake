@@ -241,6 +241,17 @@ D3DXMATRIX* D3DXMatrixTranslation(D3DXMATRIX* pOut, FLOAT x, FLOAT y, FLOAT z)
 	return pOut;
 }
 
+D3DXMATRIX* D3DXMatrixScaling(D3DXMATRIX *pOut, FLOAT sx, FLOAT sy, FLOAT sz)
+{
+#ifdef USEGLM
+	*pOut = glm::translate(glm::mat4(1.0f), glm::vec3(sx, sy, sz));
+#else
+	matrix_scale(sx, sy, sz, pOut->m);
+#endif
+	return pOut;
+}
+
+
 D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2)
 {
 #ifdef USEGLM

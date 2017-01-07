@@ -1065,20 +1065,28 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 		float xa = (((float)-viewpoint1_x_angle * 2 * D3DX_PI) / 65536.0f);
 		float ya = (((float)-viewpoint1_y_angle * 2 * D3DX_PI) / 65536.0f);
 		float za = (((float)-viewpoint1_z_angle * 2 * D3DX_PI) / 65536.0f);
-#ifdef linux
-		xa = -xa;
-		ya = -ya;
-		za = -za;
-#endif
 		// Produce and combine the rotation matrices
+#ifdef linux
+		D3DXMatrixRotationY(&matTemp, ya + D3DX_PI);
+		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
+		D3DXMatrixRotationX(&matTemp, -xa);
+		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
+		D3DXMatrixRotationZ(&matTemp, -za);
+		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
+#else
 		D3DXMatrixRotationY(&matTemp, ya);
 		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
 		D3DXMatrixRotationX(&matTemp, xa);
 		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
 		D3DXMatrixRotationZ(&matTemp, za);
 		D3DXMatrixMultiply(&matRot, &matRot, &matTemp);
+#endif
 		// Combine the rotation and translation matrices to complete the world matrix
 		D3DXMatrixMultiply(&matView, &matTrans, &matRot);
+#ifdef linux
+		D3DXMatrixScaling(&matTrans, +1, -1, +1);
+		D3DXMatrixMultiply(&matView, &matView, &matTrans);
+#endif
 		pd3dDevice->SetTransform( D3DTS_VIEW, &matView );
 	}
 
