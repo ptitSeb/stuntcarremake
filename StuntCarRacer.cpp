@@ -1939,6 +1939,7 @@ int main(int argc, const char** argv)
         exit(-2);
     }
 #ifdef PANDORA
+	SDL_ShowCursor(SDL_DISABLE);
 	glViewport(80, 0, 640, 480);
 #else
 	glViewport(0, 0, 640, 480);
