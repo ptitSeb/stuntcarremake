@@ -290,9 +290,11 @@ void GetScreenDimensions( long *screen_width,
 						  long *screen_height )
 	{
 #ifdef linux
-	const SDL_VideoInfo* info = SDL_GetVideoInfo();
+	/*const SDL_VideoInfo* info = SDL_GetVideoInfo();
 	*screen_width = info->current_w;
-	*screen_height = info->current_h; 
+	*screen_height = info->current_h; */
+	*screen_width = 640;
+	*screen_height = 480;
 #else
 	const D3DSURFACE_DESC *desc;
 	desc = DXUTGetBackBufferSurfaceDesc();
