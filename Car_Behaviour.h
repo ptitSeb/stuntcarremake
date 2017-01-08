@@ -8,13 +8,13 @@
 #define	CAR_WIDTH	64
 #define	CAR_LENGTH	128
 
-// new controls for Car Behaviour, Player 1
+// new new controls for Car Behaviour, Player 1
 // must not clash with other KEY definitions
 #define KEY_P1_LEFT		0x00000001l
 #define KEY_P1_RIGHT	0x00000002l
-#define KEY_P1_HASH		0x00000004l
-#define KEY_P1_BRAKE_BOOST	0x00000008l
-#define KEY_P1_ACCEL_BOOST	0x00000010l
+#define KEY_P1_ACCEL	0x00000004l
+#define KEY_P1_BRAKE	0x00000008l
+#define KEY_P1_BOOST	0x00000010l
 
 #define	AMIGA_PAL_HZ	(3546895)
 

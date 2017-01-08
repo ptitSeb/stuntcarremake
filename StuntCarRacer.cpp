@@ -1586,24 +1586,24 @@ void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void *pUse
             break;
 
 		// controls for Car Behaviour, Player 1
-        case 'S':
+        case VK_LEFT:
             lastInput |= KEY_P1_LEFT;
             break;
 
-        case 'D':
+        case VK_RIGHT:
             lastInput |= KEY_P1_RIGHT;
             break;
 
-        case 0xDE:	// couldn't find VK_ definition for HASH key
-            lastInput |= KEY_P1_HASH;
+        case VK_SPACE:
+            lastInput |= KEY_P1_BOOST;
             break;
 
-		case VK_SPACE:
-            lastInput |= KEY_P1_BRAKE_BOOST;
+		case VK_DOWN:
+            lastInput |= KEY_P1_BRAKE;
             break;
 
-        case VK_RETURN:
-            lastInput |= KEY_P1_ACCEL_BOOST;
+        case VK_UP:
+            lastInput |= KEY_P1_ACCEL;
             break;
         }
 
@@ -1625,24 +1625,24 @@ void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void *pUse
         switch( nChar )
         {
 		// controls for Car Behaviour, Player 1
-        case 'S':
+        case VK_LEFT:
             lastInput &= ~KEY_P1_LEFT;
             break;
 
-        case 'D':
+        case VK_RIGHT:
             lastInput &= ~KEY_P1_RIGHT;
             break;
 
-        case 0xDE:	// couldn't find VK_ definition for HASH key
-            lastInput &= ~KEY_P1_HASH;
+        case VK_SPACE:	// couldn't find VK_ definition for HASH key
+            lastInput &= ~KEY_P1_BOOST;
             break;
 
-		case VK_SPACE:
-            lastInput &= ~KEY_P1_BRAKE_BOOST;
+		case VK_DOWN:
+            lastInput &= ~KEY_P1_BRAKE;
             break;
 
-        case VK_RETURN:
-            lastInput &= ~KEY_P1_ACCEL_BOOST;
+        case VK_UP:
+            lastInput &= ~KEY_P1_ACCEL;
             break;
 		}
 	}
@@ -1830,44 +1830,36 @@ bool process_events()
 					break;
 
 				// controls for Car Behaviour, Player 1
-#ifdef PANDORA
 				case SDLK_LEFT:
-#else
-				case SDLK_s:
-#endif
 					lastInput |= KEY_P1_LEFT;
 					break;
 
-#ifdef PANDORA
 				case SDLK_RIGHT:
-#else
-				case SDLK_d:
-#endif
 					lastInput |= KEY_P1_RIGHT;
 					break;
 
 #ifdef PANDORA
 				case SDLK_HOME:
 #else
-				case SDLK_HASH:	// couldn't find VK_ definition for HASH key
+				case SDLK_SPACE:
 #endif
-					lastInput |= KEY_P1_HASH;
+					lastInput |= KEY_P1_BOOST;
 					break;
 
 #ifdef PANDORA
 				case SDLK_END:
 #else
-				case SDLK_SPACE:
+				case SDLK_DOWN:
 #endif
-					lastInput |= KEY_P1_BRAKE_BOOST;
+					lastInput |= KEY_P1_BRAKE;
 					break;
 
 #ifdef PANDORA
 				case SDLK_PAGEDOWN:
 #else
-				case SDLK_RETURN:
+				case SDLK_UP:
 #endif
-					lastInput |= KEY_P1_ACCEL_BOOST;
+					lastInput |= KEY_P1_ACCEL;
 					break;
 
 				case SDLK_ESCAPE:
@@ -1878,44 +1870,36 @@ bool process_events()
 			keyPress = 0;
             switch( event.key.keysym.sym ) {
 				// controls for Car Behaviour, Player 1
-#ifdef PANDORA
 				case SDLK_LEFT:
-#else
-				case SDLK_s:
-#endif
 					lastInput &= ~KEY_P1_LEFT;
 					break;
 
-#ifdef PANDORA
 				case SDLK_RIGHT:
-#else
-				case SDLK_d:
-#endif
 					lastInput &= ~KEY_P1_RIGHT;
 					break;
 
 #ifdef PANDORA
 				case SDLK_HOME:
 #else
-				case SDLK_HASH:	// couldn't find VK_ definition for HASH key
+				case SDLK_SPACE:
 #endif
-					lastInput &= ~KEY_P1_HASH;
+					lastInput &= ~KEY_P1_BOOST;
 					break;
 
 #ifdef PANDORA
 				case SDLK_END:
 #else
-				case SDLK_SPACE:
+				case SDLK_DOWN:
 #endif
-					lastInput &= ~KEY_P1_BRAKE_BOOST;
+					lastInput &= ~KEY_P1_BRAKE;
 					break;
 
 #ifdef PANDORA
 				case SDLK_PAGEDOWN:
 #else
-				case SDLK_RETURN:
+				case SDLK_UP:
 #endif
-					lastInput &= ~KEY_P1_ACCEL_BOOST;
+					lastInput &= ~KEY_P1_ACCEL;
 					break;
 				}
 			break;

@@ -759,37 +759,20 @@ void LimitViewpointY (long *y)
 static void CarControl (DWORD input)
 	{
 //	Keys that control car are :-
-//			S = left, D = right
-//			RETURN = accelerate + boost
-//			SPACE = brake/reverse + boost
-//			HASH = brake/reverse
+//			Left = left, Right = right
+//			Up = Accelerate, Down = Brake
+//			(X) = Accelerate, (B) = Brake on Pandora
+//			SPACE = boost
+//			(R) = boost on Pandora
 //
 //  Note: Can't accelerate without boost when using keyboard,
 //		  because HASH key is changed to be brake - see below
 
 	long left = (input & KEY_P1_LEFT),
 		 right = (input & KEY_P1_RIGHT),
-		 boost = (input & KEY_P1_ACCEL_BOOST);
-
-	// 20/05/2007 - accelerate and brake variables are needed for UpdateEngineRevs
-	accelerate = (input & KEY_P1_HASH);
-	brake = (input & KEY_P1_BRAKE_BOOST);
-
-	if (input & KEY_P1_ACCEL_BOOST)
-		{
-		accelerate = TRUE;	//	boost also selects accelerate
-		}
-
-	if (input & KEY_P1_BRAKE_BOOST)
-		{
-		boost = TRUE;	//	brake also selects boost
-		}
-
-	if (input & KEY_P1_HASH)	// see note above
-		{
-		brake = TRUE;	// select brake
-		accelerate = FALSE;
-		}
+		 accelerate = (input & KEY_P1_ACCEL),
+		 brake = (input & KEY_P1_BRAKE),
+		 boost = (input & KEY_P1_BOOST);
 
 	// if none of the resulting keys are pressed then read joystick
 #ifdef linux
