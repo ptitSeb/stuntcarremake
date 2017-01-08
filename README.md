@@ -15,6 +15,7 @@ On Pandora
  (B) Brake
  (R) Boost
 
-[![Here is a video on StuntCarRemake running on the OpenPandora](https://img.youtube.com/vi/HKutH3dDrGo/0.jpg)](https://www.youtube.com/watch?v=HKutH3dDrGo)
+[![Play on Youtube](https://img.youtube.com/vi/HKutH3dDrGo/0.jpg)](https://www.youtube.com/watch?v=HKutH3dDrGo)
+Here is a video on StuntCarRemake running on the OpenPandora
 
 Original project is here: http://sourceforge.net/projects/stuntcarremake/
