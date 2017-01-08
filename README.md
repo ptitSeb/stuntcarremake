@@ -4,4 +4,15 @@ This is a port to Linux & OpenPandora of Stunt Car Racer Remake, a windows remak
 
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
 
+Controls are:
+On Linux / Windows
+ 4 Arrows for Turning / Accelerate / Brake
+ Space for Boost
+
+On Pandora
+ DPad Left/Right for turning
+ (X) Accelerate
+ (B) Brake
+ (R) Boost
+
 Original is here: http://sourceforge.net/projects/stuntcarremake/
