@@ -1839,7 +1839,7 @@ bool process_events()
 					break;
 
 #ifdef PANDORA
-				case SDLK_HOME:
+				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
 #endif
@@ -1879,7 +1879,7 @@ bool process_events()
 					break;
 
 #ifdef PANDORA
-				case SDLK_HOME:
+				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
 #endif
