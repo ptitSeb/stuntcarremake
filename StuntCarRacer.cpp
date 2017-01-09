@@ -606,11 +606,11 @@ void CreateFonts()
 
 	if (g_pFont==NULL)
 	{
-		g_pFont = TTF_OpenFont("MSX-Screen1.ttf", 8/*15*/);
+		g_pFont = TTF_OpenFont("DejaVuSans-Bold.ttf", 15);
 	}
 	if (g_pFontLarge==NULL)
 	{
-		g_pFontLarge = TTF_OpenFont("MSX-Screen1.ttf", 16/*25*/);
+		g_pFontLarge = TTF_OpenFont("DejaVuSans-Bold.ttf", 25);
 	}
 	printf("Font created (%p / %p)\n", g_pFont, g_pFontLarge);
 }
