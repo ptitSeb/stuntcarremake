@@ -27,4 +27,10 @@ extern void FreeCarVertexBuffer (void);
 
 extern void DrawCar (IDirect3DDevice9 *pd3dDevice);
 
+extern HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice);
+
+extern void FreeCockpitVertexBuffer (void);
+
+extern void DrawCockpit (IDirect3DDevice9 *pd3dDevice);
+
 #endif	/* _CAR */

@@ -717,7 +717,7 @@ typedef struct D3DRECT {
 
 #define D3DUSAGE_WRITEONLY 1
 
-#define D3DFVF_DIFFUSE    (1<<0)
+#define D3DFVF_DIFFUSE    (1   )
 #define D3DFVF_NORMAL     (1<<1)
 #define D3DFVF_XYZ        (1<<2)
 #define D3DFVF_XYZRHW     (1<<3)

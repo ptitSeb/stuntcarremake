@@ -714,3 +714,73 @@ void DrawCar (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, numCarVertices/3 );	// 3 points per triangle
 }
 
+struct TRANSFORMEDTEXVERTEX
+{
+    FLOAT x, y, z, rhw; // The transformed position for the vertex.
+	FLOAT u, v;			// Texture
+};
+#define D3DFVF_TRANSFORMEDTEXVERTEX (D3DFVF_XYZRHW|D3DFVF_TEX1)
+
+static IDirect3DVertexBuffer9 *pCockpitVB = NULL;
+
+extern IDirect3DTexture9 *g_pCockpit;
+
+HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
+{
+	if (pCockpitVB == NULL)
+	{
+		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
+				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pCockpitVB, NULL ) ) )
+			return E_FAIL;
+	}
+
+	TRANSFORMEDTEXVERTEX *pVertices;
+	if( FAILED( pCockpitVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
+		return E_FAIL;
+	pVertices[0].x = 0.0f; pVertices[0].y = 0.0f; pVertices[0].z = 0.9f; pVertices[0].rhw = 1.0f;
+	pVertices[1].x = 640.0f; pVertices[1].y = 0.0f; pVertices[1].z = 0.9f; pVertices[1].rhw = 1.0f;
+	pVertices[2].x = 640.0f; pVertices[2].y = 480.0f; pVertices[2].z = 0.9f; pVertices[2].rhw = 1.0f;
+	pVertices[3].x = 0.0f; pVertices[3].y = 480.0f; pVertices[3].z = 0.9f; pVertices[3].rhw = 1.0f;
+	#ifdef linux
+	pVertices[0].u = 0.0f; pVertices[0].v = 1.0f;
+	pVertices[1].u = 1.0f; pVertices[1].v = 1.0f;
+	pVertices[2].u = 1.0f; pVertices[2].v = 0.0f;
+	pVertices[3].u = 0.0f; pVertices[3].v = 0.0f;
+	#else
+	pVertices[0].u = 0.0f; pVertices[0].v = 0.0f;
+	pVertices[1].u = 1.0f; pVertices[1].v = 0.0f;
+	pVertices[2].u = 1.0f; pVertices[2].v = 1.0f;
+	pVertices[3].u = 0.0f; pVertices[3].v = 1.0f;
+	#endif
+	pCockpitVB->Unlock();
+	return S_OK;
+}
+
+
+void FreeCockpitVertexBuffer (void)
+{
+	if (pCockpitVB) pCockpitVB->Release(), pCockpitVB = NULL;
+}
+
+
+void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
+{
+	pd3dDevice->SetRenderState( D3DRS_ZENABLE, FALSE );
+	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1 );
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP,   D3DTOP_DISABLE );
+
+	pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_DISABLE );
+
+	pd3dDevice->SetTexture( 0, g_pCockpit );
+
+	pd3dDevice->SetStreamSource( 0, pCockpitVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
+
+	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
+	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
+
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
+}

@@ -38,6 +38,7 @@
 #define	FURTHEST_Z (131072.0f)
 
 #define NUM_ROAD_TEXTURES	(6)
+#define NUM_WHEEL_TEXTURES	(3)
 
 GameModeType GameMode = TRACK_MENU;
 
@@ -55,6 +56,9 @@ IDirectSoundBuffer8 *OffRoadSoundBuffer = NULL;
 IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
 IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES] = {NULL};
+IDirect3DTexture9 *g_pCockpit = NULL;
+IDirect3DTexture9 *g_pLeftwheel[NUM_WHEEL_TEXTURES] = {NULL};
+IDirect3DTexture9 *g_pRightwheel[NUM_WHEEL_TEXTURES] = {NULL};
 
 
 static long frameGap = DEFAULT_FRAME_GAP;
@@ -551,6 +555,8 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 		return E_FAIL;
 	if (CreateCarVertexBuffer(pd3dDevice) != S_OK)
 		return E_FAIL;
+	if (CreateCockpitVertexBuffer(pd3dDevice) != S_OK)
+		return E_FAIL;
 
 	// Load road textures
 	/*
@@ -578,6 +584,8 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadBlack", &g_pRoadTexture[4] ) ) )
 		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadWhite", &g_pRoadTexture[5] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"Cockpit", &g_pCockpit ) ) )
 		return E_FAIL;
 
 	// Set the projection transform (view and world are updated per frame)
@@ -617,12 +625,14 @@ void CreateFonts()
 void LoadTextures()
 {
 	for (int i=0; i<6; i++) if (!g_pRoadTexture[i]) g_pRoadTexture[i] = new IDirect3DTexture9();
+	if (!g_pCockpit) g_pCockpit = new IDirect3DTexture9();
 	g_pRoadTexture[0]->LoadTexture("RoadYellowDark");
 	g_pRoadTexture[1]->LoadTexture("RoadYellowLight");
 	g_pRoadTexture[2]->LoadTexture("RoadRedDark");
 	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
 	g_pRoadTexture[4]->LoadTexture("RoadBlack");
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
+	g_pCockpit->LoadTexture("Cockpit");
 	printf("Texture loaded\n");
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
@@ -634,6 +644,8 @@ void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
 	if (CreateShadowVertexBuffer(pd3dDevice) != S_OK)
 		printf("Error creating ShadowVertexBuffer\n");
 	if (CreateCarVertexBuffer(pd3dDevice) != S_OK)
+		printf("Error creating CarVertexBuffer\n");
+	if (CreateCockpitVertexBuffer(pd3dDevice) != S_OK)
 		printf("Error creating CarVertexBuffer\n");
 
 }
@@ -1477,6 +1489,11 @@ HRESULT hr;
 				pd3dDevice->SetTransform( D3DTS_WORLD, &matWorldCar );
 				DrawCar(pd3dDevice);
 				}
+				else
+				{
+				// draw cockpit...
+				DrawCockpit(pd3dDevice);
+				}
 				break;
 			}
 
@@ -1667,10 +1684,12 @@ void CALLBACK OnLostDevice( void *pUserContext )
 	FreeTrackVertexBuffer();
 	FreeShadowVertexBuffer();
 	FreeCarVertexBuffer();
+	FreeCockpitVertexBuffer();
 
 	// Free textures
 	for (long i = 0; i < NUM_ROAD_TEXTURES; i++)
 		if (g_pRoadTexture[i]) g_pRoadTexture[i]->Release(), g_pRoadTexture[i] = NULL;
+	if (g_pCockpit) g_pCockpit->Release(), g_pCockpit[i] = NULL;
 }
 
 
@@ -1688,6 +1707,7 @@ void CALLBACK OnDestroyDevice( void *pUserContext )
 	FreeTrackVertexBuffer();
 	FreeShadowVertexBuffer();
 	FreeCarVertexBuffer();
+	FreeCockpitVertexBuffer();
 }
 
 

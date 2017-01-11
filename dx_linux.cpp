@@ -3,8 +3,19 @@
 
 const char* BitMapRessourceName(const char* name)
 {
-static const char* resname[] = {"RoadYellowDark", "RoadYellowLight", "RoadRedDark", "RoadRedLight", "RoadBlack", "RoadWhite", 0};
-static const char* filename[] = {"Bitmap/RoadYellowDark.bmp", "Bitmap/RoadYellowLight.bmp", "Bitmap/RoadRedDark.bmp", "Bitmap/RoadRedLight.bmp", "Bitmap/RoadBlack.bmp", "Bitmap/RoadWhite.bmp", 0};
+static const char* resname[] = {
+	"RoadYellowDark", "RoadYellowLight", "RoadRedDark", 
+	"RoadRedLight", "RoadBlack", "RoadWhite", 
+	"Cockpit", "LeftWheel1", "LeftWheel2", "LeftWheel3", 
+	"RightWheel1", "RightWheel2", "RightWheel3",
+	0};
+static const char* filename[] = {
+	"Bitmap/RoadYellowDark.bmp", "Bitmap/RoadYellowLight.bmp", "Bitmap/RoadRedDark.bmp", 
+	"Bitmap/RoadRedLight.bmp", "Bitmap/RoadBlack.bmp", "Bitmap/RoadWhite.bmp", 
+	"Bitmap/cockpit.png", "Bitmap/leftwheel1.png", "Bitmap/leftwheel2.png", "Bitmap/leftwheel3.png", 
+	"Bitmap/rightwheel1.png", "Bitmap/rightwheel2.png", "Bitmap/rightwheel3.png", 
+	0};
+	
 	int i = 0;
 	while(resname[i] && strcmp(resname[i], name)) i++;
 	return filename[i];
@@ -631,9 +642,11 @@ HRESULT IDirect3DDevice9::DrawPrimitive(D3DPRIMITIVETYPE PrimitiveType,UINT Star
 		if (colorop[0] <= D3DTOP_DISABLE) {
 			glDisable(GL_TEXTURE_2D);
 			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDisable(GL_BLEND);
 		} else {
 			glEnable(GL_TEXTURE_2D);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+			glEnable(GL_BLEND);
 		}
 	} else {
 		glDisable(GL_TEXTURE_2D);
