@@ -126,13 +126,13 @@ RoadRedDark             BITMAP                  "Bitmap\\RoadRedDark.bmp"
 RoadRedLight            BITMAP                  "Bitmap\\RoadRedLight.bmp"
 RoadBlack               BITMAP                  "Bitmap\\RoadBlack.bmp"
 RoadWhite               BITMAP                  "Bitmap\\RoadWhite.bmp"
-Cockpit                 BITMAP                  "Bitmap\\cockpit.png"
-LeftWheel1              BITMAP                  "Bitmap\\leftwheel1.png"
+//Cockpit                 BITMAP                  "Bitmap\\cockpit.png"
+/*LeftWheel1              BITMAP                  "Bitmap\\leftwheel1.png"
 LeftWheel2              BITMAP                  "Bitmap\\leftwheel2.png"
 LeftWheel3              BITMAP                  "Bitmap\\leftwheel3.png"
 RightWheel1             BITMAP                  "Bitmap\\rightwheel1.png"
 RightWheel2             BITMAP                  "Bitmap\\rightwheel2.png"
-RightWheel3             BITMAP                  "Bitmap\\rightwheel3.png"
+RightWheel3             BITMAP                  "Bitmap\\rightwheel3.png"*/
 #endif    // English (U.K.) resources
 /////////////////////////////////////////////////////////////////////////////
 

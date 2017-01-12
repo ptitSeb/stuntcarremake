@@ -585,7 +585,7 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadWhite", &g_pRoadTexture[5] ) ) )
 		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"Cockpit", &g_pCockpit ) ) )
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\cockpit.png", &g_pCockpit ) ) )
 		return E_FAIL;
 
 	// Set the projection transform (view and world are updated per frame)
@@ -1689,7 +1689,7 @@ void CALLBACK OnLostDevice( void *pUserContext )
 	// Free textures
 	for (long i = 0; i < NUM_ROAD_TEXTURES; i++)
 		if (g_pRoadTexture[i]) g_pRoadTexture[i]->Release(), g_pRoadTexture[i] = NULL;
-	if (g_pCockpit) g_pCockpit->Release(), g_pCockpit[i] = NULL;
+	if (g_pCockpit) g_pCockpit->Release(), g_pCockpit = NULL;
 }
 
 

@@ -767,13 +767,17 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 {
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, FALSE );
 	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
+	
+	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	pd3dDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	pd3dDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
 
-	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1 );
-	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
-	pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP,   D3DTOP_DISABLE );
-
-	pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_DISABLE );
+	pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_BLENDDIFFUSEALPHA);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTSS_COLORARG1);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
 	pd3dDevice->SetTexture( 0, g_pCockpit );
 
@@ -782,5 +786,6 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
 
-	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
+	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
 }
