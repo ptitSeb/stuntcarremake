@@ -561,6 +561,21 @@ HRESULT IDirect3DDevice9::SetRenderState(D3DRENDERSTATETYPE State, int Value)
 					break;
 			}
 			break;
+		case D3DRS_SRCBLENDALPHA:
+			//TODO
+			break;
+		case D3DRS_DESTBLENDALPHA:
+			//TODO
+			break;
+		case D3DRS_ALPHABLENDENABLE:
+			//TODO
+			break;
+		case D3DRS_SRCBLEND:
+			//TODO
+			break;
+		case D3DRS_DESTBLEND:
+			//TODO
+			break;
 		default:
 			printf("Unhandled Render State %X=%d\n", State, Value);
 	}
@@ -703,6 +718,10 @@ HRESULT IDirect3DDevice9::SetTextureStageState(DWORD Stage, D3DTEXTURESTAGESTATE
 			break;
 		case D3DTSS_ALPHAOP:
 			//TODO probably
+			break;
+		case D3DTSS_ALPHAARG1:
+			break;
+		case D3DTSS_ALPHAARG2:
 			break;
 		default:
 			printf("Unhandled SetTextureStageState(%d, 0x%X, 0x%X)\n", Stage, Type, Value);
