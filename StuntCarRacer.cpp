@@ -632,7 +632,7 @@ void LoadTextures()
 	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
 	g_pRoadTexture[4]->LoadTexture("RoadBlack");
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
-	g_pCockpit->LoadTexture("Cockpit");
+	g_pCockpit->LoadTexture("Bitmap/cockpit.png");
 	printf("Texture loaded\n");
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
