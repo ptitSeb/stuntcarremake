@@ -3,7 +3,7 @@
 #
 
 CC=g++
-PANDORA=0
+#PANDORA=1
 DEBUG=1
 
 # general compiler settings
@@ -17,6 +17,14 @@ ifeq ($(PANDORA),1)
 	LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp
 	#HAVE_GLES=1
 endif
+ifeq ($(ODROID),1)
+        FLAGS= -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -fsingle-precision-constant -O3 -fsigned-char
+        FLAGS+= -DODROID
+        FLAGS+= -DARM
+        LDFLAGS= -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+        #HAVE_GLES=1
+endif
+
 FLAGS+= -pipe -fpermissive
 CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings -ICommon
 LDFLAGS=$(FLAGS)
