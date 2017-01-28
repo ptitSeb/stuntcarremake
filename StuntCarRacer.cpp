@@ -1286,8 +1286,16 @@ void RenderText( double fTime )
 			txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*2 );
 			if (lapNumber[PLAYER] > 0)
 				StringCchPrintf( lapText, 3, L"%d", lapNumber[PLAYER] );
-			txtHelper.DrawFormattedTextLine( L"Lap: " STRING L"   Boost: %d", lapText, boostReserve );
-			txtHelper.DrawFormattedTextLine( L"Opponent Distance: %d", CalculateOpponentsDistance() );
+			//txtHelper.DrawFormattedTextLine( L"Lap: " STRING L"   Boost: %d", lapText, boostReserve );
+			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
+			txtHelper.SetInsertionPos( 75, pd3dsdBackBuffer->Height-52 );
+			txtHelper.DrawFormattedTextLine( L"L" STRING L"        B%02d", lapText, boostReserve );
+			if (CalculateOpponentsDistance() >= 0)
+				txtHelper.SetInsertionPos( 76, pd3dsdBackBuffer->Height-29 );
+			else
+				txtHelper.SetInsertionPos( 80, pd3dsdBackBuffer->Height-29 );
+			txtHelper.DrawFormattedTextLine( L"          %04d", CalculateOpponentsDistance() );
+			txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
 			txtHelper.DrawFormattedTextLine( L"Speed: %d", CalculateDisplaySpeed() );
 			txtHelper.DrawFormattedTextLine( L"Damage: %d", new_damage );
