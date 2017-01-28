@@ -770,9 +770,10 @@ static void CarControl (DWORD input)
 
 	long left = (input & KEY_P1_LEFT),
 		 right = (input & KEY_P1_RIGHT),
-		 accelerate = (input & KEY_P1_ACCEL),
-		 brake = (input & KEY_P1_BRAKE),
 		 boost = (input & KEY_P1_BOOST);
+
+	accelerate = (input & KEY_P1_ACCEL);
+	brake = (input & KEY_P1_BRAKE);
 
 	// if none of the resulting keys are pressed then read joystick
 #ifdef linux
