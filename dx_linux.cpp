@@ -566,7 +566,11 @@ HRESULT IDirect3DDevice9::SetRenderState(D3DRENDERSTATETYPE State, int Value)
 			//TODO
 			break;
 		case D3DRS_ALPHABLENDENABLE:
-			//TODO
+			if (Value) {
+				glEnable(GL_ALPHA_TEST);
+			} else {
+				glDisable(GL_ALPHA_TEST);
+			}
 			break;
 		case D3DRS_SRCBLEND:
 			//TODO
