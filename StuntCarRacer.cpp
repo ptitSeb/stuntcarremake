@@ -1980,6 +1980,8 @@ int main(int argc, const char** argv)
     pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
 
 	glEnable(GL_DEPTH_TEST);
+	glAlphaFunc(GL_NOTEQUAL, 0);
+	glEnable(GL_ALPHA_TEST);
 //	glShadeModel(GL_FLAT);
 	glDisable(GL_LIGHTING);
 	// Disable texture mapping by default (only DrawTrack() enables it)
