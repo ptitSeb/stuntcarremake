@@ -201,9 +201,13 @@ static long grounded_count = 0;
 static long damage_value = 0;
 static long damaged_count = 0;
 
-static long front_left_amount_below_road = 0,
+long front_left_amount_below_road = 0,
 			front_right_amount_below_road = 0,
 			rear_amount_below_road = 0;
+
+long front_left_wheel_speed = 0,
+	 		front_right_wheel_speed = 0;
+long leftwheel_angle = 0, rightwheel_angle = 0;
 
 static long old_front_left_difference = 0,
 			old_front_right_difference = 0,
@@ -325,6 +329,7 @@ static void PositionCarAbovePiece (long piece);
 static void UpdateEngineRevs (void);
 static void DrawDustClouds (void);
 static void DrawSparks (void);
+static void SetWheelRotationSpeed();
 
 #ifdef NOT_USED
 static void RewindRecording (void);
@@ -916,7 +921,7 @@ static void CarMovement (void)
 
 	CalculateXZSpeeds();
 
-	//SetWheelRotationSpeed();
+	SetWheelRotationSpeed();
 	CalculateGravityAcceleration();
 	CarCollisionDetection();
 
@@ -1988,7 +1993,34 @@ set.wheel.rotation.speed :-
 		}
 	return;
 */
+static void SetOneWheelRotationSpeed(long touching_road, long player_z_speed, long *wheel_rotation_speed)
+{
+	if(touching_road == 0) 
+	{
+		// Not touching road, so reduce wheel speed by one quarter
+		long reduction = (*wheel_rotation_speed) / 4;
+		*wheel_rotation_speed -= reduction;
+		return;
+	}
+	if(abs(player_z_speed) < 0x800)
+		{
+		// multiply by 8 and use as wheel speed
+		*wheel_rotation_speed = abs(player_z_speed) * 8;
+		}
+	else
+		{
+		// double it, add $3000 and use as wheel speed
+		*wheel_rotation_speed = (abs(player_z_speed) * 2) + 0x3000;
+		if (*wheel_rotation_speed > 0xffff)
+			*wheel_rotation_speed = 0xff00;		// set to maximum value
+		}
+}
 
+static void SetWheelRotationSpeed()
+{
+	SetOneWheelRotationSpeed(front_left_amount_below_road, player_z_speed, &front_left_wheel_speed);
+	SetOneWheelRotationSpeed(front_right_amount_below_road, player_z_speed, &front_right_wheel_speed);
+}
 
 /*	======================================================================================= */
 /*	Function:		CalculateGravityAcceleration											*/
@@ -3763,6 +3795,10 @@ fwe2	tst.b	B.5d724
 
 fwe3	move.w	sprite.DMA.value,dmacon+custom
 */
+// wheel update
+
+leftwheel_angle = (leftwheel_angle+front_left_wheel_speed)&0xfffff;
+rightwheel_angle = (leftwheel_angle+front_right_wheel_speed)&0xfffff;
 
 int period, index;
 DWORD freq;

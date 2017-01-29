@@ -38,7 +38,7 @@
 #define	FURTHEST_Z (131072.0f)
 
 #define NUM_ROAD_TEXTURES	(6)
-#define NUM_WHEEL_TEXTURES	(3)
+#define NUM_WHEEL_TEXTURES	(6)
 
 GameModeType GameMode = TRACK_MENU;
 
@@ -57,8 +57,7 @@ IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
 IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES] = {NULL};
 IDirect3DTexture9 *g_pCockpit = NULL;
-IDirect3DTexture9 *g_pLeftwheel[NUM_WHEEL_TEXTURES] = {NULL};
-IDirect3DTexture9 *g_pRightwheel[NUM_WHEEL_TEXTURES] = {NULL};
+IDirect3DTexture9 *g_pWheel[NUM_WHEEL_TEXTURES] = {NULL};
 
 
 static long frameGap = DEFAULT_FRAME_GAP;
@@ -587,6 +586,19 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\cockpit.png", &g_pCockpit ) ) )
 		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel5.png", &g_pWheel[0] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel4.png", &g_pWheel[1] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel3.png", &g_pWheel[2] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel2.png", &g_pWheel[3] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel1.png", &g_pWheel[4] ) ) )
+		return E_FAIL;
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel0.png", &g_pWheel[5] ) ) )
+		return E_FAIL;
+	
 
 	// Set the projection transform (view and world are updated per frame)
     D3DXMATRIX matProj;
@@ -626,6 +638,7 @@ void LoadTextures()
 {
 	for (int i=0; i<6; i++) if (!g_pRoadTexture[i]) g_pRoadTexture[i] = new IDirect3DTexture9();
 	if (!g_pCockpit) g_pCockpit = new IDirect3DTexture9();
+	for (int i=0; i<NUM_WHEEL_TEXTURES; i++) if (!g_pWheel[i]) g_pWheel[i] = new IDirect3DTexture9();
 	g_pRoadTexture[0]->LoadTexture("RoadYellowDark");
 	g_pRoadTexture[1]->LoadTexture("RoadYellowLight");
 	g_pRoadTexture[2]->LoadTexture("RoadRedDark");
@@ -633,6 +646,12 @@ void LoadTextures()
 	g_pRoadTexture[4]->LoadTexture("RoadBlack");
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
 	g_pCockpit->LoadTexture("Bitmap/cockpit.png");
+	g_pWheel[0]->LoadTexture("Bitmap/wheel5.png");
+	g_pWheel[1]->LoadTexture("Bitmap/wheel4.png");
+	g_pWheel[2]->LoadTexture("Bitmap/wheel3.png");
+	g_pWheel[3]->LoadTexture("Bitmap/wheel2.png");
+	g_pWheel[4]->LoadTexture("Bitmap/wheel1.png");
+	g_pWheel[5]->LoadTexture("Bitmap/wheel0.png");
 	printf("Texture loaded\n");
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
@@ -1698,6 +1717,9 @@ void CALLBACK OnLostDevice( void *pUserContext )
 	for (long i = 0; i < NUM_ROAD_TEXTURES; i++)
 		if (g_pRoadTexture[i]) g_pRoadTexture[i]->Release(), g_pRoadTexture[i] = NULL;
 	if (g_pCockpit) g_pCockpit->Release(), g_pCockpit = NULL;
+	for (long i = 0; i < NUM_WHEEL_TEXTURES; i++) {
+		if (g_pWheel[i]) g_pWheel[i]->Release(), g_pWheel[i] = NULL;
+	}
 }
 
 

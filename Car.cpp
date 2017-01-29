@@ -722,8 +722,13 @@ struct TRANSFORMEDTEXVERTEX
 #define D3DFVF_TRANSFORMEDTEXVERTEX (D3DFVF_XYZRHW|D3DFVF_TEX1)
 
 static IDirect3DVertexBuffer9 *pCockpitVB = NULL;
+static IDirect3DVertexBuffer9 *pLeftwheelVB = NULL, *pRightwheelVB = NULL;
+static int old_leftwheel = -1, old_rightwheel = -1;
 
 extern IDirect3DTexture9 *g_pCockpit;
+extern IDirect3DTexture9 *g_pWheel[6];
+extern long front_left_amount_below_road, front_right_amount_below_road;
+extern long leftwheel_angle, rightwheel_angle;
 
 HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
@@ -731,6 +736,18 @@ HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
 				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pCockpitVB, NULL ) ) )
+			return E_FAIL;
+	}
+	if (pLeftwheelVB == NULL)
+	{
+		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
+				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pLeftwheelVB, NULL ) ) )
+			return E_FAIL;
+	}
+	if (pRightwheelVB == NULL)
+	{
+		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
+				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pRightwheelVB, NULL ) ) )
 			return E_FAIL;
 	}
 
@@ -765,6 +782,60 @@ void FreeCockpitVertexBuffer (void)
 
 void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 {
+	// Update Left/Right Wheel VB if needed
+	if(old_leftwheel != (front_left_amount_below_road>>6)) {
+		old_leftwheel = (front_left_amount_below_road>>6);
+		TRANSFORMEDTEXVERTEX *pVertices;
+		if( FAILED( pLeftwheelVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
+			return;
+		float X1 = 0.0f+31.f*2, X2 = 31.f*2+2*24.0f;
+		float Y1 = 480.0f-56.0f*2-20*2, Y2 = 480.0f-20*2;
+		Y1-=old_leftwheel;
+		Y2-=old_leftwheel;
+		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 0.8f; pVertices[0].rhw = 1.0f;
+		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 0.8f; pVertices[1].rhw = 1.0f;
+		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 0.8f; pVertices[2].rhw = 1.0f;
+		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 0.8f; pVertices[3].rhw = 1.0f;
+		#ifdef linux
+		pVertices[0].u = 0.0f; pVertices[0].v = 1.0f;
+		pVertices[1].u = 1.0f; pVertices[1].v = 1.0f;
+		pVertices[2].u = 1.0f; pVertices[2].v = 0.0f;
+		pVertices[3].u = 0.0f; pVertices[3].v = 0.0f;
+		#else
+		pVertices[0].u = 0.0f; pVertices[0].v = 0.0f;
+		pVertices[1].u = 1.0f; pVertices[1].v = 0.0f;
+		pVertices[2].u = 1.0f; pVertices[2].v = 1.0f;
+		pVertices[3].u = 0.0f; pVertices[3].v = 1.0f;
+		#endif
+		pLeftwheelVB->Unlock();
+	}
+	if(old_rightwheel != (front_right_amount_below_road>>6)) {
+		old_rightwheel = (front_right_amount_below_road>>6);
+		TRANSFORMEDTEXVERTEX *pVertices;
+		if( FAILED( pRightwheelVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
+			return;
+		float X1 = 640.f-31.f*2 - 24.f*2, X2 = 640.f-31.f*2;
+		float Y1 = 480.0f-56.0f*2-20*2, Y2 = 480.0f-20*2;
+		Y1-=old_rightwheel;
+		Y2-=old_rightwheel;
+		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 0.8f; pVertices[0].rhw = 1.0f;
+		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 0.8f; pVertices[1].rhw = 1.0f;
+		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 0.8f; pVertices[2].rhw = 1.0f;
+		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 0.8f; pVertices[3].rhw = 1.0f;
+		#ifdef linux
+		pVertices[0].u = 1.0f; pVertices[0].v = 1.0f;
+		pVertices[1].u = 0.0f; pVertices[1].v = 1.0f;
+		pVertices[2].u = 0.0f; pVertices[2].v = 0.0f;
+		pVertices[3].u = 1.0f; pVertices[3].v = 0.0f;
+		#else
+		pVertices[0].u = 1.0f; pVertices[0].v = 0.0f;
+		pVertices[1].u = 0.0f; pVertices[1].v = 0.0f;
+		pVertices[2].u = 0.0f; pVertices[2].v = 1.0f;
+		pVertices[3].u = 1.0f; pVertices[3].v = 1.0f;
+		#endif
+		pRightwheelVB->Unlock();
+	}
+
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, FALSE );
 	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
 	
@@ -779,6 +850,22 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
+	// left wheel
+	pd3dDevice->SetTexture( 0, g_pWheel[(leftwheel_angle>>16)%6] );
+	pd3dDevice->SetStreamSource( 0, pLeftwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
+
+	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
+	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
+
+	// right wheel
+	pd3dDevice->SetTexture( 0, g_pWheel[(rightwheel_angle>>16)%6] );
+
+	pd3dDevice->SetStreamSource( 0, pRightwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
+
+	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
+	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
+
+	// Cockpit
 	pd3dDevice->SetTexture( 0, g_pCockpit );
 
 	pd3dDevice->SetStreamSource( 0, pCockpitVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
