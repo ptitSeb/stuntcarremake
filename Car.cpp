@@ -777,6 +777,8 @@ HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 void FreeCockpitVertexBuffer (void)
 {
 	if (pCockpitVB) pCockpitVB->Release(), pCockpitVB = NULL;
+	if (pLeftwheelVB) pLeftwheelVB->Release(), pLeftwheelVB = NULL;
+	if (pRightwheelVB) pRightwheelVB->Release(), pRightwheelVB = NULL;
 }
 
 
@@ -849,16 +851,23 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTSS_COLORARG1);
 	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-
 	// left wheel
 	pd3dDevice->SetTexture( 0, g_pWheel[(leftwheel_angle>>16)%6] );
-	pd3dDevice->SetStreamSource( 0, pLeftwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
+#ifdef WIN32
+	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+#endif
+	pd3dDevice->SetStreamSource(0, pLeftwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX));
 
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
 
 	// right wheel
 	pd3dDevice->SetTexture( 0, g_pWheel[(rightwheel_angle>>16)%6] );
+#ifdef WIN32
+	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
+	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
+#endif
 
 	pd3dDevice->SetStreamSource( 0, pRightwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
 
