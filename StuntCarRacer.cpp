@@ -1975,6 +1975,13 @@ int main(int argc, const char** argv)
     SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
     SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
+
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
+#ifdef PANDORA
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 2);
+#else
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 4);
+#endif
 	int flags = 0;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
 #ifdef PANDORA
