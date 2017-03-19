@@ -1257,7 +1257,6 @@ void RenderText( double fTime )
 
     // Output statistics
     txtHelper.Begin();
-	//txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
 	txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	if (bShowStats)
 	{
@@ -1315,7 +1314,6 @@ void RenderText( double fTime )
 			txtHelper.DrawFormattedTextLine( L"         %+05d", CalculateOpponentsDistance() );
 			txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
-			txtHelper.DrawFormattedTextLine( L"Speed: %d", CalculateDisplaySpeed() );
 			txtHelper.DrawFormattedTextLine( L"Damage: %d", new_damage );
 			txtHelper.End();
 

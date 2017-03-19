@@ -721,8 +721,16 @@ struct TRANSFORMEDTEXVERTEX
 };
 #define D3DFVF_TRANSFORMEDTEXVERTEX (D3DFVF_XYZRHW|D3DFVF_TEX1)
 
-static IDirect3DVertexBuffer9 *pCockpitVB = NULL;
+struct TRANSFORMEDCOLVERTEX
+{
+    FLOAT x, y, z, rhw;	// The transformed position for the vertex.
+	DWORD color;		// Color
+};
+#define D3DFVF_TRANSFORMEDCOLVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
+
+static IDirect3DVertexBuffer9 *pCockpitVB = NULL, *pSpeedBarCB = NULL;
 static IDirect3DVertexBuffer9 *pLeftwheelVB = NULL, *pRightwheelVB = NULL;
+static int old_speedbar = -1;
 static int old_leftwheel = -1, old_rightwheel = -1;
 
 extern IDirect3DTexture9 *g_pCockpit;
@@ -736,6 +744,12 @@ HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
 				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pCockpitVB, NULL ) ) )
+			return E_FAIL;
+	}
+	if (pSpeedBarCB == NULL)
+	{
+		if ( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDCOLVERTEX),
+				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDCOLVERTEX, D3DPOOL_DEFAULT, &pSpeedBarCB, NULL ) ) )
 			return E_FAIL;
 	}
 	if (pLeftwheelVB == NULL)
@@ -777,10 +791,12 @@ HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 void FreeCockpitVertexBuffer (void)
 {
 	if (pCockpitVB) pCockpitVB->Release(), pCockpitVB = NULL;
+	if (pSpeedBarCB) pSpeedBarCB->Release(), pSpeedBarCB = NULL;
 	if (pLeftwheelVB) pLeftwheelVB->Release(), pLeftwheelVB = NULL;
 	if (pRightwheelVB) pRightwheelVB->Release(), pRightwheelVB = NULL;
 }
 
+extern long CalculateDisplaySpeed (void);
 
 void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 {
@@ -837,6 +853,19 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 		#endif
 		pRightwheelVB->Unlock();
 	}
+	if (old_speedbar != CalculateDisplaySpeed()) {
+		old_speedbar = CalculateDisplaySpeed();
+		TRANSFORMEDCOLVERTEX *pVertices;
+		if( FAILED( pSpeedBarCB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
+			return;
+		float X1 = 196.0f, X2 = 196.0f + ((CalculateDisplaySpeed() >= 240) ? 240.0f : (float)CalculateDisplaySpeed())/240.0f*242.0f;
+		float Y1 = 480.0f-61.0f, Y2=480.0f-61.0f+3.0f;
+		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 1.0f; pVertices[0].rhw = 1.0f; pVertices[0].color = 0xff00ffff;
+		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 1.0f; pVertices[1].rhw = 1.0f; pVertices[1].color = 0xff00ffff;
+		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 1.0f; pVertices[2].rhw = 1.0f; pVertices[2].color = 0xff00ffff;
+		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 1.0f; pVertices[3].rhw = 1.0f; pVertices[3].color = 0xff00ffff;
+		pSpeedBarCB->Unlock();
+	}
 
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, FALSE );
 	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
@@ -882,7 +911,14 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
 
+	// Speed bar
+	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
+	pd3dDevice->SetStreamSource( 0, pSpeedBarCB, 0, sizeof(TRANSFORMEDCOLVERTEX) );
+
+	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDCOLVERTEX );
+	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
+
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	//pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
 }
