@@ -1341,8 +1341,15 @@ void RenderText( double fTime )
 
 				if (GameMode == GAME_OVER)
 				{
+#ifdef 	linux
+					txtHelperLarge.SetInsertionPos( 250, pd3dsdBackBuffer->Height-25*13 );
+					txtHelperLarge.DrawTextLine( L"GAME OVER" );
+					txtHelperLarge.SetInsertionPos( 132, pd3dsdBackBuffer->Height-25*11 );
+					txtHelperLarge.DrawTextLine( L"Press 'M' for track menu" );
+#else
 					txtHelperLarge.SetInsertionPos( 124, pd3dsdBackBuffer->Height-25*12 );
 					txtHelperLarge.DrawTextLine( L"GAME OVER: Press 'M' for track menu" );
+#endif
 				}
 				else
 				{
