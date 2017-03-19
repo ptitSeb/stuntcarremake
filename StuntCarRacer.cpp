@@ -2008,7 +2008,9 @@ int main(int argc, const char** argv)
 			printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
         	exit(-2);
 		}
-    }
+    } else {
+		glEnable(GL_MULTISAMPLE);
+	}
 #ifdef PANDORA
 	SDL_ShowCursor(SDL_DISABLE);
 	glViewport(80, 0, 640, 480);
