@@ -1991,8 +1991,18 @@ int main(int argc, const char** argv)
 	screen = SDL_SetVideoMode( 640, 480, 32, flags );
 #endif
     if ( screen == NULL ) {
-        printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
-        exit(-2);
+		// fallback to no MSAA
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
+#ifdef PANDORA
+		screen = SDL_SetVideoMode( 800, 480, 32, flags );
+#else
+		screen = SDL_SetVideoMode( 640, 480, 32, flags );
+#endif
+    	if ( screen == NULL ) {
+			printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
+        	exit(-2);
+		}
     }
 #ifdef PANDORA
 	SDL_ShowCursor(SDL_DISABLE);
