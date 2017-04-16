@@ -12,7 +12,7 @@
 #include "Car.h"
 #include "StuntCarRacer.h"
 #include "3D_Engine.h"
-
+#include "Atlas.h"
 /*	===== */
 /*	Debug */
 /*	===== */
@@ -729,20 +729,23 @@ struct TRANSFORMEDCOLVERTEX
 #define D3DFVF_TRANSFORMEDCOLVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
 
 static IDirect3DVertexBuffer9 *pCockpitVB = NULL, *pSpeedBarCB = NULL;
-static IDirect3DVertexBuffer9 *pLeftwheelVB = NULL, *pRightwheelVB = NULL;
+#define MAX_COCKIPTVB 512
 static int old_speedbar = -1;
 static int old_leftwheel = -1, old_rightwheel = -1;
 
-extern IDirect3DTexture9 *g_pCockpit;
-extern IDirect3DTexture9 *g_pWheel[6];
+extern IDirect3DTexture9 *g_pAtlas;
 extern long front_left_amount_below_road, front_right_amount_below_road;
 extern long leftwheel_angle, rightwheel_angle;
+extern long boost_activated;
+extern long new_damage;
+extern long nholes;
 
 HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
+	InitAtlasCoord();
 	if (pCockpitVB == NULL)
 	{
-		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
+		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_COCKIPTVB*sizeof(TRANSFORMEDTEXVERTEX),
 				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pCockpitVB, NULL ) ) )
 			return E_FAIL;
 	}
@@ -752,38 +755,6 @@ HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDCOLVERTEX, D3DPOOL_DEFAULT, &pSpeedBarCB, NULL ) ) )
 			return E_FAIL;
 	}
-	if (pLeftwheelVB == NULL)
-	{
-		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
-				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pLeftwheelVB, NULL ) ) )
-			return E_FAIL;
-	}
-	if (pRightwheelVB == NULL)
-	{
-		if( FAILED( pd3dDevice->CreateVertexBuffer( 4*sizeof(TRANSFORMEDTEXVERTEX),
-				D3DUSAGE_WRITEONLY, D3DFVF_TRANSFORMEDTEXVERTEX, D3DPOOL_DEFAULT, &pRightwheelVB, NULL ) ) )
-			return E_FAIL;
-	}
-
-	TRANSFORMEDTEXVERTEX *pVertices;
-	if( FAILED( pCockpitVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
-		return E_FAIL;
-	pVertices[0].x = 0.0f; pVertices[0].y = 0.0f; pVertices[0].z = 0.9f; pVertices[0].rhw = 1.0f;
-	pVertices[1].x = 640.0f; pVertices[1].y = 0.0f; pVertices[1].z = 0.9f; pVertices[1].rhw = 1.0f;
-	pVertices[2].x = 640.0f; pVertices[2].y = 480.0f; pVertices[2].z = 0.9f; pVertices[2].rhw = 1.0f;
-	pVertices[3].x = 0.0f; pVertices[3].y = 480.0f; pVertices[3].z = 0.9f; pVertices[3].rhw = 1.0f;
-	#ifdef linux
-	pVertices[0].u = 0.0f; pVertices[0].v = 1.0f;
-	pVertices[1].u = 1.0f; pVertices[1].v = 1.0f;
-	pVertices[2].u = 1.0f; pVertices[2].v = 0.0f;
-	pVertices[3].u = 0.0f; pVertices[3].v = 0.0f;
-	#else
-	pVertices[0].u = 0.0f; pVertices[0].v = 0.0f;
-	pVertices[1].u = 1.0f; pVertices[1].v = 0.0f;
-	pVertices[2].u = 1.0f; pVertices[2].v = 1.0f;
-	pVertices[3].u = 0.0f; pVertices[3].v = 1.0f;
-	#endif
-	pCockpitVB->Unlock();
 	return S_OK;
 }
 
@@ -792,67 +763,82 @@ void FreeCockpitVertexBuffer (void)
 {
 	if (pCockpitVB) pCockpitVB->Release(), pCockpitVB = NULL;
 	if (pSpeedBarCB) pSpeedBarCB->Release(), pSpeedBarCB = NULL;
-	if (pLeftwheelVB) pLeftwheelVB->Release(), pLeftwheelVB = NULL;
-	if (pRightwheelVB) pRightwheelVB->Release(), pRightwheelVB = NULL;
+	/*if (pLeftwheelVB) pLeftwheelVB->Release(), pLeftwheelVB = NULL;
+	if (pRightwheelVB) pRightwheelVB->Release(), pRightwheelVB = NULL;*/
 }
 
 extern long CalculateDisplaySpeed (void);
 
+static int cockpit_vtx = 0;
+static AddQuad(TRANSFORMEDTEXVERTEX *pVertices, float x1, float y1, float x2, float y2, float z, int idx, int revX, float w) {
+	float u1 = (revX)?atlas_tx2[idx]:atlas_tx1[idx], v1 = atlas_ty1[idx];
+	float u2 = (revX)?atlas_tx1[idx]:atlas_tx2[idx], v2 = atlas_ty2[idx];
+	if(w!=1.0f) {
+		u2 = u1 + (u2-u1)*w;
+	}
+	pVertices+=cockpit_vtx;
+	pVertices[0].x = x1; pVertices[0].y = y1; pVertices[0].z = z; pVertices[0].rhw = 1.0f;
+	pVertices[1].x = x2; pVertices[1].y = y1; pVertices[1].z = z; pVertices[1].rhw = 1.0f;
+	pVertices[2].x = x2; pVertices[2].y = y2; pVertices[2].z = z; pVertices[2].rhw = 1.0f;
+	pVertices[0].u = u1; pVertices[0].v = v1;
+	pVertices[1].u = u2; pVertices[1].v = v1;
+	pVertices[2].u = u2; pVertices[2].v = v2;
+	cockpit_vtx += 3;
+	pVertices += 3;
+	pVertices[0].x = x1; pVertices[0].y = y1; pVertices[0].z = z; pVertices[0].rhw = 1.0f;
+	pVertices[1].x = x2; pVertices[1].y = y2; pVertices[1].z = z; pVertices[1].rhw = 1.0f;
+	pVertices[2].x = x1; pVertices[2].y = y2; pVertices[2].z = z; pVertices[2].rhw = 1.0f;
+	pVertices[0].u = u1; pVertices[0].v = v1;
+	pVertices[1].u = u2; pVertices[1].v = v2;
+	pVertices[2].u = u1; pVertices[2].v = v2;
+	cockpit_vtx += 3;
+}
+
 void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 {
-	// Update Left/Right Wheel VB if needed
-	if(old_leftwheel != (front_left_amount_below_road>>6)) {
-		old_leftwheel = (front_left_amount_below_road>>6);
-		TRANSFORMEDTEXVERTEX *pVertices;
-		if( FAILED( pLeftwheelVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
-			return;
-		float X1 = 0.0f+31.f*2, X2 = 31.f*2+2*24.0f;
-		float Y1 = 480.0f-56.0f*2-20*2, Y2 = 480.0f-20*2;
-		Y1-=old_leftwheel;
-		Y2-=old_leftwheel;
-		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 0.8f; pVertices[0].rhw = 1.0f;
-		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 0.8f; pVertices[1].rhw = 1.0f;
-		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 0.8f; pVertices[2].rhw = 1.0f;
-		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 0.8f; pVertices[3].rhw = 1.0f;
-		#ifdef linux
-		pVertices[0].u = 0.0f; pVertices[0].v = 1.0f;
-		pVertices[1].u = 1.0f; pVertices[1].v = 1.0f;
-		pVertices[2].u = 1.0f; pVertices[2].v = 0.0f;
-		pVertices[3].u = 0.0f; pVertices[3].v = 0.0f;
-		#else
-		pVertices[0].u = 0.0f; pVertices[0].v = 0.0f;
-		pVertices[1].u = 1.0f; pVertices[1].v = 0.0f;
-		pVertices[2].u = 1.0f; pVertices[2].v = 1.0f;
-		pVertices[3].u = 0.0f; pVertices[3].v = 1.0f;
-		#endif
-		pLeftwheelVB->Unlock();
+	// Prepare Cockpit drawing
+	TRANSFORMEDTEXVERTEX *pVertices;
+	cockpit_vtx = 0;
+	if( FAILED( pCockpitVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
+		return E_FAIL;
+	old_leftwheel = (front_left_amount_below_road>>6);
+	float X1 = 0.0f+31.f*2, X2 = 31.f*2+2*24.0f;
+	float Y1 = 480.0f-56.0f*2.4f-20*2.4f, Y2 = 480.0f-20*2.4f;
+	Y1-=old_leftwheel;
+	Y2-=old_leftwheel;
+	AddQuad(pVertices, X1, Y1, X2, Y2, 0.8f, eWheel0+(leftwheel_angle>>16)%6, 0,1);
+	old_rightwheel = (front_right_amount_below_road>>6);
+	X1 = 640.f-31.f*2 - 24.f*2, X2 = 640.f-31.f*2;
+	Y1 = 480.0f-56.0f*2.4f-20*2.4f, Y2 = 480.0f-20*2.4f;
+	Y1-=old_rightwheel;
+	Y2-=old_rightwheel;
+	AddQuad(pVertices, X1, Y1, X2, Y2, 0.8f, eWheel0+(rightwheel_angle>>16)%6, 1,1);
+
+	int engineFrame = eEngine;
+	if(boost_activated) {
+		static int frame = 0;
+		frame = (frame+1)%16;
+		const int engineframes[8] = {0,0,0,1,2,2,2,1};
+		engineFrame = eEngineFlames0 + engineframes[frame>>1];
 	}
-	if(old_rightwheel != (front_right_amount_below_road>>6)) {
-		old_rightwheel = (front_right_amount_below_road>>6);
-		TRANSFORMEDTEXVERTEX *pVertices;
-		if( FAILED( pRightwheelVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
-			return;
-		float X1 = 640.f-31.f*2 - 24.f*2, X2 = 640.f-31.f*2;
-		float Y1 = 480.0f-56.0f*2-20*2, Y2 = 480.0f-20*2;
-		Y1-=old_rightwheel;
-		Y2-=old_rightwheel;
-		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 0.8f; pVertices[0].rhw = 1.0f;
-		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 0.8f; pVertices[1].rhw = 1.0f;
-		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 0.8f; pVertices[2].rhw = 1.0f;
-		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 0.8f; pVertices[3].rhw = 1.0f;
-		#ifdef linux
-		pVertices[0].u = 1.0f; pVertices[0].v = 1.0f;
-		pVertices[1].u = 0.0f; pVertices[1].v = 1.0f;
-		pVertices[2].u = 0.0f; pVertices[2].v = 0.0f;
-		pVertices[3].u = 1.0f; pVertices[3].v = 0.0f;
-		#else
-		pVertices[0].u = 1.0f; pVertices[0].v = 0.0f;
-		pVertices[1].u = 0.0f; pVertices[1].v = 0.0f;
-		pVertices[2].u = 0.0f; pVertices[2].v = 1.0f;
-		pVertices[3].u = 1.0f; pVertices[3].v = 1.0f;
-		#endif
-		pRightwheelVB->Unlock();
+	AddQuad(pVertices, 0.0f, 0.0f, 640.0f, 480.0f, 0.89f, engineFrame, 0,1);
+	AddQuad(pVertices, 0.0f, 0.0f, 640.0f, 480.0f, 0.9f, eCockpit, 0,1);
+	if (new_damage) {
+		// cracking... width is 238, offset is 41 (in 320x200 screen space)
+		float dam = new_damage; if (dam>238) dam=238;
+		X1 = 41.0f*2.0f; X2 = (41.0f+dam)*2.0f;
+		Y1 = 0.0f; Y2 = 0.0f+8.0f*2.4;
+		AddQuad(pVertices, X1, Y1, X2, Y2, 0.91f, eCracking, 0, dam/238.0f);
 	}
+	for (int i=0; i<nholes; i++) {
+		X1 = (47.0f+24.0f*i)*2; X2 = X1 + 12.0f*2.0f;
+		Y1 = 0.0f; Y2 = 0.0f+8.0f*2.4f;
+		AddQuad(pVertices, X1, Y1, X2, Y2, 0.95f, eHole, 0,1);
+	}
+
+	pCockpitVB->Unlock();
+
+	// Prepare speedbar
 	if (old_speedbar != CalculateDisplaySpeed()) {
 		old_speedbar = CalculateDisplaySpeed();
 		TRANSFORMEDCOLVERTEX *pVertices;
@@ -880,38 +866,18 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTSS_COLORARG1);
 	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
 	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
-	// left wheel
-	pd3dDevice->SetTexture( 0, g_pWheel[(leftwheel_angle>>16)%6] );
 #ifdef WIN32
 	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
 	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
 #endif
-	pd3dDevice->SetStreamSource(0, pLeftwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX));
-
-	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
-	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
-
-	// right wheel
-	pd3dDevice->SetTexture( 0, g_pWheel[(rightwheel_angle>>16)%6] );
-#ifdef WIN32
-	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_CLAMP);
-	pd3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
-#endif
-
-	pd3dDevice->SetStreamSource( 0, pRightwheelVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
-
-	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
-	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
-
-	// Cockpit
-	pd3dDevice->SetTexture( 0, g_pCockpit );
-
+	// Draw Cockpit
+	pd3dDevice->SetTexture( 0, g_pAtlas );
 	pd3dDevice->SetStreamSource( 0, pCockpitVB, 0, sizeof(TRANSFORMEDTEXVERTEX) );
 
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDTEXVERTEX );
-	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
+	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLELIST, 0, cockpit_vtx/3 );	// 3 points per triangle
 
-	// Speed bar
+	// Draw Speed bar
 	pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_DISABLE );
 	pd3dDevice->SetStreamSource( 0, pSpeedBarCB, 0, sizeof(TRANSFORMEDCOLVERTEX) );
 

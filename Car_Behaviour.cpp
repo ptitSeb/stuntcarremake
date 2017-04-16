@@ -113,6 +113,7 @@ long front_left_damage = 0,
 	 rear_damage = 0;
 long damaged = 0;
 long new_damage = 0;
+long nholes = 0;
 
 long car_collision_x_acceleration,
 	 car_collision_y_acceleration,
@@ -161,7 +162,7 @@ static long boost_unit_value = 16;	// (16 standard, 12 super)
 
 static long left_right_value;
 static long engine_z_acceleration;
-static long boost_activated;
+/*static*/ long boost_activated;
 
 static long rear_wheel_x_offset, rear_wheel_z_offset;
 static long front_left_wheel_x_offset, front_left_wheel_z_offset;
@@ -440,6 +441,7 @@ void ResetPlayer (void)
 
 	new_damage = 0;
 	smashed_countdown = 0;
+	nholes = 0;
 
 	// calculated
 	car_collision_x_acceleration = 0;
@@ -4087,6 +4089,7 @@ void UpdateDamage (void)
 		if (smashed_countdown == 69)
 		{
 			// change smash to hole, by copying 'damage hole' graphic to damage.hole.position
+			nholes++;
 			goto PlayCreakSound;
 		}
 
@@ -4102,6 +4105,7 @@ void UpdateDamage (void)
 	// if (damage.hole.position == 0) goto PlayCreakSound;
 	//--damage.hole.position
 	// copy 'damage hole smashed' graphic to damage.hole.position
+	nholes++;
 
 	smashed_countdown = 69;
 

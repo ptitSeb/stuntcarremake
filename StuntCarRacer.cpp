@@ -56,8 +56,8 @@ IDirectSoundBuffer8 *OffRoadSoundBuffer = NULL;
 IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
 IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES] = {NULL};
-IDirect3DTexture9 *g_pCockpit = NULL;
-IDirect3DTexture9 *g_pWheel[NUM_WHEEL_TEXTURES] = {NULL};
+IDirect3DTexture9 *g_pAtlas = NULL;
+
 
 
 static long frameGap = DEFAULT_FRAME_GAP;
@@ -558,20 +558,6 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 		return E_FAIL;
 
 	// Load road textures
-	/*
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadYellowDark.bmp", &g_pRoadTexture[0] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadYellowLight.bmp", &g_pRoadTexture[1] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadRedDark.bmp", &g_pRoadTexture[2] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadRedLight.bmp", &g_pRoadTexture[3] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadBlack.bmp", &g_pRoadTexture[4] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"RoadWhite.bmp", &g_pRoadTexture[5] ) ) )
-		return E_FAIL;
-	*/
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadYellowDark", &g_pRoadTexture[0] ) ) )
 		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadYellowLight", &g_pRoadTexture[1] ) ) )
@@ -584,19 +570,7 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadWhite", &g_pRoadTexture[5] ) ) )
 		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\cockpit.png", &g_pCockpit ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel5.png", &g_pWheel[0] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel4.png", &g_pWheel[1] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel3.png", &g_pWheel[2] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel2.png", &g_pWheel[3] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel1.png", &g_pWheel[4] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\wheel0.png", &g_pWheel[5] ) ) )
+	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\atlas.png", &g_pAtlas ) ) )
 		return E_FAIL;
 	
 
@@ -637,21 +611,14 @@ void CreateFonts()
 void LoadTextures()
 {
 	for (int i=0; i<6; i++) if (!g_pRoadTexture[i]) g_pRoadTexture[i] = new IDirect3DTexture9();
-	if (!g_pCockpit) g_pCockpit = new IDirect3DTexture9();
-	for (int i=0; i<NUM_WHEEL_TEXTURES; i++) if (!g_pWheel[i]) g_pWheel[i] = new IDirect3DTexture9();
 	g_pRoadTexture[0]->LoadTexture("RoadYellowDark");
 	g_pRoadTexture[1]->LoadTexture("RoadYellowLight");
 	g_pRoadTexture[2]->LoadTexture("RoadRedDark");
 	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
 	g_pRoadTexture[4]->LoadTexture("RoadBlack");
 	g_pRoadTexture[5]->LoadTexture("RoadWhite");
-	g_pCockpit->LoadTexture("Bitmap/cockpit.png");
-	g_pWheel[0]->LoadTexture("Bitmap/wheel5.png");
-	g_pWheel[1]->LoadTexture("Bitmap/wheel4.png");
-	g_pWheel[2]->LoadTexture("Bitmap/wheel3.png");
-	g_pWheel[3]->LoadTexture("Bitmap/wheel2.png");
-	g_pWheel[4]->LoadTexture("Bitmap/wheel1.png");
-	g_pWheel[5]->LoadTexture("Bitmap/wheel0.png");
+	if (!g_pAtlas) g_pAtlas = new IDirect3DTexture9();
+	g_pAtlas->LoadTexture("Bitmap/atlas.png");
 	printf("Texture loaded\n");
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
@@ -1213,7 +1180,11 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*6 );
 	txtHelper.DrawTextLine( L"Keyboard controls during game :-" );
+	#ifdef PANDORA
+	txtHelper.DrawTextLine( L"  DPad = Steer, (X) = Accelerate, (B) = Brake, (R) = Nitro" );
+	#else
 	txtHelper.DrawTextLine( L"  S = Steer left, D = Steer right, Enter = Accelerate, Space = Brake" );
+	#endif
 	txtHelper.DrawTextLine( L"  R = Point car in opposite direction, P = Pause, O = Unpause" );
 	txtHelper.DrawTextLine( L"  M = Back to track menu, Escape = Quit" );
 
@@ -1312,9 +1283,9 @@ void RenderText( double fTime )
 			else
 				txtHelper.SetInsertionPos( 76, pd3dsdBackBuffer->Height-29 );
 			txtHelper.DrawFormattedTextLine( L"         %+05d", CalculateOpponentsDistance() );
-			txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
+			/*txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
-			txtHelper.DrawFormattedTextLine( L"Damage: %d", new_damage );
+			txtHelper.DrawFormattedTextLine( L"Damage: %d", new_damage );*/
 			txtHelper.End();
 
 			if (raceFinished)
@@ -1720,10 +1691,7 @@ void CALLBACK OnLostDevice( void *pUserContext )
 	// Free textures
 	for (long i = 0; i < NUM_ROAD_TEXTURES; i++)
 		if (g_pRoadTexture[i]) g_pRoadTexture[i]->Release(), g_pRoadTexture[i] = NULL;
-	if (g_pCockpit) g_pCockpit->Release(), g_pCockpit = NULL;
-	for (long i = 0; i < NUM_WHEEL_TEXTURES; i++) {
-		if (g_pWheel[i]) g_pWheel[i]->Release(), g_pWheel[i] = NULL;
-	}
+	if (g_pAtlas) g_pAtlas->Release(), g_pAtlas = NULL;
 }
 
 
