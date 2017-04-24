@@ -821,8 +821,11 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 		const int engineframes[8] = {0,0,0,1,2,2,2,1};
 		engineFrame = eEngineFlames0 + engineframes[frame>>1];
 	}
-	AddQuad(pVertices, 0.0f, 0.0f, 640.0f, 480.0f, 0.89f, engineFrame, 0,1);
-	AddQuad(pVertices, 0.0f, 0.0f, 640.0f, 480.0f, 0.9f, eCockpit, 0,1);
+	AddQuad(pVertices, 42.0f*2.0f, 123.0f*2.4f, (42.0f+235.0f)*2.0f, (123.f+35.0f)*2.4f, 0.89f, engineFrame, 0,1);
+	AddQuad(pVertices, 41.f*2.f, 0.0f, (41.f+238.f)*2.f, 16.f*2.4f, 0.9f, eCockpitTop, 0,1);
+	AddQuad(pVertices, 0.0f, 0.0f, 41.f*2.f, 153.f*2.4f, 0.9f, eCockpitLeft, 0,1);
+	AddQuad(pVertices, 279.f*2.f, 0.0f, 640.0f, 153.f*2.4f, 0.9f, eCockpitRight, 0,1);
+	AddQuad(pVertices, 0.0f, 153.f*2.4f, 640.0f, 480.0f, 0.9f, eCockpitBottom, 0,1);
 	if (new_damage) {
 		// cracking... width is 238, offset is 41 (in 320x200 screen space)
 		float dam = new_damage; if (dam>238) dam=238;
