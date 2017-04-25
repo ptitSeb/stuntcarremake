@@ -1932,6 +1932,7 @@ bool process_events()
 	return true;
 }
 
+int GL_MSAA = 0;
 int main(int argc, const char** argv)
 {
 	SDL_Surface *screen = NULL;
@@ -1950,7 +1951,7 @@ int main(int argc, const char** argv)
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
 #ifdef PANDORA
-/*	int revision = 5;
+	int revision = 5;
 	FILE *f = fopen("/etc/powervr-esrev", "r");
 	if (f) {
 		fscanf(f, "%d", &revision);
@@ -1961,10 +1962,12 @@ int main(int argc, const char** argv)
 		// only do MSAA for Gigahertz model
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 2);
-	}*/
+		GL_MSAA=1;
+	}
 #else
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 4);
+	GL_MSAA=1;
 #endif
 	int flags = 0;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
@@ -1976,6 +1979,7 @@ int main(int argc, const char** argv)
 #endif
     if ( screen == NULL ) {
 		// fallback to no MSAA
+		GL_MSAA=0;
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
 #ifdef PANDORA

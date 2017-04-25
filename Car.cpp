@@ -770,7 +770,7 @@ void FreeCockpitVertexBuffer (void)
 extern long CalculateDisplaySpeed (void);
 
 static int cockpit_vtx = 0;
-static AddQuad(TRANSFORMEDTEXVERTEX *pVertices, float x1, float y1, float x2, float y2, float z, int idx, int revX, float w) {
+static void AddQuad(TRANSFORMEDTEXVERTEX *pVertices, float x1, float y1, float x2, float y2, float z, int idx, int revX, float w) {
 	float u1 = (revX)?atlas_tx2[idx]:atlas_tx1[idx], v1 = atlas_ty1[idx];
 	float u2 = (revX)?atlas_tx1[idx]:atlas_tx2[idx], v2 = atlas_ty2[idx];
 	if(w!=1.0f) {
@@ -794,8 +794,16 @@ static AddQuad(TRANSFORMEDTEXVERTEX *pVertices, float x1, float y1, float x2, fl
 	cockpit_vtx += 3;
 }
 
+#ifdef linux
+extern int GL_MSAA;
+#endif
+
 void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 {
+#ifdef linux
+	if(GL_MSAA)
+		glDisable(GL_MULTISAMPLE);
+#endif
 	// Prepare Cockpit drawing
 	TRANSFORMEDTEXVERTEX *pVertices;
 	cockpit_vtx = 0;
@@ -890,4 +898,8 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	//pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
+#ifdef linux
+	if(GL_MSAA)
+		glEnable(GL_MULTISAMPLE);
+#endif
 }
