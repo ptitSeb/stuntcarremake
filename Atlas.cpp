@@ -1,3 +1,4 @@
+#include "dxstdafx.h"
 #include "Atlas.h"
 
 float atlas_tx1[eLAST] = {0};

@@ -323,6 +323,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="3D_Engine.h" />
+    <ClInclude Include="Atlas.h" />
     <ClInclude Include="Backdrop.h" />
     <ClInclude Include="Car.h" />
     <ClInclude Include="Car_Behaviour.h" />
@@ -346,6 +347,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="3D_Engine.cpp" />
+    <ClCompile Include="Atlas.cpp" />
     <ClCompile Include="Backdrop.cpp" />
     <ClCompile Include="Car.cpp" />
     <ClCompile Include="Car_Behaviour.cpp" />

@@ -808,7 +808,7 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	TRANSFORMEDTEXVERTEX *pVertices;
 	cockpit_vtx = 0;
 	if( FAILED( pCockpitVB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
-		return E_FAIL;
+		return;
 	old_leftwheel = (front_left_amount_below_road>>6);
 	float X1 = 0.0f+31.f*2, X2 = 31.f*2+2*24.0f;
 	float Y1 = 480.0f-56.0f*2.4f-20*2.4f, Y2 = 480.0f-20*2.4f;

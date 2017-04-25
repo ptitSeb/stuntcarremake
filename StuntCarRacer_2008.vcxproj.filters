@@ -68,6 +68,7 @@
     <ClInclude Include="3D_Engine.h" />
     <ClInclude Include="Car_Behaviour.h" />
     <ClInclude Include="Opponent_Behaviour.h" />
+    <ClInclude Include="Atlas.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="StuntCarRacer.rc">
@@ -99,6 +100,7 @@
     <ClCompile Include="3D_Engine.cpp" />
     <ClCompile Include="Car_Behaviour.cpp" />
     <ClCompile Include="Opponent_Behaviour.cpp" />
+    <ClCompile Include="Atlas.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Media Include="Sounds\Creak.wav" />
