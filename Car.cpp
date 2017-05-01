@@ -742,7 +742,6 @@ extern long nholes;
 
 HRESULT CreateCockpitVertexBuffer (IDirect3DDevice9 *pd3dDevice)
 {
-	InitAtlasCoord();
 	if (pCockpitVB == NULL)
 	{
 		if( FAILED( pd3dDevice->CreateVertexBuffer( MAX_COCKIPTVB*sizeof(TRANSFORMEDTEXVERTEX),

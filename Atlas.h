@@ -19,6 +19,12 @@ enum eAtlas {
     eEngineFlames0,
     eEngineFlames1,
     eEngineFlames2,
+    eRoadYellowDark,
+    eRoadYellowLight,
+    eRoadRedDark,
+    eRoadRedLight,
+    eRoadBlack,
+    eRoadWhite,
     eLAST
 };
 

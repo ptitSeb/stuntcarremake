@@ -15,6 +15,7 @@
 #include "Track.h"
 #include "StuntCarRacer.h"
 #include "3D_Engine.h"
+#include "Atlas.h"
 
 /*	===== */
 /*	Debug */
@@ -1778,7 +1779,7 @@ BYTE roadColourIndex;
 			{
 				t = 4;
 			}
-			SegmentRoadTexture[trackSegments++] = t;
+			SegmentRoadTexture[trackSegments++] = eRoadYellowDark + t;
 
 			// switch to other road side lines colour
 			rlc = (rlc == 0) ? 1 : 0;
@@ -1807,7 +1808,7 @@ D3DXVECTOR3 v;
 }
 
 
-static void StorePieceTriangle( long piece, long piece_x, long piece_y, long piece_z, long offset1, long offset2, long offset3, UTVERTEX *pVertices, DWORD colour, short txind )
+static void StorePieceTriangle( long piece, long piece_x, long piece_y, long piece_z, long offset1, long offset2, long offset3, UTVERTEX *pVertices, DWORD colour, short txind, long s )
 {
 D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 
@@ -1827,21 +1828,13 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	pVertices[trackVertices].color = colour;//D3DCOLOR_XRGB(255,255,255);
 	if (txind == 1)
 	{
-		pVertices[trackVertices].tu = 0.0f;
-#ifdef linux
-		pVertices[trackVertices].tv = 1.0f;
-#else
-		pVertices[trackVertices].tv = 0.0f;//1.0f;
-#endif
+		pVertices[trackVertices].tu = atlas_tx1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
 	}
 	else if (txind == 2)
 	{
-		pVertices[trackVertices].tu = 0.0f;
-#ifdef linux
-		pVertices[trackVertices].tv = 1.0f;
-#else
-		pVertices[trackVertices].tv = 0.0f;//1.0f;
-#endif
+		pVertices[trackVertices].tu = atlas_tx1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
 	}
 	++trackVertices;
 
@@ -1850,13 +1843,13 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	pVertices[trackVertices].color = colour;//D3DCOLOR_XRGB(255,255,255);
 	if (txind == 1)
 	{
-		pVertices[trackVertices].tu = 0.0f;
-		pVertices[trackVertices].tv = 0.0f;
+		pVertices[trackVertices].tu = atlas_tx1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
 	}
 	else if (txind == 2)
 	{
-		pVertices[trackVertices].tu = 1.0f;
-		pVertices[trackVertices].tv = 0.0f;
+		pVertices[trackVertices].tu = atlas_tx2[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
 	}
 	++trackVertices;
 
@@ -1865,24 +1858,20 @@ D3DXVECTOR3 v1, v2, v3;//, edge1, edge2, surface_normal;
 	pVertices[trackVertices].color = colour;//D3DCOLOR_XRGB(255,255,255);
 	if (txind == 1)
 	{
-		pVertices[trackVertices].tu = 1.0f;
-		pVertices[trackVertices].tv = 0.0f;
+		pVertices[trackVertices].tu = atlas_tx2[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
 	}
 	else if (txind == 2)
 	{
-		pVertices[trackVertices].tu = 1.0f;
-#ifdef linux
-		pVertices[trackVertices].tv = 1.0f;
-#else
-		pVertices[trackVertices].tv = 0.0f;//1.0f;
-#endif
+		pVertices[trackVertices].tu = atlas_tx2[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
 	}
 	++trackVertices;
 }
 
 
 // Fetch and store the piece vertex identified by offset1 (offset2 and 3 are just used to calculate the surface normal)
-static void StorePieceVertex1( long piece, long piece_x, long piece_y, long piece_z, long offset1, long offset2, long offset3, UTVERTEX *pVertices, DWORD colour, short txind )
+static void StorePieceVertex1( long piece, long piece_x, long piece_y, long piece_z, long offset1, long offset2, long offset3, UTVERTEX *pVertices, DWORD colour, short txind, long s )
 {
 D3DXVECTOR3 v1;//, v2, v3, edge1, edge2, surface_normal;
 
@@ -1902,13 +1891,13 @@ D3DXVECTOR3 v1;//, v2, v3, edge1, edge2, surface_normal;
 	pVertices[trackVertices].color = colour;
 	if (txind == 1)
 	{
-		pVertices[trackVertices].tu = 0.0f;
-		pVertices[trackVertices].tv = 0.0f;
+		pVertices[trackVertices].tu = atlas_tx1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
 	}
 	else if (txind == 2)
 	{
-		pVertices[trackVertices].tu = 1.0f;
-		pVertices[trackVertices].tv = 0.0f;
+		pVertices[trackVertices].tu = atlas_tx2[SegmentRoadTexture[Track[piece].firstSegment+s]]; //1.0f;
+		pVertices[trackVertices].tv = atlas_ty1[SegmentRoadTexture[Track[piece].firstSegment+s]]; //0.0f;
 	}
 	++trackVertices;
 }
@@ -1996,9 +1985,9 @@ static void CreateUpdatePieceInVBMode1( long piece, long face, UTVERTEX *pVertic
 
 			colour = SCRGB(roadColourIndex);
 			// triangle 1 (offsets 0,4,5)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+4, offset+5, pVertices, colour, 1);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+4, offset+5, pVertices, colour, 1, s);
 			// triangle 2 (offsets 0,5,1)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+5, offset+1, pVertices, colour, 2);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+5, offset+1, pVertices, colour, 2, s);
 		}
 	}
 	else if (face == LEFT_SIDE)	// create left side
@@ -2009,9 +1998,9 @@ static void CreateUpdatePieceInVBMode1( long piece, long face, UTVERTEX *pVertic
 		{
 			offset = s * 4;
 			// triangle 1 (offsets 0,2,6)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+2, offset+6, pVertices, colour, 0);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+2, offset+6, pVertices, colour, 0, s);
 			// triangle 2 (offsets 0,6,4)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+6, offset+4, pVertices, colour, 0);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset, offset+6, offset+4, pVertices, colour, 0, s);
 		}
 	}
 	else	// create right side
@@ -2022,9 +2011,9 @@ static void CreateUpdatePieceInVBMode1( long piece, long face, UTVERTEX *pVertic
 		{
 			offset = s * 4;
 			// triangle 1 (offsets 5,7,3)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset+5, offset+7, offset+3, pVertices, colour, 0);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset+5, offset+7, offset+3, pVertices, colour, 0, s);
 			// triangle 2 (offsets 5,3,1)
-			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset+5, offset+3, offset+1, pVertices, colour, 0);
+			StorePieceTriangle(piece, piece_x, piece_y, piece_z, offset+5, offset+3, offset+1, pVertices, colour, 0, s);
 		}
 	}
 }
@@ -2064,22 +2053,22 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
 			roadColourIndex = Track[piece].roadColour[0];
 			colour = SCRGB(roadColourIndex);
 			// triangle 1 (offsets 1,0,5)
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 1, 0, 5, pVertices, colour, 2);
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 0, 5, 1, pVertices, colour, 1);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 1, 0, 5, pVertices, colour, 2, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 0, 5, 1, pVertices, colour, 1, 0);
 		}
 		else if (face == LEFT_SIDE)
 		{
 			colour = SCRGB(Track[piece].sidesColour);
 			// triangle 1 (offsets 0,2,4)
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 0, 2, 4, pVertices, colour, 0);
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 2, 4, 0, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 0, 2, 4, pVertices, colour, 0, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 2, 4, 0, pVertices, colour, 0, 0);
 		}
 		else	// right side
 		{
 			colour = SCRGB(Track[piece].sidesColour);
 			// triangle 1 (offsets 3,1,7)
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 3, 1, 7, pVertices, colour, 0);
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 1, 7, 3, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 3, 1, 7, pVertices, colour, 0, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, 1, 7, 3, pVertices, colour, 0, 0);
 		}
 	}
 
@@ -2109,9 +2098,9 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
 
 			colour = SCRGB(roadColourIndex);
 			// store last vertex of triangle 1 (offsets 1,0,5) i.e. offset 5
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+5, offset+1, offset, pVertices, colour, 2);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+5, offset+1, offset, pVertices, colour, 2, s);
 			// store last vertex of triangle 2 (offsets 0,5,4) i.e. offset 4
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+4, offset, offset+5, pVertices, colour, 1);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+4, offset, offset+5, pVertices, colour, 1, s);
 		}
 	}
 	else if (face == LEFT_SIDE)	// create left side
@@ -2133,9 +2122,9 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
 			}
 
 			// store last vertex of triangle 1 (offsets 0,2,4) i.e. offset 4
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+4, offset+0, offset+2, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+4, offset+0, offset+2, pVertices, colour, 0, s);
 			// store last vertex of triangle 2 (offsets 2,4,6) i.e. offset 6
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+6, offset+2, offset+4, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+6, offset+2, offset+4, pVertices, colour, 0, s);
 		}
 	}
 	else	// create right side
@@ -2157,9 +2146,9 @@ static void CreateUpdatePieceInVBMode2( long piece, long face, UTVERTEX *pVertic
 			}
 
 			// store last vertex of triangle 1 (offsets 3,1,7) i.e. offset 7
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+7, offset+3, offset+1, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+7, offset+3, offset+1, pVertices, colour, 0, s);
 			// store last vertex of triangle 2 (offsets 7,1,5) i.e. offset 5
-			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+5, offset+7, offset+1, pVertices, colour, 0);
+			StorePieceVertex1(piece, piece_x, piece_y, piece_z, offset+5, offset+7, offset+1, pVertices, colour, 0, s);
 		}
 	}
 }
@@ -2286,10 +2275,9 @@ long savedTrackVertices = trackVertices;
 
 extern long player_current_piece;	// use as players_road_section
 extern long player_current_segment;
-extern IDirect3DTexture9 *g_pRoadTexture[];
 
 #define TEXTURED_SEGMENTS_AROUND_PLAYER	11
-
+extern IDirect3DTexture9 *g_pAtlas;
 
 void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 {
@@ -2396,6 +2384,10 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 
 		s = firstTexturedSegment;
 		v += s * verticesPerSegment;
+
+		// Setup texture 1
+		pd3dDevice->SetTexture( 0, g_pAtlas );
+
 		for (i = 0; i < count; i++, s++, v += verticesPerSegment)
 		{
 			if (s == NumTrackSegments)
@@ -2405,7 +2397,7 @@ void DrawTrack (IDirect3DDevice9 *pd3dDevice)
 			}
 
 			// Setup texture 1
-			pd3dDevice->SetTexture( 0, g_pRoadTexture[SegmentRoadTexture[s]] );
+			//pd3dDevice->SetTexture( 0, g_pRoadTexture[SegmentRoadTexture[s]] );
 
 			pd3dDevice->DrawPrimitive( primitiveType, v, 2 );	// 2 road triangles per segment
 			segmentsRendered++;

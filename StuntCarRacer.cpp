@@ -19,6 +19,7 @@
 #include "Car_Behaviour.h"
 #include "Opponent_Behaviour.h"
 #include "wavefunctions.h"
+#include "Atlas.h"
 
 #ifdef linux
 #define STRING "%S"
@@ -37,9 +38,6 @@
 
 #define	FURTHEST_Z (131072.0f)
 
-#define NUM_ROAD_TEXTURES	(6)
-#define NUM_WHEEL_TEXTURES	(6)
-
 GameModeType GameMode = TRACK_MENU;
 
 // Both the following are used for keyboard input
@@ -55,7 +53,6 @@ IDirectSoundBuffer8 *SmashSoundBuffer = NULL;
 IDirectSoundBuffer8 *OffRoadSoundBuffer = NULL;
 IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
-IDirect3DTexture9 *g_pRoadTexture[NUM_ROAD_TEXTURES] = {NULL};
 IDirect3DTexture9 *g_pAtlas = NULL;
 
 
@@ -557,22 +554,10 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 	if (CreateCockpitVertexBuffer(pd3dDevice) != S_OK)
 		return E_FAIL;
 
-	// Load road textures
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadYellowDark", &g_pRoadTexture[0] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadYellowLight", &g_pRoadTexture[1] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadRedDark", &g_pRoadTexture[2] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadRedLight", &g_pRoadTexture[3] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadBlack", &g_pRoadTexture[4] ) ) )
-		return E_FAIL;
-	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"RoadWhite", &g_pRoadTexture[5] ) ) )
-		return E_FAIL;
 	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\atlas.png", &g_pAtlas ) ) )
 		return E_FAIL;
 	
+	InitAtlasCoord();
 
 	// Set the projection transform (view and world are updated per frame)
     D3DXMATRIX matProj;
@@ -610,15 +595,9 @@ void CreateFonts()
 }
 void LoadTextures()
 {
-	for (int i=0; i<6; i++) if (!g_pRoadTexture[i]) g_pRoadTexture[i] = new IDirect3DTexture9();
-	g_pRoadTexture[0]->LoadTexture("RoadYellowDark");
-	g_pRoadTexture[1]->LoadTexture("RoadYellowLight");
-	g_pRoadTexture[2]->LoadTexture("RoadRedDark");
-	g_pRoadTexture[3]->LoadTexture("RoadRedLight");
-	g_pRoadTexture[4]->LoadTexture("RoadBlack");
-	g_pRoadTexture[5]->LoadTexture("RoadWhite");
 	if (!g_pAtlas) g_pAtlas = new IDirect3DTexture9();
 	g_pAtlas->LoadTexture("Bitmap/atlas.png");
+	InitAtlasCoord();
 	printf("Texture loaded\n");
 }
 void CreateBuffers(IDirect3DDevice9 *pd3dDevice)
@@ -1688,9 +1667,6 @@ void CALLBACK OnLostDevice( void *pUserContext )
 	FreeCarVertexBuffer();
 	FreeCockpitVertexBuffer();
 
-	// Free textures
-	for (long i = 0; i < NUM_ROAD_TEXTURES; i++)
-		if (g_pRoadTexture[i]) g_pRoadTexture[i]->Release(), g_pRoadTexture[i] = NULL;
 	if (g_pAtlas) g_pAtlas->Release(), g_pAtlas = NULL;
 }
 
