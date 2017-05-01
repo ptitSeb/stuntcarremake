@@ -836,19 +836,17 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_sizew, m_sizeh, 0, GL_RGBA, GL_UNSIGNED_BYTE, tmp);
 	free(tmp);
 	SDL_Color forecol = {255,255,255,255};
-	m_w = ((float)m_fontsize)/m_sizew; m_h = ((float)m_fontsize)/m_sizeh;
+	m_inv = 1.0/(float)m_sizew;
 	for(int i=0; i<16; i++) {
 		for(int j=0; j<16; j++) {
 			char text[2] = {(char)(i*16+j), 0};
 			SDL_Surface* surf = TTF_RenderText_Blended(font, text, forecol);
 			if(surf) {
-				m_aw[i*16+j] = ((float)surf->w)/m_sizew;
 				m_as[i*16+j] = surf->w;
-				glTexSubImage2D(GL_TEXTURE_2D, 0, j*m_fontsize, i*m_fontsize, surf->w, surf->h, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
+				glTexSubImage2D(GL_TEXTURE_2D, 0, j*m_fontsize, i*m_fontsize, surf->w, (surf->h>=m_fontsize)?m_fontsize-1:surf->h, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 				SDL_FreeSurface(surf);
 			} else {
 				m_as[i*16+j] = m_fontsize / 2;
-				m_aw[i*16+j] = ((float)m_as[i*16+j])/m_sizew;
 			}
 		}
 	}
@@ -883,10 +881,10 @@ void CDXUTTextHelper::DrawTextLine(const wchar_t* line)
 	while((ch=line[i]))
 	{
 		float col = ch%16, lin = ch/16;
-		glTexCoord2f(col*m_w+0,lin*m_h+0); glVertex2f(posx, m_posy);
-		glTexCoord2f(col*m_w+m_aw[ch],lin*m_h+0); glVertex2f(posx+m_as[ch], m_posy);
-		glTexCoord2f(col*m_w+m_aw[ch],lin*m_h+m_h); glVertex2f(posx+m_as[ch], m_posy + m_fontsize);
-		glTexCoord2f(col*m_w+0,lin*m_h+m_h); glVertex2f(posx, m_posy + m_fontsize);
+		glTexCoord2f((col*m_fontsize+0)*m_inv,(lin*m_fontsize+0)*m_inv); glVertex2f(posx, m_posy);
+		glTexCoord2f((col*m_fontsize+m_as[ch])*m_inv,(lin*m_fontsize+0)*m_inv); glVertex2f(posx+m_as[ch], m_posy);
+		glTexCoord2f((col*m_fontsize+m_as[ch])*m_inv,(lin*m_fontsize+m_fontsize-1)*m_inv); glVertex2f(posx+m_as[ch], m_posy + m_fontsize);
+		glTexCoord2f((col*m_fontsize+0)*m_inv,(lin*m_fontsize+m_fontsize-1)*m_inv); glVertex2f(posx, m_posy + m_fontsize);
 		posx+=m_as[ch];
 		i++;
 	}

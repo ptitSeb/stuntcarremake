@@ -832,7 +832,7 @@ private:
 	int 		    m_size;
   int         m_fontsize;
   int         m_posx, m_posy;
-  float       m_aw[256], m_w, m_h;
+  float       m_inv;
   int         m_as[256];
   float       m_forecol[4];
   GLuint      m_texture;
