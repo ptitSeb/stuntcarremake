@@ -1,0 +1,10 @@
+language: cpp
+sudo: false
+dist: trusty
+
+compiler:
+    - g++
+
+#Build steps
+
+script: make
