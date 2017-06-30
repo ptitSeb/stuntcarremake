@@ -1,5 +1,7 @@
 # stuntcarremake
 
+![stuntcarremake build status](https://api.travis-ci.org/ptitSeb/stuntcarremake.png "stuntcarremake build status")
+
 This is a port to Linux & OpenPandora of Stunt Car Racer Remake, a windows remake of the old Stunt Car Racer from the AtariST/Amiga time.
 
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
