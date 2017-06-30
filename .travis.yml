@@ -1,10 +1,12 @@
 language: cpp
-sudo: false
+sudo: true
 dist: trusty
 
 compiler:
     - g++
 
 #Build steps
+before_install:
+    - sudo apt-get libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libopenal-dev
 
 script: make
