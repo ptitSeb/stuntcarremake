@@ -1920,6 +1920,27 @@ int main(int argc, const char** argv)
 
 	TTF_Init();
 
+	// crude command line parameter reading
+	int nomsaa = 0;
+	int fullscreen = 0;
+	int givehelp = 0;
+
+	for (int i=1; i<argc; i++) {
+		if(!strcmp(argv[i], "-f"))
+			fullscreen = 1;
+		else if(!strcmp(argv[i], "--fullscreen"))
+			fullscreen = 1;
+		else if(!strcmp(argv[i], "-n"))
+			nomsaa = 1;
+		else if(!strcmp(argv[i], "--nomsaa"))
+			nomsaa = 1;
+		else givehelp = 1;
+	}
+	if(givehelp) {
+		printf("Unrecognized parameter.\nOptions are:\n\t-f|--fullscreen\tUse fullscreen\n\t-n|--nomsaa\tDisable MSAA\n");
+		exit(0);
+	}
+
     SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 5 );
     SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 5 );
     SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 5 );
@@ -1934,19 +1955,23 @@ int main(int argc, const char** argv)
 		fclose(f);
 		printf("Pandora Model detected = %d\n", revision);
 	}
-	if(revision==5) {
+	if(revision==5 && !nomsaa) {
 		// only do MSAA for Gigahertz model
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 2);
 		GL_MSAA=1;
 	}
 #else
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 4);
-	GL_MSAA=1;
+	if(!nomsaa) {
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 4);
+		GL_MSAA=1;
+	}
 #endif
 	int flags = 0;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
+	if(fullscreen)
+		flags |= SDL_FULLSCREEN;
 #ifdef PANDORA
 	flags |= SDL_FULLSCREEN;
 	screen = SDL_SetVideoMode( 800, 480, 32, flags );
@@ -1993,7 +2018,7 @@ int main(int argc, const char** argv)
 
 	glEnable(GL_DEPTH_TEST);
 	glAlphaFunc(GL_NOTEQUAL, 0);
-	glEnable(GL_ALPHA_TEST);
+//	glEnable(GL_ALPHA_TEST);
 //	glShadeModel(GL_FLAT);
 	glDisable(GL_LIGHTING);
 	// Disable texture mapping by default (only DrawTrack() enables it)
