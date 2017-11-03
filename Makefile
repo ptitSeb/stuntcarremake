@@ -24,6 +24,13 @@ ifeq ($(ODROID),1)
         LDFLAGS= -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
         #HAVE_GLES=1
 endif
+ifeq ($(CHIP),1)
+        FLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=hard -fsingle-precision-constant -O3 -fsigned-char
+        FLAGS+= -DCHIP
+        FLAGS+= -DARM
+        LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=hard
+        #HAVE_GLES=1
+endif
 
 FLAGS+= -pipe -fpermissive
 CFLAGS=$(FLAGS) -Wno-conversion-null -Wno-write-strings -ICommon
@@ -138,6 +145,8 @@ check:
 	@echo "DEBUG = $(DEBUG)"
 	@echo "PROFILE = $(PROFILE)"
 	@echo "PANDORA = $(PANDORA)"
+	@echo "ODROID = $(ODROID)"
+	@echo "CHIP = $(CHIP)"
 	@echo "HAVE_GLES = $(HAVE_GLES)"
 	@echo "SDL = $(SDL)"
 	@echo "SDL_ = $(SDL_)"

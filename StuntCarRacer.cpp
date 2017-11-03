@@ -1975,6 +1975,9 @@ int main(int argc, const char** argv)
 #ifdef PANDORA
 	flags |= SDL_FULLSCREEN;
 	screen = SDL_SetVideoMode( 800, 480, 32, flags );
+#elif defined(CHIP)
+	flags |= SDL_FULLSCREEN;
+	screen = SDL_SetVideoMode( 480, 272, 32, flags );
 #else
 	screen = SDL_SetVideoMode( 640, 480, 32, flags );
 #endif
@@ -1985,11 +1988,19 @@ int main(int argc, const char** argv)
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
 #ifdef PANDORA
 		screen = SDL_SetVideoMode( 800, 480, 32, flags );
+#elif defined(CHIP)
+		screen = SDL_SetVideoMode( 480, 272, 32, flags );
 #else
 		screen = SDL_SetVideoMode( 640, 480, 32, flags );
 #endif
     	if ( screen == NULL ) {
+#ifdef PANDORA
+			printf("Couldn't set 800x480x16 video mode: %s\n", SDL_GetError());
+#elif defined(CHIP)
+			printf("Couldn't set 480x272x32 video mode: %s\n", SDL_GetError());
+#else
 			printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
+#endif
         	exit(-2);
 		}
     } else {
@@ -1998,6 +2009,9 @@ int main(int argc, const char** argv)
 #ifdef PANDORA
 	SDL_ShowCursor(SDL_DISABLE);
 	glViewport(80, 0, 640, 480);
+#elif defined(CHIP)
+	SDL_ShowCursor(SDL_DISABLE);
+	glViewport(59, 0, 362, 272);	// try to preserve correct aspect ratio
 #else
 	glViewport(0, 0, 640, 480);
 #endif
