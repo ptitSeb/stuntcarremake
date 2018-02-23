@@ -24,6 +24,13 @@ ifeq ($(ODROID),1)
         LDFLAGS= -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
         #HAVE_GLES=1
 endif
+ifeq ($(ODROIDN1),1)
+        FLAGS= -mcpu=cortex-a72.cortex-a53 -fsingle-precision-constant -O3 -fsigned-char -ffast-math
+        FLAGS+= -DODROID
+        FLAGS+= -DARM
+        LDFLAGS= -mcpu=cortex-a72.cortex-a53
+        #HAVE_GLES=1
+endif
 ifeq ($(CHIP),1)
         FLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=hard -fsingle-precision-constant -O3 -fsigned-char
         FLAGS+= -DCHIP
