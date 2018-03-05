@@ -1927,6 +1927,7 @@ int main(int argc, const char** argv)
 	// crude command line parameter reading
 	int nomsaa = 0;
 	int fullscreen = 0;
+	int desktop = 0;
 	int givehelp = 0;
 
 	for (int i=1; i<argc; i++) {
@@ -1934,6 +1935,10 @@ int main(int argc, const char** argv)
 			fullscreen = 1;
 		else if(!strcmp(argv[i], "--fullscreen"))
 			fullscreen = 1;
+		else if(!strcmp(argv[i], "-d"))
+			desktop = 1;
+		else if(!strcmp(argv[i], "--desktop"))
+			desktop = 1;
 		else if(!strcmp(argv[i], "-n"))
 			nomsaa = 1;
 		else if(!strcmp(argv[i], "--nomsaa"))
@@ -1973,52 +1978,63 @@ int main(int argc, const char** argv)
 	}
 #endif
 	int flags = 0;
+	int screenH, screenW, screenX, screenY;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
 	if(fullscreen)
 		flags |= SDL_FULLSCREEN;
 #ifdef PANDORA
 	flags |= SDL_FULLSCREEN;
-	screen = SDL_SetVideoMode( 800, 480, 32, flags );
+	screenW = 800; screenH = 480;
 #elif defined(CHIP)
 	flags |= SDL_FULLSCREEN;
-	screen = SDL_SetVideoMode( 480, 272, 32, flags );
+	screenW = 480; screenH = 272;
 #else
-	screen = SDL_SetVideoMode( 640, 480, 32, flags );
+	if(desktop || fullscreen) {
+		flags |= SDL_FULLSCREEN;
+		if(desktop) {
+			const SDL_VideoInfo* infos = SDL_GetVideoInfo();
+			screenW = infos->current_w;
+			screenH = infos->current_h;
+		} else {
+			screenW = 640;
+			screenH = 480;
+		}
+	} else {
+		screenW = 640;
+		screenH = 480;
+	}
 #endif
+	screen = SDL_SetVideoMode( screenW, screenH, 32, flags );
     if ( screen == NULL ) {
 		// fallback to no MSAA
 		GL_MSAA=0;
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
-#ifdef PANDORA
-		screen = SDL_SetVideoMode( 800, 480, 32, flags );
-#elif defined(CHIP)
-		screen = SDL_SetVideoMode( 480, 272, 32, flags );
-#else
-		screen = SDL_SetVideoMode( 640, 480, 32, flags );
-#endif
+		screen = SDL_SetVideoMode( screenW, screenH, 32, flags );
     	if ( screen == NULL ) {
 #ifdef PANDORA
 			printf("Couldn't set 800x480x16 video mode: %s\n", SDL_GetError());
-#elif defined(CHIP)
-			printf("Couldn't set 480x272x32 video mode: %s\n", SDL_GetError());
 #else
-			printf("Couldn't set 640x480x32 video mode: %s\n", SDL_GetError());
+			printf("Couldn't set %dx%dx32 video mode: %s\n", screenW, screenH, SDL_GetError());
 #endif
         	exit(-2);
 		}
     } else {
 		glEnable(GL_MULTISAMPLE);
 	}
-#ifdef PANDORA
-	SDL_ShowCursor(SDL_DISABLE);
-	glViewport(80, 0, 640, 480);
-#elif defined(CHIP)
-	SDL_ShowCursor(SDL_DISABLE);
-	glViewport(59, 0, 362, 272);	// try to preserve correct aspect ratio
-#else
-	glViewport(0, 0, 640, 480);
-#endif
+	// automatic guess the scale
+	float screenScale = 1.;
+	if(screenW/640. < screenH/480.)
+		screenScale = screenW/640.;
+	else
+		screenScale = screenH/480.;
+	screenX = (screenW-640.*screenScale)/2.;
+	screenY = (screenH-480.*screenScale)/2.;
+	screenW = 640*screenScale;
+	screenH = 480*screenScale;
+	if(flags&SDL_FULLSCREEN)
+		SDL_ShowCursor(SDL_DISABLE);
+	glViewport(screenX, screenY, screenW, screenH);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, 640, 480, 0, 0, FURTHEST_Z);
