@@ -1840,6 +1840,8 @@ bool process_events()
 				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
+				case SDLK_RSHIFT:
+				case SDLK_LSHIFT:
 #endif
 					lastInput |= KEY_P1_BOOST;
 					break;
@@ -1880,6 +1882,8 @@ bool process_events()
 				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
+				case SDLK_RSHIFT:
+				case SDLK_LSHIFT:
 #endif
 					lastInput &= ~KEY_P1_BOOST;
 					break;
