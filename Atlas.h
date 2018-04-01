@@ -23,12 +23,12 @@ enum eAtlas {
     eRoadYellowLight,
     eRoadRedDark,
     eRoadRedLight,
+    eRoadBlack,
+    eRoadWhite,
     eRoadYellowDark2,
     eRoadYellowLight2,
     eRoadRedDark2,
     eRoadRedLight2,
-    eRoadBlack,
-    eRoadWhite,
     eLAST
 };
 

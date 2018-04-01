@@ -25,6 +25,8 @@ extern FILE *out;
 
 #define	MAX_VERTICES_PER_CAR	(142*3)
 
+extern bool bSuperLeague;
+
 /*	=========== */
 /*	Static data */
 /*	=========== */
@@ -653,7 +655,10 @@ static COORD_3D car[16+8] = {
 /**/
 
 	// car left side
-	colour = SCRGB(SCR_BASE_COLOUR+12);
+	if(bSuperLeague)
+		colour = SCRGB(SCR_BASE_COLOUR+21);
+	else
+		colour = SCRGB(SCR_BASE_COLOUR+12);
 	StoreCarTriangle(&car[4+16], &car[5+16], &car[1+16], vertices, colour);
 	StoreCarTriangle(&car[4+16], &car[1+16], &car[0+16], vertices, colour);
 	// car right side
@@ -661,7 +666,10 @@ static COORD_3D car[16+8] = {
 	StoreCarTriangle(&car[3+16], &car[6+16], &car[7+16], vertices, colour);
 
 	// car back
-	colour = SCRGB(SCR_BASE_COLOUR+10);
+	if(bSuperLeague)
+		colour = SCRGB(SCR_BASE_COLOUR+20);
+	else
+		colour = SCRGB(SCR_BASE_COLOUR+10);
 	StoreCarTriangle(&car[0+16], &car[1+16], &car[2+16], vertices, colour);
 	StoreCarTriangle(&car[0+16], &car[2+16], &car[3+16], vertices, colour);
 	// car front
@@ -673,7 +681,10 @@ static COORD_3D car[16+8] = {
 	StoreCarTriangle(&car[1+16], &car[5+16], &car[6+16], vertices, colour);
 	StoreCarTriangle(&car[1+16], &car[6+16], &car[2+16], vertices, colour);
 	// car bottom
-	colour = SCRGB(SCR_BASE_COLOUR+9);
+	if(bSuperLeague)
+		colour = SCRGB(SCR_BASE_COLOUR+19);
+	else
+		colour = SCRGB(SCR_BASE_COLOUR+9);
 	StoreCarTriangle(&car[3+16], &car[7+16], &car[4+16], vertices, colour);
 	StoreCarTriangle(&car[3+16], &car[4+16], &car[0+16], vertices, colour);
 	#undef vertices

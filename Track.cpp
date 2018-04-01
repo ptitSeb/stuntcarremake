@@ -37,6 +37,7 @@ extern long	VALUE1, VALUE2;
 /*	=========== */
 extern GameModeType GameMode;
 extern long bTrackDrawMode;
+extern bool bSuperLeague;
 
 unsigned char sections_car_can_be_put_on[] =
 {
@@ -1361,14 +1362,24 @@ long ConvertAmigaTrack( long track )
 		if (piece & 1)
 			{
 			// odd numbered section (light)
-			roadColour = SCR_BASE_COLOUR + 2;
-			sidesColour = SCR_BASE_COLOUR + 10;		// 8 for SUPER LEAGUE
+				if(bSuperLeague) {
+					roadColour = SCR_BASE_COLOUR + 17;
+					sidesColour = SCR_BASE_COLOUR + 16;
+				} else {
+					roadColour = SCR_BASE_COLOUR + 2;
+					sidesColour = SCR_BASE_COLOUR + 10;		// 8 for SUPER LEAGUE
+				}
 			}
 		else
 			{
 			// even numbered section (dark)
-			roadColour = SCR_BASE_COLOUR + 1;
-			sidesColour = SCR_BASE_COLOUR + 15;
+				if(bSuperLeague) {
+					roadColour = SCR_BASE_COLOUR + 18;
+					sidesColour = SCR_BASE_COLOUR + 15;
+				} else {
+					roadColour = SCR_BASE_COLOUR + 1;
+					sidesColour = SCR_BASE_COLOUR + 15;
+				}
 			}
 
 
@@ -1774,6 +1785,20 @@ BYTE roadColourIndex;
 					t = 1;
 				else
 					t = 3;
+			}
+			else if (roadColourIndex == SCR_BASE_COLOUR + 18)
+			{
+				if (rlc == 0)
+					t = 6+0;
+				else
+					t = 6+2;
+			}
+			else if (roadColourIndex == SCR_BASE_COLOUR + 17)	// lighter
+			{
+				if (rlc == 0)
+					t = 6+1;
+				else
+					t = 6+3;
 			}
 			else// if (roadColourIndex == SCR_BASE_COLOUR)	// black
 			{

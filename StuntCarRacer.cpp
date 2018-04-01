@@ -69,6 +69,7 @@ long bTrackDrawMode = 0;
 bool bOutsideView = FALSE;
 long engineSoundPlaying = FALSE;
 double gameStartTime, gameEndTime;
+bool bSuperLeague = FALSE;
 
 #if defined(DEBUG) || defined(_DEBUG)
 FILE *out;
@@ -308,7 +309,7 @@ void GetScreenDimensions( long *screen_width,
 // Colours
 //--------------------------------------------------------------------------------------
 
-#define NUM_PALETTE_ENTRIES     (42)
+#define NUM_PALETTE_ENTRIES     (42+6)
 //#define	PALETTE_COMPONENT_BITS	(8)		// bits per colour r/g/b component
 
 static PALETTEENTRY SCPalette[NUM_PALETTE_ENTRIES] =
@@ -354,13 +355,21 @@ static PALETTEENTRY SCPalette[NUM_PALETTE_ENTRIES] =
 		{0x55, 0xbb, 0xff},
 		{0x55, 0x99, 0xff},
 		{0x33, 0x55, 0x77},
-		{0x55, 0x00, 0x00},
-		{0x77, 0x33, 0x33},
+		{0x55, 0x00, 0x00}, // 9
+		{0x77, 0x33, 0x33},	//10
 		{0x99, 0x55, 0x55},
-		{0xdd, 0x99, 0x99},
+		{0xdd, 0x99, 0x99}, //12
 		{0x77, 0x77, 0x55},
 		{0xbb, 0xbb, 0xbb},
-		{0xff, 0xff, 0xff}
+		{0xff, 0xff, 0xff},
+
+		// extra track colours (altered super league)
+		{ 51,   51,  119},	// SCR_BASE_COLOUR+16
+		{119,  153,  119},
+		{ 85,  153,   85},
+		{0x00, 0x00, 0x55}, //19
+		{0x33, 0x33, 0x77},	//20
+		{0x99, 0x99, 0xdd}, //21
 	};
 
 
@@ -1082,9 +1091,11 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 #ifdef linux
 #define FIRSTMENU SDLK_1
 #define STARTMENU SDLK_s
+#define LEAGUEMENU SDLK_l
 #else
 #define FIRSTMENU '1'
 #define STARTMENU 'S'
+#define LEAGUEMENU 'L'
 #endif
 
 static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
@@ -1104,10 +1115,16 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*8 );
 	txtHelper.DrawFormattedTextLine( L"Current track - " STRING L".  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawTextLine( L"'L' to switch Super League On/Off");
 
-	if ((keyPress >= firstMenuOption) && (keyPress <= lastMenuOption))
+	if (((keyPress >= firstMenuOption) && (keyPress <= lastMenuOption)) || (keyPress == LEAGUEMENU))
 		{
-		track_number = keyPress - firstMenuOption;	// start at 0
+		if(keyPress == LEAGUEMENU) {
+			bSuperLeague = !bSuperLeague;
+			track_number = TrackID;
+			CreateCarVertexBuffer(DXUTGetD3DDevice());	// recreate car
+		} else 
+			track_number = keyPress - firstMenuOption;	// start at 0
 
 		if (! ConvertAmigaTrack(track_number))
 			{
@@ -1138,6 +1155,7 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 		bPlayerPaused = bOpponentPaused = FALSE;
 		keyPress = '\0';
 		}
+	
 
 	return;
 	}
@@ -1154,7 +1172,8 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*9 );
-	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING L".  Press 'S' to start game, 'M' for track menu, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING L".  Press 'S' to start game", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
+	txtHelper.DrawTextLine( L"'M' for track menu, Escape to quit");
 	txtHelper.DrawTextLine( L"(Press F4 to change scenery, F9 / F10 to adjust frame rate)" );
 
 	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*6 );
