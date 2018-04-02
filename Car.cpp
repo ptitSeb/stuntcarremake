@@ -840,21 +840,21 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 		engineFrame = eEngineFlames0 + engineframes[frame>>1];
 	}
 	AddQuad(pVertices, 42.0f*2.0f, 123.0f*2.4f, (42.0f+235.0f)*2.0f, (123.f+35.0f)*2.4f, 0.89f, engineFrame, 0,1);
-	AddQuad(pVertices, 41.f*2.f, 0.0f, (41.f+238.f)*2.f, 16.f*2.4f, 0.9f, eCockpitTop, 0,1);
-	AddQuad(pVertices, 0.0f, 0.0f, 41.f*2.f, 153.f*2.4f, 0.9f, eCockpitLeft, 0,1);
-	AddQuad(pVertices, 279.f*2.f, 0.0f, 640.0f, 153.f*2.4f, 0.9f, eCockpitRight, 0,1);
-	AddQuad(pVertices, 0.0f, 153.f*2.4f, 640.0f, 480.0f, 0.9f, eCockpitBottom, 0,1);
+	AddQuad(pVertices, 41.f*2.f, 0.0f, (41.f+238.f)*2.f, 16.f*2.4f, 0.9f, (bSuperLeague)?eCockpitTop2:eCockpitTop, 0,1);
+	AddQuad(pVertices, 0.0f, 0.0f, 41.f*2.f, 153.f*2.4f, 0.9f, (bSuperLeague)?eCockpitLeft2:eCockpitLeft, 0,1);
+	AddQuad(pVertices, 279.f*2.f, 0.0f, 640.0f, 153.f*2.4f, 0.9f, (bSuperLeague)?eCockpitRight2:eCockpitRight, 0,1);
+	AddQuad(pVertices, 0.0f, 153.f*2.4f, 640.0f, 480.0f, 0.9f, (bSuperLeague)?eCockpitBottom2:eCockpitBottom, 0,1);
 	if (new_damage) {
 		// cracking... width is 238, offset is 41 (in 320x200 screen space)
 		float dam = new_damage; if (dam>238) dam=238;
 		X1 = 41.0f*2.0f; X2 = (41.0f+dam)*2.0f;
 		Y1 = 0.0f; Y2 = 0.0f+8.0f*2.4;
-		AddQuad(pVertices, X1, Y1, X2, Y2, 0.91f, eCracking, 0, dam/238.0f);
+		AddQuad(pVertices, X1, Y1, X2, Y2, 0.91f, (bSuperLeague)?eCracking2:eCracking, 0, dam/238.0f);
 	}
 	for (int i=0; i<nholes; i++) {
 		X1 = (47.0f+24.0f*i)*2; X2 = X1 + 12.0f*2.0f;
 		Y1 = 0.0f; Y2 = 0.0f+8.0f*2.4f;
-		AddQuad(pVertices, X1, Y1, X2, Y2, 0.95f, eHole, 0,1);
+		AddQuad(pVertices, X1, Y1, X2, Y2, 0.95f, (bSuperLeague)?eHole2:eHole, 0,1);
 	}
 
 	pCockpitVB->Unlock();
