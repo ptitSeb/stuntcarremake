@@ -55,7 +55,7 @@ IDirectSoundBuffer8 *EngineSoundBuffers[8] = {NULL};
 
 IDirect3DTexture9 *g_pAtlas = NULL;
 
-
+int wideScreen = 0;
 
 static long frameGap = DEFAULT_FRAME_GAP;
 static bool bFrameMoved = FALSE;
@@ -300,7 +300,7 @@ void GetScreenDimensions( long *screen_width,
 	/*const SDL_VideoInfo* info = SDL_GetVideoInfo();
 	*screen_width = info->current_w;
 	*screen_height = info->current_h; */
-	*screen_width = 640;
+	*screen_width = (wideScreen)?800:640;
 	*screen_height = 480;
 #else
 	const D3DSURFACE_DESC *desc;
@@ -1108,7 +1108,7 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 	{
 	long i, track_number;
 	UINT firstMenuOption, lastMenuOption;
-	txtHelper.SetInsertionPos( 2, 15*8 );
+	txtHelper.SetInsertionPos( 2+(wideScreen?10:0), 15*8 );
 	txtHelper.DrawTextLine( L"Choose track :-" );
 
 	for (i = 0, firstMenuOption = FIRSTMENU; i < NUM_TRACKS; i++)
@@ -1119,7 +1119,7 @@ static void HandleTrackMenu( CDXUTTextHelper &txtHelper )
 
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
-	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*8 );
+	txtHelper.SetInsertionPos( 2+(wideScreen?10:0), pd3dsdBackBuffer->Height-15*8 );
 	txtHelper.DrawFormattedTextLine( L"Current track - " STRING L".  Press 'S' to select, Escape to quit", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 	txtHelper.DrawTextLine( L"'L' to switch Super League On/Off");
 
@@ -1177,12 +1177,12 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 	{
 	// output instructions
 	const D3DSURFACE_DESC *pd3dsdBackBuffer = DXUTGetBackBufferSurfaceDesc();
-	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*9 );
+	txtHelper.SetInsertionPos( 2+(wideScreen?10:0), pd3dsdBackBuffer->Height-15*9 );
 	txtHelper.DrawFormattedTextLine( L"Selected track - " STRING L".  Press 'S' to start game", (TrackID == NO_TRACK ? L"None" : GetTrackName(TrackID)));
 	txtHelper.DrawTextLine( L"'M' for track menu, Escape to quit");
 	txtHelper.DrawTextLine( L"(Press F4 to change scenery, F9 / F10 to adjust frame rate)" );
 
-	txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*6 );
+	txtHelper.SetInsertionPos( 2+(wideScreen?10:0), pd3dsdBackBuffer->Height-15*6 );
 	txtHelper.DrawTextLine( L"Keyboard controls during game :-" );
 	#ifdef PANDORA
 	txtHelper.DrawTextLine( L"  DPad = Steer, (X) = Accelerate, (B) = Brake, (R) = Nitro" );
@@ -1247,7 +1247,7 @@ void RenderText( double fTime )
 	txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
 	if (bShowStats)
 	{
-		txtHelper.SetInsertionPos( 2, 0 );
+		txtHelper.SetInsertionPos( 2+(wideScreen?10:0), 0 );
 #ifndef linux
 		txtHelper.DrawTextLine( DXUTGetFrameStats(true) );
 		txtHelper.DrawTextLine( DXUTGetDeviceStats() );
@@ -1285,23 +1285,21 @@ void RenderText( double fTime )
 			// Output opponent's name for four seconds at race start
 			if (((DXUTGetTime() - gameStartTime) < 4.0) && (opponentsID != NO_OPPONENT))
 			{
-				txtHelper.SetInsertionPos( 250, pd3dsdBackBuffer->Height-15*20 );
+				txtHelper.SetInsertionPos( 250+(wideScreen?80:0), pd3dsdBackBuffer->Height-15*20 );
 				txtHelper.DrawFormattedTextLine( L"Opponent: " STRING, opponentNames[opponentsID] );
 			}
-			txtHelper.SetInsertionPos( 2, pd3dsdBackBuffer->Height-15*2 );
+			txtHelper.SetInsertionPos( 2+(wideScreen?80:0), pd3dsdBackBuffer->Height-15*2 );
 			if (lapNumber[PLAYER] > 0)
 				StringCchPrintf( lapText, 3, L"%d", lapNumber[PLAYER] );
 			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-			txtHelper.SetInsertionPos( 75, pd3dsdBackBuffer->Height-52 );
+			txtHelper.SetInsertionPos( 75+(wideScreen?80:0), pd3dsdBackBuffer->Height-52 );
 			txtHelper.DrawFormattedTextLine( L"L" STRING L"        B%02d", lapText, boostReserve );
 			if (CalculateOpponentsDistance() >= 0)
-				txtHelper.SetInsertionPos( 72, pd3dsdBackBuffer->Height-29 );
+				txtHelper.SetInsertionPos( 72+(wideScreen?80:0), pd3dsdBackBuffer->Height-29 );
 			else
-				txtHelper.SetInsertionPos( 76, pd3dsdBackBuffer->Height-29 );
+				txtHelper.SetInsertionPos( 76+(wideScreen?80:0), pd3dsdBackBuffer->Height-29 );
 			txtHelper.DrawFormattedTextLine( L"         %+05d", CalculateOpponentsDistance() );
-			/*txtHelper.SetForegroundColor( D3DXCOLOR( 1.0f, 1.0f, 0.0f, 1.0f ) );
-			txtHelper.SetInsertionPos( 280, pd3dsdBackBuffer->Height-15*2 );
-			txtHelper.DrawFormattedTextLine( L"Damage: %d", new_damage );*/
+
 			txtHelper.End();
 
 			if (raceFinished)
@@ -1327,12 +1325,12 @@ void RenderText( double fTime )
 				if (GameMode == GAME_OVER)
 				{
 #ifdef 	linux
-					txtHelperLarge.SetInsertionPos( 250, pd3dsdBackBuffer->Height-25*13 );
+					txtHelperLarge.SetInsertionPos( 250+(wideScreen?80:0), pd3dsdBackBuffer->Height-25*13 );
 					txtHelperLarge.DrawTextLine( L"GAME OVER" );
-					txtHelperLarge.SetInsertionPos( 132, pd3dsdBackBuffer->Height-25*11 );
+					txtHelperLarge.SetInsertionPos( 132+(wideScreen?80:0), pd3dsdBackBuffer->Height-25*11 );
 					txtHelperLarge.DrawTextLine( L"Press 'M' for track menu" );
 #else
-					txtHelperLarge.SetInsertionPos( 124, pd3dsdBackBuffer->Height-25*12 );
+					txtHelperLarge.SetInsertionPos( 124+(wideScreen?80:0), pd3dsdBackBuffer->Height-25*12 );
 					txtHelperLarge.DrawTextLine( L"GAME OVER: Press 'M' for track menu" );
 #endif
 				}
@@ -1345,7 +1343,7 @@ void RenderText( double fTime )
 					else
 						txtHelperLarge.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
 
-					txtHelperLarge.SetInsertionPos( 250, pd3dsdBackBuffer->Height-25*12 );
+					txtHelperLarge.SetInsertionPos( 250+(wideScreen?80:0), pd3dsdBackBuffer->Height-25*12 );
 
 					if (raceWon)
 						txtHelperLarge.DrawTextLine( L"RACE WON" );
@@ -2015,6 +2013,7 @@ int main(int argc, const char** argv)
 	}
 #endif
 	int flags = 0;
+	wideScreen = 0;
 	int screenH, screenW, screenX, screenY;
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
 	if(fullscreen)
@@ -2037,7 +2036,7 @@ int main(int argc, const char** argv)
 			screenH = 480;
 		}
 	} else {
-		screenW = 640;
+		screenW = 800;
 		screenH = 480;
 	}
 #endif
@@ -2065,16 +2064,19 @@ int main(int argc, const char** argv)
 		screenScale = screenW/640.;
 	else
 		screenScale = screenH/480.;
-	screenX = (screenW-640.*screenScale)/2.;
+	// is it a Wide screen ration?
+	if((screenW/screenScale - 640)>=80)
+		wideScreen=1;
+	screenX = (screenW-(wideScreen?800.:640.)*screenScale)/2.;
 	screenY = (screenH-480.*screenScale)/2.;
-	screenW = 640*screenScale;
+	screenW = (wideScreen?800:640)*screenScale;
 	screenH = 480*screenScale;
 	if(flags&SDL_FULLSCREEN)
 		SDL_ShowCursor(SDL_DISABLE);
 	glViewport(screenX, screenY, screenW, screenH);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, 640, 480, 0, 0, FURTHEST_Z);
+	glOrtho(0, wideScreen?800:640, 480, 0, 0, FURTHEST_Z);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -2113,14 +2115,15 @@ int main(int argc, const char** argv)
 	DSSetMode();
 
 	bool run = true;
+	glClearColor(0,0,0,1);
     while( run ) {
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		double fTime = DXUTGetTime();
 		run = process_events();
 		OnFrameMove( &pd3dDevice, fTime, fTime - fLastTime, NULL );
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
 		SDL_GL_SwapBuffers();
-		glClearColor(0,0,0,1);
-		glClear(GL_COLOR_BUFFER_BIT);
 
 		int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000;
 		if (timetowait>0)
