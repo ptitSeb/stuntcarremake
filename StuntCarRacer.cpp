@@ -2076,7 +2076,9 @@ int main(int argc, const char** argv)
 	glViewport(screenX, screenY, screenW, screenH);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, wideScreen?800:640, 480, 0, 0, FURTHEST_Z);
+	screenH = 480;
+	screenW = wideScreen?800:640;
+	glOrtho(0, screenW, screenH, 0, 0, FURTHEST_Z);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -2085,7 +2087,7 @@ int main(int argc, const char** argv)
 	IDirect3DDevice9 pd3dDevice;
 
     D3DXMATRIX matProj;
-	FLOAT fAspect = 640.0f / 480.0f;
+	FLOAT fAspect = screenW / 480.0f;
     D3DXMatrixPerspectiveFovLH( &matProj, D3DX_PI/4, fAspect, 0.5f, FURTHEST_Z );
     pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
 
