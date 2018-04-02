@@ -871,7 +871,7 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 		TRANSFORMEDCOLVERTEX *pVertices;
 		if( FAILED( pSpeedBarCB->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
 			return;
-		float X1 = 196.0f, X2 = 196.0f + ((CalculateDisplaySpeed() >= 240) ? 240.0f : (float)CalculateDisplaySpeed())/240.0f*242.0f;
+		float X1 = Wide*2.f+196.0f, X2 = Wide*2.f+196.0f + ((CalculateDisplaySpeed() >= 240) ? 240.0f : (float)CalculateDisplaySpeed())/240.0f*242.0f;
 		float Y1 = 480.0f-61.0f, Y2=480.0f-61.0f+3.0f;
 		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 1.0f; pVertices[0].rhw = 1.0f; pVertices[0].color = 0xff00ffff;
 		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 1.0f; pVertices[1].rhw = 1.0f; pVertices[1].color = 0xff00ffff;
