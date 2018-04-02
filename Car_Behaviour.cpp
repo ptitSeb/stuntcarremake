@@ -136,6 +136,8 @@ extern IDirectSoundBuffer8 *CreakSoundBuffer;
 extern IDirectSoundBuffer8 *SmashSoundBuffer;
 extern IDirectSoundBuffer8 *OffRoadSoundBuffer;
 
+extern bool bSuperLeague;
+
 /*	=========== */
 /*	Static data */
 /*	=========== */
@@ -157,8 +159,8 @@ static long accelerate, brake;
 
 static long accelerating = FALSE;	// to remember previous control state
 
-static long engine_power = 240;		// (240 standard, 320 super)
-static long boost_unit_value = 16;	// (16 standard, 12 super)
+long engine_power = 240;		// (240 standard, 320 super)
+long boost_unit_value = 16;	// (16 standard, 12 super)
 
 static long left_right_value;
 static long engine_z_acceleration;
@@ -371,8 +373,8 @@ void ResetPlayer (void)
 
 	accelerating = FALSE;
 
-	engine_power = 240;		// (240 standard, 320 super)
-	boost_unit_value = 16;	// (16 standard, 12 super)
+	engine_power = (bSuperLeague)?320:240;		// (240 standard, 320 super)
+	boost_unit_value = (bSuperLeague)?12:16;	// (16 standard, 12 super)
 
 	// calculated
 	left_right_value = 0;
@@ -2068,11 +2070,11 @@ static void CalculateGravityAcceleration (void)
 /*	Description:	Calculate car acceleration caused by collision with other objects		*/
 /*	======================================================================================= */
 
-static long damaged_limit = 10;	// Actually track/league dependant (could add to track data)
+long damaged_limit = 10;	// Actually track/league dependant (could add to track data)
 
 	// NOTE: road_cushion_value is 0 for standard league and 1 for super league
 	//		 fourteen_frames_elapsed has value of 0 or -1 (set)
-static long road_cushion_value = 0, fourteen_frames_elapsed = 0;
+long road_cushion_value = 0, fourteen_frames_elapsed = 0;
 
 
 // following are only global due to use by two functions - could be passed in instead

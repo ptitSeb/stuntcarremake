@@ -77,7 +77,7 @@ static char Piece_X_Z_Position[MAX_PIECES_PER_TRACK];/* Little Ramp data, from b
 //*
 //* Bottom nibble is the near section piece to use.
 //
-static char Piece_Angle_And_Template[MAX_PIECES_PER_TRACK];/* Little Ramp data, from before it was loaded =
+char Piece_Angle_And_Template[MAX_PIECES_PER_TRACK];/* Little Ramp data, from before it was loaded =
 {
 	(char)0xa0,(char)0xa0,(char)0xa0,(char)0xa0,(char)0xa0,(char)0xa0,(char)0xa0,(char)0xa0,
 	(char)0xa0,(char)0xa0,(char)0x80,(char)0x86,(char)0x57,(char)0xc0,(char)0xe0,(char)0xe0,

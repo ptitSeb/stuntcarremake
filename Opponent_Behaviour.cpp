@@ -67,6 +67,11 @@ long opponents_current_piece = 0;	// use as opponents_road_section
 bool player_close_to_opponent = FALSE;
 bool opponent_behind_player = FALSE;
 
+extern bool bSuperLeague;
+extern unsigned char sections_car_can_be_put_on[]; 				// both array are used for opponents speed values computation
+extern char Piece_Angle_And_Template[MAX_PIECES_PER_TRACK];
+
+// SEB: The opponents_speed_values, that is pre-computed, is not used anymore and Opponents_Speed_Value function is used now
 // Values for each piece of each track (Global because MoveDrawBridge() modifies the Draw Bridge values)
 // NOTE: These are for the Standard league.  Super league values are different
 unsigned char opponents_speed_values[NUM_TRACKS][MAX_PIECES_PER_TRACK] =
@@ -190,14 +195,14 @@ static unsigned char opp_track_speed_values[] =	//DAT.1fe2c
 	// Standard league
 	0x07,0x07,0x07,0x07,0x07,0x07,0x07,0x07,
 	0x41,0x3a,0x3e,0x41,0x48,0x51,0x48,0x4f,
-	//0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	// used when creating opponents.speed.values
-	//0x48,0x41,0x45,0x48,0x4f,0x58,0x4f,0x56,	// used when creating opponents.speed.values
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,	// used when creating opponents.speed.values
+	0x48,0x41,0x45,0x48,0x4f,0x58,0x4f,0x56,	// used when creating opponents.speed.values
 
 	// Super league
 	0x07,0x03,0x03,0x03,0x03,0x03,0x07,0x03,
-	0x66,0x57,0x57,0x59,0x59,0x69,0x62,0x64
-	//0x07,0x03,0x03,0x03,0x03,0x01,0x03,0x03,	// used when creating opponents.speed.values
-	//0x61,0x55,0x53,0x56,0x58,0x5b,0x5a,0x62	// used when creating opponents.speed.values
+	0x66,0x57,0x57,0x59,0x59,0x69,0x62,0x64,
+	0x07,0x03,0x03,0x03,0x03,0x01,0x03,0x03,	// used when creating opponents.speed.values
+	0x61,0x55,0x53,0x56,0x58,0x5b,0x5a,0x62		// used when creating opponents.speed.values
 };
 
 static long opponents_distance_into_section;
@@ -238,7 +243,7 @@ static long opp_touching_road;
 static long opp_y_acceleration[NUM_OPP_WHEEL_POSITIONS];
 static long opp_y_speed[NUM_OPP_WHEEL_POSITIONS];
 
-static long opp_engine_power = 236;		// (236 standard, 314 super)
+long opp_engine_power = 236;		// (236 standard, 314 super)
 static long opponents_engine_z_acceleration;
 static long opponents_max_speed;
 static long opponents_z_speed;
@@ -358,8 +363,8 @@ void OpponentBehaviour (long *x,
 		// end initialise.opponent.data
 
 		// Set opponent_max_speed
-		long s = (long)rand() & (long)opp_track_speed_values[TrackID];
-		s += (long)opp_track_speed_values[TrackID+8];
+		long s = (long)rand() & (long)opp_track_speed_values[TrackID+(bSuperLeague?32:0)];
+		s += (long)opp_track_speed_values[TrackID+8+(bSuperLeague?32:0)];
 		opponents_max_speed = s;
 //temp		opponents_max_speed = 10;
 
@@ -1247,6 +1252,66 @@ static void AverageWheelYSpeeds( long wheel1, long wheel2 )
 	opp_y_speed[wheel2] = average;
 }
 
+static long Opponent_Speed_Value( long TrackID, long pos )
+{
+/*srd111a	move.l	#road.section.angle.and.piece,a1
+	move.b	(a1,d1.w),d0
+	andi.b	#$f,d0
+	move.b	d0,d2
+	move.l	#sections.car.can.be.put.on,a2
+	move.b	(a2,d2.w),d0
+	bpl	srd112
+
+	move.b	B.63ce1,d0
+	subi.b	#10,d0
+	move.b	d0,value
+	move.b	B.63ce1,d0
+	jmp	srd113a
+
+srd112	move.b	value,d0
+	addi.b	#10,d0
+	bmi	srd113
+	move.b	d0,value
+
+srd113	move.b	value,d0
+
+srd113a	move.b	prompt.chars,d2
+	beq	srd114
+
+	subq.b	#1,prompt.chars
+	ori.b	#$80,d0
+
+srd114	move.l	#opponents.speed.values,a1
+	move.b	d0,(a1,d1.w)
+*/
+	static long oldpos = -1;
+	static long oldtrack = -1;
+	static bool oldleague = false;
+	static long oldspeed = 0;
+	if(pos==oldpos && oldtrack==TrackID && oldleague==bSuperLeague)
+		return oldspeed;
+	oldpos = pos;
+	oldleague = bSuperLeague;
+	oldtrack = TrackID;
+
+	long b = Piece_Angle_And_Template[pos];
+	b = sections_car_can_be_put_on[b&0x0f];
+	long B63ce1 = (long)rand() & (long)opp_track_speed_values[TrackID+16+(bSuperLeague?32:0)];
+		 B63ce1 += (long)opp_track_speed_values[TrackID+24+(bSuperLeague?32:0)];
+	long /*value,*/ d0;
+	if (b<0) {
+		//value = B63ce1-10;
+		d0 = B63ce1;
+	} else {
+		if (B63ce1<(0x7f-10))
+			d0 = /*value =*/ B63ce1+10;
+		else
+			d0 = /*value =*/ B63ce1;
+	}
+	oldspeed = d0;
+	return d0;
+}
+
 
 /*	======================================================================================= */
 /*	Function:		RandomizeOpponentsSteering												*/
@@ -1324,7 +1389,7 @@ long value;
 
 ros1:
 	d2 = opponents_current_piece;
-	if (opponents_speed_values[TrackID][d2] < 0)
+	if (/*opponents_speed_values[TrackID][d2]*/Opponent_Speed_Value(TrackID, d2) < 0)
 		goto ros2;
 
 	if (opponent_behind_player)
@@ -1432,7 +1497,7 @@ long speed_value, speed, opponents_required_z_speed;
 	if (!opp_touching_road)
 		return;
 
-	speed_value = opponents_speed_values[TrackID][opponents_current_piece];
+	speed_value = /*opponents_speed_values[TrackID][opponents_current_piece]*/Opponent_Speed_Value(TrackID, opponents_current_piece);
 	speed = speed_value;
 	if ((speed & 0x80) == 0)
 	{

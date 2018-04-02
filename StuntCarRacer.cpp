@@ -84,6 +84,12 @@ extern long INITIALISE_PLAYER;
 extern bool raceFinished, raceWon;
 extern long lapNumber[];
 
+// League / Super League variable
+extern long damaged_limit;
+extern long road_cushion_value;
+extern long engine_power;
+extern long boost_unit_value;
+extern long opp_engine_power;
 
 //-----------------------------------------------------------------------------
 // Static variables
@@ -1195,7 +1201,19 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 		ResetLapData(PLAYER);
 		gameStartTime = DXUTGetTime();
 		gameEndTime = 0;
-		boostReserve = StandardBoost;	// SuperBoost for super league
+		if(bSuperLeague) {
+			boostReserve = SuperBoost;
+			road_cushion_value = 1;
+			engine_power = 320;
+			boost_unit_value = 12;
+			opp_engine_power = 314;
+		} else {
+			boostReserve = StandardBoost;	// SuperBoost for super league
+			road_cushion_value = 0;
+			engine_power = 240;
+			boost_unit_value = 16;
+			opp_engine_power = 236;
+		}
 		boostUnit = 0;
 		bPlayerPaused = bOpponentPaused = FALSE;
 		keyPress = '\0';
