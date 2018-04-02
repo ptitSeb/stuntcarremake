@@ -2469,6 +2469,7 @@ extern long opponents_current_piece;	// use as opponents_road_section
 
 extern unsigned char opponents_speed_values[NUM_TRACKS][MAX_PIECES_PER_TRACK];
 
+//TODO: what are those value in SuperLeague mode? Seems to be the same, but need more checks
 // Opponent's speed values for driving up the Draw Bridge (one value for each height)
 static unsigned char TAB5a996[16] = {0xd2,0xbb,0xb7,0xb3,0xb1,0xad,0xab,0xa7,0xa6,0xa4,0xa2,0xa1,0x9f,0x9f,0x9f,0x9e};
 // Opponent's speed values for approaching the Draw Bridge
