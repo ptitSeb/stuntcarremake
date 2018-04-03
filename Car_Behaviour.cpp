@@ -2462,7 +2462,7 @@ static void CalculateTotalAcceleration (void)
 	reduction = ((engine_z_acceleration >> 8) | (player_z_speed >> 8)) & 0xff;
 	if ((reduction & 0x80) != 0x80)	// i.e. not negative
 		{
-		if ((engine_z_acceleration & 0xff) != 0)
+		if (engine_z_acceleration>=0x100)
 			{
 			engine_z_acceleration -= reduction;
 			}
