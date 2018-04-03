@@ -3657,11 +3657,11 @@ long CalculateDisplaySpeed (void)
 	long speed;
 
 	speed = player_z_speed;
-	if (speed < 0) speed = 0;
+	if (speed < 0x1100) speed = 0; // first few values are not displayed
 
 	speed = ((speed * 183) >> 15);
 
-	return(speed);
+	return(speed*240)>>7;	// on screen full 240 speed is 128 lenght!
 	}
 
 /*	======================================================================================= */
