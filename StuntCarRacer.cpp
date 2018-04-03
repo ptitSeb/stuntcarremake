@@ -32,7 +32,7 @@
 // Defines, constants, and global variables
 //-----------------------------------------------------------------------------
 
-#define DEFAULT_FRAME_GAP	(4)		// Used to limit frame rate.  Amiga StuntCarRacer uses value of 6 (called MIN.FRAMES)
+#define DEFAULT_FRAME_GAP	(6)		// 4 Used to limit frame rate.  Amiga StuntCarRacer uses value of 6 (called MIN.FRAMES)
 
 #define	HEIGHT_ABOVE_ROAD	(100)
 
@@ -2118,6 +2118,8 @@ int main(int argc, const char** argv)
 
 	bool run = true;
 	glClearColor(0,0,0,1);
+	double fTime;
+	fLastTime = fTime = DXUTGetTime();
     while( run ) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2128,6 +2130,7 @@ int main(int argc, const char** argv)
 		SDL_GL_SwapBuffers();
 
 		int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000;
+		//int32_t timetowait = (1.0f/60.0f - (fTime-fLastTime))*1000;
 		if (timetowait>0)
 			SDL_Delay(timetowait);
 

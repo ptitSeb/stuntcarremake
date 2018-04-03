@@ -2459,10 +2459,10 @@ static void CalculateTotalAcceleration (void)
 	// this probably simulates the effect of wind resistance and the
 	// car having reduced ability to accelerate as speed increases
 	//21/05/1998 - old method - if ((engine_z_acceleration > 0) && (player_z_speed >= 0))
-	reduction = ((engine_z_acceleration >> 8) | (player_z_speed >> 8)) & 0xff;
-	if ((reduction & 0x80) != 0x80)	// i.e. not negative
+	reduction = ((engine_z_acceleration / 256) | (player_z_speed / 256)) & 0xff;
+	if (!(reduction & 0x80))	// i.e. not negative
 		{
-		if (engine_z_acceleration>=0x100)
+		if (engine_z_acceleration&0xff)
 			{
 			engine_z_acceleration -= reduction;
 			}
