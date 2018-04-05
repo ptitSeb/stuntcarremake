@@ -3661,7 +3661,7 @@ long CalculateDisplaySpeed (void)
 
 	speed = ((speed * 183) >> 15);
 
-	return(speed*240)>>7;	// on screen full 240 speed is 128 lenght!
+	return(speed*200)>>7;	// on screen full 240 speed is 128 lenght, but first 40 are not displayed!
 	}
 
 /*	======================================================================================= */
