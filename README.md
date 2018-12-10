@@ -4,6 +4,12 @@
 
 This is a port to Linux & OpenPandora of Stunt Car Racer Remake, a windows remake of the old Stunt Car Racer from the AtariST/Amiga time.
 
+To build on Linux, simply use `make LINUX=1`
+For ODroid it will be `make ODROID=1`
+and for PocketCHIP: `make CHIP=1`
+a simple `make` will build for Pandora.
+Also, you can also use SDL2 instead of SDL1, by adding `SDL=2` to the make command (so SDL2 Linux is `make LINUX=1 SDL=2`)
+
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
 
 Controls are:

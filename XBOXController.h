@@ -6,7 +6,11 @@
 
 // We need the Windows Header and the XInput Header
 #ifdef linux
+#ifdef USE_SDL2
+#include <SDL2/SDL.h>
+#else
 #include <SDL/SDL.h>
+#endif
 #define XINPUT_STATE int
 #else
 #include <windows.h>

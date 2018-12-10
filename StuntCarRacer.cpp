@@ -1950,11 +1950,20 @@ bool process_events()
 int GL_MSAA = 0;
 int main(int argc, const char** argv)
 {
+#ifdef USE_SDL2
+	SDL_Window *window = NULL;
+	SDL_GLContext context = NULL;
+	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) {
+		printf("Could not initialise SDL2: %s\n", SDL_GetError());
+		exit(-1);
+	}
+#else
 	SDL_Surface *screen = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_EVENTTHREAD)==-1) {
 		printf("Could not initialise SDL: %s\n", SDL_GetError());
 		exit(-1);
 	}
+#endif
 	atexit(SDL_Quit);
 
 	TTF_Init();
@@ -2015,22 +2024,47 @@ int main(int argc, const char** argv)
 	int flags = 0;
 	wideScreen = 0;
 	int screenH, screenW, screenX, screenY;
+#ifdef USE_SDL2
+	flags = SDL_WINDOW_OPENGL;
+#else
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
+#endif
 	if(fullscreen)
+#ifdef USE_SDL2
+		flags |= SDL_WINDOW_FULLSCREEN;
+#else
 		flags |= SDL_FULLSCREEN;
+#endif
 #ifdef PANDORA
+#ifdef USE_SDL2
+		flags |= SDL_WINDOW_FULLSCREEN;
+#else
 	flags |= SDL_FULLSCREEN;
+#endif
 	screenW = 800; screenH = 480;
 #elif defined(CHIP)
+#ifdef USE_SDL2
+		flags |= SDL_WINDOW_FULLSCREEN;
+#else
 	flags |= SDL_FULLSCREEN;
+#endif
 	screenW = 480; screenH = 272;
 #else
 	if(desktop || fullscreen) {
+#ifdef USE_SDL2
+		flags |= (desktop)?SDL_WINDOW_FULLSCREEN_DESKTOP:SDL_WINDOW_FULLSCREEN;
+#else
 		flags |= SDL_FULLSCREEN;
+#endif
 		if(desktop) {
+#ifdef USE_SDL2
+			screenW = 640;
+			screenH = 480;
+#else
 			const SDL_VideoInfo* infos = SDL_GetVideoInfo();
 			screenW = infos->current_w;
 			screenH = infos->current_h;
+#endif
 		} else {
 			screenW = 640;
 			screenH = 480;
@@ -2040,6 +2074,26 @@ int main(int argc, const char** argv)
 		screenH = 480;
 	}
 #endif
+#ifdef USE_SDL2
+	window = SDL_CreateWindow("StuntCarRemake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
+	if(window==NULL && GL_MSAA) {
+		// fallback to no MSAA
+		GL_MSAA=0;
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
+		window = SDL_CreateWindow("StuntCarRemake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
+	}
+	if(window==NULL) {
+		printf("Couldn't create Window (%dx%d): %s\n", screenW, screenH, SDL_GetError());
+		exit(-2);
+	}
+	context = SDL_GL_CreateContext(window);
+	if(context==NULL) {
+			printf("Couldn't create OpenGL Context: %s\n", SDL_GetError());
+			exit(-3);
+	}
+	SDL_GetWindowSize(window, &screenW, &screenH);
+#else
 	screen = SDL_SetVideoMode( screenW, screenH, 32, flags );
     if ( screen == NULL ) {
 		// fallback to no MSAA
@@ -2058,6 +2112,7 @@ int main(int argc, const char** argv)
     } else {
 		glEnable(GL_MULTISAMPLE);
 	}
+#endif
 	// automatic guess the scale
 	float screenScale = 1.;
 	if(screenW/640. < screenH/480.)
@@ -2071,7 +2126,11 @@ int main(int argc, const char** argv)
 	screenY = (screenH-480.*screenScale)/2.;
 	screenW = (wideScreen?800:640)*screenScale;
 	screenH = 480*screenScale;
+#ifdef USE_SDL2
+	if(flags&SDL_WINDOW_FULLSCREEN || flags&SDL_WINDOW_FULLSCREEN_DESKTOP)
+#else
 	if(flags&SDL_FULLSCREEN)
+#endif
 		SDL_ShowCursor(SDL_DISABLE);
 	glViewport(screenX, screenY, screenW, screenH);
 	glMatrixMode(GL_PROJECTION);
@@ -2127,7 +2186,11 @@ int main(int argc, const char** argv)
 		run = process_events();
 		OnFrameMove( &pd3dDevice, fTime, fTime - fLastTime, NULL );
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
+#ifdef USE_SDL2
+		SDL_GL_SwapWindow(window);
+#else
 		SDL_GL_SwapBuffers();
+#endif
 
 		int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000;
 		//int32_t timetowait = (1.0f/60.0f - (fTime-fLastTime))*1000;
