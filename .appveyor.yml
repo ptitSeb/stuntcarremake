@@ -1,0 +1,14 @@
+version: build{build}
+
+os: Visual Studio 2015
+configuration: Release
+
+# build
+branches:
+  only:
+    - master
+
+build: 
+  project: StuntCarRacer_2008.sln
+  verbosity: normal
+
