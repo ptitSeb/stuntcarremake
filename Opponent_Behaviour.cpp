@@ -50,6 +50,10 @@ extern bool bTestKey;
 
 #define LOCAL_Y_FACTOR	4
 
+extern float fTimeRatio;
+extern float fTimeRatio2;
+extern bool bFramePlain;
+
 typedef enum
 	{
 	REAR_LEFT = 0,
@@ -527,7 +531,6 @@ long piece = opponents_current_piece, next_segment;
 long left_side_x, left_side_z, right_side_x, right_side_z;
 bool draw_shadow = TRUE;
 
-
 	/*
 	 * Rear wheels
 	 */
@@ -932,36 +935,38 @@ static long byte_count = 0;
 	opp_actual_height[REAR_RIGHT] = opp_rear_right_road_pos.y;
 	opp_actual_height[FRONT] = opp_front_road_pos_y;
 	*/
-	RandomizeOpponentsSteering();
-	GetOpponentsEngineAcceleration();
-	AdjustOpponentsEngineAcceleration();
+	if(bFramePlain) {
+		RandomizeOpponentsSteering();
+		GetOpponentsEngineAcceleration();
+		AdjustOpponentsEngineAcceleration();
 #ifdef TEST_AMIGA_AOEA
-	long temp;
-	if (GetRecordedAmigaWord(&temp))
-	{
-		bool flag = temp & 0x80 ? TRUE : FALSE;
-		if (flag != opponents_required_z_speed_reached)
+		long temp;
+		if (GetRecordedAmigaWord(&temp))
 		{
-			++VALUE1;	// Count differences
-			fprintf(out, "%s different %d %d (VALUE2 %d)\n", "opponents.required.z.speed.reached", temp, opponents_required_z_speed_reached, VALUE2);
-			opponents_required_z_speed_reached = flag;	// Use Amiga value when different
+			bool flag = temp & 0x80 ? TRUE : FALSE;
+			if (flag != opponents_required_z_speed_reached)
+			{
+				++VALUE1;	// Count differences
+				fprintf(out, "%s different %d %d (VALUE2 %d)\n", "opponents.required.z.speed.reached", temp, opponents_required_z_speed_reached, VALUE2);
+				opponents_required_z_speed_reached = flag;	// Use Amiga value when different
+			}
 		}
-	}
-	CompareRecordedAmigaWord("opponents.engine.z.acceleration", &opponents_engine_z_acceleration);
+		CompareRecordedAmigaWord("opponents.engine.z.acceleration", &opponents_engine_z_acceleration);
 #endif
-	UpdateOpponentsZSpeed();
+		UpdateOpponentsZSpeed();
 
 
 #ifdef TEST_AMIGA_OM
-	if (GetRecordedAmigaWord(&opponents_z_speed))
-		++VALUE2;
+		if (GetRecordedAmigaWord(&opponents_z_speed))
+			++VALUE2;
 
-	GetRecordedAmigaWord(&opponents_current_piece);
-	GetRecordedAmigaWord(&byte_count);
-	GetRecordedAmigaWord(&opponents_distance_into_section);
+		GetRecordedAmigaWord(&opponents_current_piece);
+		GetRecordedAmigaWord(&byte_count);
+		GetRecordedAmigaWord(&opponents_distance_into_section);
 #endif
+	}	//bFramePlain
 	// TO DO: Tidy up
-	long value = (opponents_z_speed * (Track[opponents_current_piece].lengthReduction << 7)) << 1;
+	long value = ((long)(opponents_z_speed * fTimeRatio) * (Track[opponents_current_piece].lengthReduction << 7)) << 1;
 	value >>= 16;
 	value *= REDUCTION;
 	value >>= 8;
@@ -989,8 +994,10 @@ static long byte_count = 0;
 	}
 
 #ifdef TEST_AMIGA_OM
-	CompareRecordedAmigaWord("opponents.road.section", &opponents_current_piece);
-	CompareRecordedAmigaWord("opponents.distance.into.section", &opponents_distance_into_section);
+	if(bFramePlain) {
+		CompareRecordedAmigaWord("opponents.road.section", &opponents_current_piece);
+		CompareRecordedAmigaWord("opponents.distance.into.section", &opponents_distance_into_section);
+	}
 #endif
 }
 
@@ -1006,6 +1013,7 @@ static void UpdateOpponentsActualWheelHeights( void )
 {
 long height_adjust, touching_road, total_diff, i, acceleration, speed;
 
+	if(bFramePlain) {
 	opp_smallest_difference = -32768;
 
 #ifdef	TEST_AMIGA_AWH
@@ -1090,13 +1098,13 @@ long height_adjust, touching_road, total_diff, i, acceleration, speed;
 	// of the other two wheels (only one central front wheel is considered)
 	total_diff = opp_new_rear_left_difference + opp_new_rear_right_difference + opp_new_front_difference;
 
-	opp_y_acceleration[REAR_LEFT] = (total_diff + opp_new_rear_left_difference + (opp_new_rear_left_difference << 2)) >> 3;
-	opp_y_acceleration[REAR_RIGHT] = (total_diff + opp_new_rear_right_difference + (opp_new_rear_right_difference << 2)) >> 3;
-	opp_y_acceleration[FRONT] = (total_diff + opp_new_front_difference + (opp_new_front_difference << 2)) >> 3;
+	opp_y_acceleration[REAR_LEFT] = ((total_diff + opp_new_rear_left_difference + (opp_new_rear_left_difference << 2))) >> 3;
+	opp_y_acceleration[REAR_RIGHT] = ((total_diff + opp_new_rear_right_difference + (opp_new_rear_right_difference << 2))) >> 3;
+	opp_y_acceleration[FRONT] = ((total_diff + opp_new_front_difference + (opp_new_front_difference << 2))) >> 3;
 
 
 	// Randomly make opponent do a wheelie (if they have that attribute)
-	if (opponent_attributes[opponentsID] & WHEELIE)
+	if ((opponent_attributes[opponentsID] & WHEELIE))
 		{
 		i = opp_y_speed[FRONT] | opp_y_acceleration[FRONT];
 		if ((i & 0xfffc) == 0)		// If front of car isn't moving much vertically
@@ -1112,21 +1120,19 @@ long height_adjust, touching_road, total_diff, i, acceleration, speed;
 	acceleration = ((opp_y_acceleration[REAR_LEFT] * REDUCTION) >> 8);
 	opp_y_speed[REAR_LEFT] += acceleration;
 
-	speed = ((opp_y_speed[REAR_LEFT] * REDUCTION) >> 9);
-	opp_actual_height[REAR_LEFT] += speed;
-
 	// Update rear right wheel y speed and height
 	acceleration = ((opp_y_acceleration[REAR_RIGHT] * REDUCTION) >> 8);
 	opp_y_speed[REAR_RIGHT] += acceleration;
 
-	speed = ((opp_y_speed[REAR_RIGHT] * REDUCTION) >> 9);
-	opp_actual_height[REAR_RIGHT] += speed;
-
 	// Update front wheel y speed and height
 	acceleration = ((opp_y_acceleration[FRONT] * REDUCTION) >> 8);
 	opp_y_speed[FRONT] += acceleration;
-
-	speed = ((opp_y_speed[FRONT] * REDUCTION) >> 9);
+	}
+	speed = ((long)(opp_y_speed[REAR_LEFT] * REDUCTION * fTimeRatio) >> 9);
+	opp_actual_height[REAR_LEFT] += speed;
+	speed = ((long)(opp_y_speed[REAR_RIGHT] * REDUCTION * fTimeRatio) >> 9);
+	opp_actual_height[REAR_RIGHT] += speed;
+	speed = ((long)(opp_y_speed[FRONT] * REDUCTION * fTimeRatio) >> 9);
 	opp_actual_height[FRONT] += speed;
 
 	// Limit movement of opponent's wheels
@@ -1139,6 +1145,7 @@ long height_adjust, touching_road, total_diff, i, acceleration, speed;
 		LimitOpponentWheels(368, REAR_LEFT, FRONT);
 
 #ifdef	TEST_AMIGA_AWH
+	if(bFramePlain) {
 	CompareRecordedAmigaWord("opp.rear.left.y.acceleration", &opp_y_acceleration[REAR_LEFT]);
 	CompareRecordedAmigaWord("opp.rear.right.y.acceleration", &opp_y_acceleration[REAR_RIGHT]);
 	CompareRecordedAmigaWord("opp.front.y.acceleration", &opp_y_acceleration[FRONT]);
@@ -1150,6 +1157,7 @@ long height_adjust, touching_road, total_diff, i, acceleration, speed;
 	CompareRecordedAmigaWord("opp.rear.left.actual.height", &opp_actual_height[REAR_LEFT]);
 	CompareRecordedAmigaWord("opp.rear.right.actual.height", &opp_actual_height[REAR_RIGHT]);
 	CompareRecordedAmigaWord("opp.front.actual.height", &opp_actual_height[FRONT]);
+	}
 #endif
 }
 
@@ -1935,6 +1943,8 @@ static void OpponentPlayerInteraction( void )
 // TO DO: Tidy up, rename variables, remove gotos
 long d0, d1, d2;
 long count, piece;
+	if(!bFramePlain)
+		return;
 
 	//VALUE2 = players_road_x_position;
 	//VALUE3 = rear_wheel_surface_x_position;

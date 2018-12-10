@@ -71,6 +71,10 @@ long engineSoundPlaying = FALSE;
 double gameStartTime, gameEndTime;
 bool bSuperLeague = FALSE;
 
+float fTimeRatio; // time factor (when frame are shorter then 6/50 sec)
+float fTimeRatio2; // i.e. fTimeRatio²
+bool bFramePlain; // current frame is a 6/50 frame like in original (to update sound, sprite animations...)
+
 #if defined(DEBUG) || defined(_DEBUG)
 FILE *out;
 bool bTestKey = FALSE;
@@ -894,13 +898,32 @@ static void StopEngineSound( void )
 void CALLBACK OnFrameMove( IDirect3DDevice9 *pd3dDevice, double fTime, float fElapsedTime, void *pUserContext )
 {
 static D3DXVECTOR3 vUpVec( 0.0f, 1.0f, 0.0f );
-static long frameCount = 0;
+//static long frameCount = 0;
 DWORD input = lastInput;	// take copy of user input
 D3DXMATRIX matRot, matTemp, matTrans, matView;
+static double fLastPlainFrame = 0.0;
 
 	bFrameMoved = FALSE;
+	if(fElapsedTime<1/200.)
+		return;	// too fast...
 //	VALUE3 = frameGap;
-
+	if(fLastPlainFrame==0.0) {
+		fLastPlainFrame = fTime;
+		fTimeRatio = 1.0f;
+		bFramePlain = TRUE;
+	} else {
+		if(fTime >= fLastPlainFrame+5.0/60.) {
+			bFramePlain = TRUE;
+			fLastPlainFrame += 5.0/60.;
+		} else
+			bFramePlain = FALSE;
+		fTimeRatio = fElapsedTime / (5.0/60.);
+	}
+	if(fTimeRatio > 1.0) {
+		fTimeRatio = 1.0;
+		bFramePlain = TRUE;
+	}
+	fTimeRatio2 = fTimeRatio*fTimeRatio;
 	if (GameMode == GAME_OVER)
 	{
 		StopEngineSound();
@@ -924,7 +947,7 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 			if (!bPaused) FramesWheelsEngine(EngineSoundBuffers);
 		}
 
-		if (frameCount > 0)
+		/*if (frameCount > 0)
 			--frameCount;
 
 		if (frameCount == 0)
@@ -936,7 +959,7 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 		{
 			//if (frameCount == frameGap-1) DXUTPause( true, true );	//pausing doesn't work properly
 			return;
-		}
+		}*/
 	}
 	else if (GameMode == TRACK_MENU)
 	{
@@ -953,7 +976,7 @@ D3DXMATRIX matRot, matTemp, matTrans, matView;
 		keyPress = '\0';
 	}
 
-	if (!bPaused)
+	if (!bPaused && bFramePlain)
 		MoveDrawBridge();
 
 	// Car behaviour
@@ -2129,8 +2152,8 @@ int main(int argc, const char** argv)
         OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
 		SDL_GL_SwapBuffers();
 
-		int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000;
-		//int32_t timetowait = (1.0f/60.0f - (fTime-fLastTime))*1000;
+		int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000.;
+		//int32_t timetowait = (1.0f/60.0f - (fTime-fLastTime))*1000.;
 		if (timetowait>0)
 			SDL_Delay(timetowait);
 

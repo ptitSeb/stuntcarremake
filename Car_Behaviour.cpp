@@ -95,6 +95,9 @@ extern bool bTestKey;
 
 #define LOCAL_Y_FACTOR	4
 
+extern float fTimeRatio;
+extern bool bFramePlain;
+
 /*	=========== */
 /*	Global data */
 /*	=========== */
@@ -602,7 +605,8 @@ void CarBehaviour (DWORD input,
 
 	CarControl(input);
 	CarMovement();
-	UpdateEngineRevs();
+	if(bFramePlain)
+		UpdateEngineRevs();
 
 	if (touching_road) drop_start_done = TRUE;	// Amiga StuntCarRacer does this differently
 
@@ -883,13 +887,14 @@ static void BoostPower (long boost_flag,
 			{
 			if (boostReserve > 0)
 				{
+				if(bFramePlain) {
 				--boostUnit;
 				if (boostUnit < 0)
 					{
 					boostUnit = boost_unit_value;
 					--boostReserve;
 					}
-
+				}
 				boost_activated = 0x80;
 				engine_z_acceleration *= 2;
 				}
@@ -918,20 +923,23 @@ static void CarMovement (void)
 	//fprintf(out, "player_x_angle %d\n", player_x_angle);
 	//fprintf(out, "player_y_angle %d\n", player_y_angle);
 	//fprintf(out, "player_z_angle %d\n", player_z_angle);
-
 	CalculateWheelXZOffsets();
-	CalculateRoadWheelHeights();
+	if(bFramePlain)
+		CalculateRoadWheelHeights();
 	CalculateActualWheelHeights();
 
 	CalculateXZSpeeds();
 
-	SetWheelRotationSpeed();
+	if(bFramePlain)
+		SetWheelRotationSpeed();
 	CalculateGravityAcceleration();
-	CarCollisionDetection();
+	if(bFramePlain)
+		CarCollisionDetection();
 
 	//if (B.1bb72 != 0)		// always set
 		{
-		CalculateTotalAcceleration();
+		if(bFramePlain)
+			CalculateTotalAcceleration();
 
 		CalculateSteering();
 
@@ -947,29 +955,31 @@ static void CarMovement (void)
 	UpdatePlayersPosition();
 
 #ifdef PLAY_AMIGA_RECORDING
-	if (StartOfAmigaRecording)
-	{
-	GetRecordedAmigaLong(&player_x); player_x *= (PC_FACTOR * 4);
-	GetRecordedAmigaLong(&player_y);
-	GetRecordedAmigaLong(&player_z); player_z *= (PC_FACTOR * 4);
-	GetRecordedAmigaWord(&player_x_angle);
-	GetRecordedAmigaWord(&player_y_angle);
-	GetRecordedAmigaWord(&player_z_angle);
+	if(bFramePlain) {
+		if (StartOfAmigaRecording)
+		{
+		GetRecordedAmigaLong(&player_x); player_x *= (PC_FACTOR * 4);
+		GetRecordedAmigaLong(&player_y);
+		GetRecordedAmigaLong(&player_z); player_z *= (PC_FACTOR * 4);
+		GetRecordedAmigaWord(&player_x_angle);
+		GetRecordedAmigaWord(&player_y_angle);
+		GetRecordedAmigaWord(&player_z_angle);
 
-	++AmigaRecordingFrame;
-	if (AmigaRecordingFrame > 0)
-		StartOfAmigaRecording = FALSE;
-	}
-	else
-	{
-	// throw values away
-	long temp;
-	GetRecordedAmigaLong(&temp);
-	GetRecordedAmigaLong(&temp);
-	GetRecordedAmigaLong(&temp);
-	GetRecordedAmigaWord(&temp);
-	GetRecordedAmigaWord(&temp);
-	GetRecordedAmigaWord(&temp);
+		++AmigaRecordingFrame;
+		if (AmigaRecordingFrame > 0)
+			StartOfAmigaRecording = FALSE;
+		}
+		else
+		{
+		// throw values away
+		long temp;
+		GetRecordedAmigaLong(&temp);
+		GetRecordedAmigaLong(&temp);
+		GetRecordedAmigaLong(&temp);
+		GetRecordedAmigaWord(&temp);
+		GetRecordedAmigaWord(&temp);
+		GetRecordedAmigaWord(&temp);
+		}
 	}
 #endif
 
@@ -2003,7 +2013,7 @@ static void SetOneWheelRotationSpeed(long touching_road, long player_z_speed, lo
 	{
 		// Not touching road, so reduce wheel speed by one quarter
 		long reduction = (*wheel_rotation_speed) / 4;
-		*wheel_rotation_speed -= reduction;
+		*wheel_rotation_speed -= reduction*fTimeRatio;
 		return;
 	}
 	if(abs(player_z_speed) < 0x800)
@@ -2093,7 +2103,6 @@ static void CarCollisionDetection (void)
 
 	long average_front_amount_below_road,
 		 average_amount_below_road;
-
 
 	grounded_count = 0;
 	damage_value = 0;
@@ -2186,6 +2195,7 @@ static void CarCollisionDetection (void)
 
 //******** Play grounded sound if necessary ********
 
+	if(bFramePlain) {
 	if (grounded_delay > 0) --grounded_delay;
 
 	if (grounded_count == 0)
@@ -2204,7 +2214,7 @@ static void CarCollisionDetection (void)
 		GroundedSoundBuffer->Play(NULL,NULL,NULL);	// not looping
 		grounded_delay = 5;
 		}
-
+	}
 	return;
 	}
 
@@ -2231,16 +2241,17 @@ static void CalculateWheelCollision (long road_height,
 
 	amount_below_road = new_difference - *old_difference_in_out;
 	// 21/05/1998 - '/ 256' changed to '>> 8', to match Amiga StuntCarRacer exactly
-	amount_below_road = ((amount_below_road * INCREASE) >> 8) + new_difference;
+	amount_below_road = ((long)(amount_below_road * INCREASE) >> 8) + new_difference;
 
 	if (amount_below_road >= 0)
 		{
 		old_amount_below_road = *amount_below_road_in_out;
 		*amount_below_road_in_out = amount_below_road;
 
-		if ((amount_below_road >= 0x400) && (old_amount_below_road < 0x200))
+		if ((amount_below_road >= 0x400) && (old_amount_below_road < 0x200) && bFramePlain)
 			grounded_count++;	// wheel grounded - update grounded wheel count
 
+		if(bFramePlain) {
 		damage = *amount_below_road_in_out - (road_cushion_value * 256);
 		if (damage >= 0x700)
 			{
@@ -2248,7 +2259,7 @@ static void CalculateWheelCollision (long road_height,
 				damage_value = damage;
 
 			damage -= 0x600;
-			if (fourteen_frames_elapsed == 0)
+			if (bFramePlain && fourteen_frames_elapsed == 0)
 				{
 				damaged_count++;
 				if (damaged_count < damaged_limit)
@@ -2268,6 +2279,7 @@ static void CalculateWheelCollision (long road_height,
 			}
 		else
 			damaged_count = 0;
+		}
 		}
 	else
 		{
@@ -2335,7 +2347,11 @@ static void CalculateCarCollisionAcceleration (long average_amount_below_road)
 	else
 		surface_value = surface_cosx_sinz;
 
+#if 0
+	car_collision_x_acceleration = (average_amount_below_road * surface_value) * fTimeRatio / 256.;
+#else
 	car_collision_x_acceleration = (average_amount_below_road * surface_value) >> 8;
+#endif
 
 	//******** Calculate car collision Y acceleration ********
 
@@ -2344,7 +2360,11 @@ static void CalculateCarCollisionAcceleration (long average_amount_below_road)
 	else
 		surface_value = surface_cosx_cosz;
 
+#if 0
+	car_collision_y_acceleration = (average_amount_below_road * surface_value) * fTimeRatio / 256.;
+#else
 	car_collision_y_acceleration = (average_amount_below_road * surface_value) >> 8;
+#endif
 
 	//******** Calculate car collision Z acceleration ********
 
@@ -2353,7 +2373,11 @@ static void CalculateCarCollisionAcceleration (long average_amount_below_road)
 	else
 		surface_value = -surface_sinx;
 
+#if 0
+	car_collision_z_acceleration = (average_amount_below_road * surface_value) * fTimeRatio / 256.;
+#else
 	car_collision_z_acceleration = (average_amount_below_road * surface_value) >> 8;
+#endif
 
 
 #ifdef	HIGHER_FRAME_RATE
@@ -2459,7 +2483,11 @@ static void CalculateTotalAcceleration (void)
 	// this probably simulates the effect of wind resistance and the
 	// car having reduced ability to accelerate as speed increases
 	//21/05/1998 - old method - if ((engine_z_acceleration > 0) && (player_z_speed >= 0))
+#if 0
+	reduction = ((engine_z_acceleration / 256) | (long)(player_z_speed * fTimeRatio / 256.)) & 0xff;
+#else
 	reduction = ((engine_z_acceleration / 256) | (player_z_speed / 256)) & 0xff;
+#endif
 	if (!(reduction & 0x80))	// i.e. not negative
 		{
 		if (engine_z_acceleration&0xff)
@@ -3061,6 +3089,16 @@ static void ReduceWorldAcceleration (void)
 
 	// Reduce acceleration values using current speed values.
 	// amount = reduction amount, factor = overall reduction factor.
+#if 0
+	reduction = ((long)((player_world_x_speed * amount * fTimeRatio) / 65536.) >> factor);
+	total_world_x_acceleration -= reduction;
+
+	reduction = ((long)((player_world_y_speed * amount * fTimeRatio) / 65536.) >> factor);
+	total_world_y_acceleration -= reduction;
+
+	reduction = ((long)((player_world_z_speed * amount * fTimeRatio) / 65536.) >> factor);
+	total_world_z_acceleration -= reduction;
+#else
 	reduction = (((player_world_x_speed * amount) >> 16) >> factor);
 	total_world_x_acceleration -= reduction;
 
@@ -3069,6 +3107,7 @@ static void ReduceWorldAcceleration (void)
 
 	reduction = (((player_world_z_speed * amount) >> 16) >> factor);
 	total_world_z_acceleration -= reduction;
+#endif
 	return;
 	}
 
@@ -3096,18 +3135,30 @@ static void CalculateXZRotationAcceleration (void)
 	//			 calculate_car_collision_acceleration used here ?
 	//
 	// - perhaps values used are really accelerations rather than inclinations
-
+#if 0
+	player_x_rotation_acceleration = overall_difference_below_road -
+										(player_x_rotation_speed / (fTimeRatio * 16.f));
+#else
 	player_x_rotation_acceleration = overall_difference_below_road -
 										(player_x_rotation_speed >> 4);
+#endif
 	if (touching_road)
 		{
 		// This part lifts the car up at the front during forwards acceleration
 		// and, vice versa, dips the front of the car during backwards acceleration.
+#if 0
+		player_x_rotation_acceleration += (player_z_acceleration / (fTimeRatio * 4.f));
+#else
 		player_x_rotation_acceleration += (player_z_acceleration >> 2);
+#endif
 		}
-
+#if 0
+	player_z_rotation_acceleration = front_difference_below_road -
+										(player_z_rotation_speed / (fTimeRatio * 16.f));
+#else
 	player_z_rotation_acceleration = front_difference_below_road -
 										(player_z_rotation_speed >> 4);
+#endif
 
 #ifdef	HIGHER_FRAME_RATE
 	// 08/11/1998 - allow four times the frame rate by dividing accelerations by four
@@ -3128,16 +3179,25 @@ static void CalculateXZRotationAcceleration (void)
 
 static void UpdatePlayersRotationSpeed (void)
 	{
-	long acceleration;
+#if 1
+	float factor = fTimeRatio /256.f;
+	player_x_rotation_speed += (player_x_rotation_acceleration * REDUCTION)*factor;
+	player_y_rotation_speed += (player_y_rotation_acceleration * REDUCTION)*factor;
+	player_z_rotation_speed += (player_z_rotation_acceleration * REDUCTION)*factor;
+#else
+	if(bFramePlain) {
+		long acceleration;
 
-	acceleration = ((player_x_rotation_acceleration * REDUCTION) >> 8);
-	player_x_rotation_speed += acceleration;
+		acceleration = ((player_x_rotation_acceleration * REDUCTION) >> 8);
+		player_x_rotation_speed += acceleration;
 
-	acceleration = ((player_y_rotation_acceleration * REDUCTION) >> 8);
-	player_y_rotation_speed += acceleration;
+		acceleration = ((player_y_rotation_acceleration * REDUCTION) >> 8);
+		player_y_rotation_speed += acceleration;
 
-	acceleration = ((player_z_rotation_acceleration * REDUCTION) >> 8);
-	player_z_rotation_speed += acceleration;
+		acceleration = ((player_z_rotation_acceleration * REDUCTION) >> 8);
+		player_z_rotation_speed += acceleration;
+	}
+#endif
 	return;
 	}
 
@@ -3159,7 +3219,17 @@ static void CalculateFinalRotationSpeed (void)
 	// shouldn't need changing because Amiga StuntCarRacer Z rotation appears to be same as
 	// PC StuntCarRacer Z rotation (i.e. RotX = Xcosz - Ysinz, RotY = Xsinz + Ycosz)
 	// and so does X rotation
+#if 0
+	float factor = fTimeRatio/(1<<LOG_PRECISION);
+	player_final_x_rotation_speed =  ((player_x_rotation_speed * (long)cos_z) * factor);
+	player_final_x_rotation_speed += ((player_y_rotation_speed * (long)-sin_z) * factor);
 
+	player_final_y_rotation_speed =  ((player_x_rotation_speed * (long)sin_z) * factor);
+	player_final_y_rotation_speed += ((player_y_rotation_speed * (long)cos_z) * factor);
+
+	player_final_z_rotation_speed =  player_z_rotation_speed;
+	player_final_z_rotation_speed += ((player_final_y_rotation_speed * (long)sin_x) * factor);
+#else
 	player_final_x_rotation_speed =  ((player_x_rotation_speed * (long)cos_z) >> LOG_PRECISION);
 	player_final_x_rotation_speed += ((player_y_rotation_speed * (long)-sin_z) >> LOG_PRECISION);
 
@@ -3170,6 +3240,7 @@ static void CalculateFinalRotationSpeed (void)
 	// the X axis and adding it onto the Z rotation speed.
 	player_final_z_rotation_speed =  player_z_rotation_speed;
 	player_final_z_rotation_speed += ((player_final_y_rotation_speed * (long)sin_x) >> LOG_PRECISION);
+#endif
 	return;
 	}
 
@@ -3182,6 +3253,12 @@ static void CalculateFinalRotationSpeed (void)
 
 static void UpdatePlayersWorldSpeed (void)
 	{
+#if 1
+	float factor = fTimeRatio/256.f;
+	player_world_x_speed += (total_world_x_acceleration * REDUCTION) * factor;
+	player_world_y_speed += (total_world_y_acceleration * REDUCTION) * factor;
+	player_world_z_speed += (total_world_z_acceleration * REDUCTION) * factor;
+#else
 	long acceleration;
 
 	acceleration = ((total_world_x_acceleration * REDUCTION) >> 8);
@@ -3192,6 +3269,7 @@ static void UpdatePlayersWorldSpeed (void)
 
 	acceleration = ((total_world_z_acceleration * REDUCTION) >> 8);
 	player_world_z_speed += acceleration;
+#endif
 	return;
 	}
 
@@ -3207,6 +3285,11 @@ static void UpdatePlayersPosition (void)
 
 //******** Set player's new position ********
 
+#if 1
+	player_x += (player_world_x_speed * REDUCTION) * PC_FACTOR * fTimeRatio;
+	player_y += (player_world_y_speed * REDUCTION) * 0.5f * fTimeRatio;
+	player_z += (player_world_z_speed * REDUCTION) * PC_FACTOR * fTimeRatio;
+#else
 #ifdef ORIGINAL
 	// following speeds could be worked out differently, using just one shift, then an AND
 	// not sure yet why the speeds need the bottom bits clear anyway
@@ -3236,21 +3319,26 @@ static void UpdatePlayersPosition (void)
 	speed = ((player_world_z_speed * REDUCTION) * PC_FACTOR);
 	player_z += speed;
 #endif
-
+#endif
 	if (player_y >= 0x10000000)
 		player_y = 0x10000000;
 
 //******** Set player's new angles ********
-
-	speed = ((player_final_x_rotation_speed * REDUCTION) >> 8);
+#if 1
+	float factor = fTimeRatio / 256.f;
+	player_x_angle += (player_final_x_rotation_speed * REDUCTION)*factor;
+	player_y_angle += (player_final_y_rotation_speed * REDUCTION)*factor;
+	player_z_angle += (player_final_z_rotation_speed * REDUCTION)*factor;
+#else
+	speed = ((long)(player_final_x_rotation_speed * REDUCTION * fTimeRatio) >> 8);
 	player_x_angle += speed;
 
-	speed = ((player_final_y_rotation_speed * REDUCTION) >> 8);
+	speed = ((long)(player_final_y_rotation_speed * REDUCTION * fTimeRatio) >> 8);
 	player_y_angle += speed;
 
-	speed = ((player_final_z_rotation_speed * REDUCTION) >> 8);
+	speed = ((long)(player_final_z_rotation_speed * REDUCTION * fTimeRatio) >> 8);
 	player_z_angle += speed;
-
+#endif
 	// 19/05/1998 - limit to valid range as no longer stored as words
 	player_x_angle &= (MAX_ANGLE - 1);
 	player_y_angle &= (MAX_ANGLE - 1);

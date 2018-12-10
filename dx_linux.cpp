@@ -1,5 +1,9 @@
 #ifdef linux
 #include "dx_linux.h"
+#ifdef USE_CLOCK
+#else
+#include <sys/time.h>
+#endif
 
 extern bool wideScreen;
 
@@ -940,7 +944,15 @@ const D3DSURFACE_DESC * DXUTGetBackBufferSurfaceDesc()
 
 DOUBLE DXUTGetTime()
 {
-	return ((DOUBLE)SDL_GetTicks())/1000.0;
+#ifdef USE_CLOCK
+
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (double)tv.tv_sec + (double)tv.tv_usec/1000000.;
+#endif
+	// this is not precise enough!
+	//return ((DOUBLE)SDL_GetTicks())/1000.0;
 }
 
 void DXUTReset3DEnvironment()
