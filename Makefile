@@ -65,16 +65,17 @@ ifeq ($(PROFILE),1)
 	FLAGS+= -pg
 endif
 
-SDL=1
-ifeq ($(SDL),1)
+#SDL=1
+ifeq ($(SDL),2)
+	SDL_=sdl2
+	TTF_ = SDL2_ttf
+	IMAGE_ = SDL2_image
+	CFLAGS += -DUSE_SDL2
+else
 	SDL_=
 	CFLAGS+=`sdl-config --cflags`
 	TTF_ = SDL_ttf
 	IMAGE_ = SDL_image
-else
-	SDL_=sdl$(SDL)
-	TTF_ = SDL$(SDL)_ttf
-	IMAGE_ = SDL$(SDL)_image
 endif
 
 # library headers

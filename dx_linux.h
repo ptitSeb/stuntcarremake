@@ -11,9 +11,15 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#ifdef USE_SDL2
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
+#else
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
 #include <SDL/SDL_image.h>
+#endif
 #include <AL/al.h>
 #include <wchar.h>
 #define USEGLM
