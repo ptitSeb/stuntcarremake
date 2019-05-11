@@ -66,7 +66,7 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	glTexImage2D(GL_TEXTURE_2D, 0, intfmt, w2, h2, 0, fmt, GL_UNSIGNED_BYTE, NULL);
 	// simple and hugly way to make the texture upside down...
 	for (int i = 0; i< h ; i++) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (h-1)-i, w, 1, fmt, GL_UNSIGNED_BYTE, img->pixels+(img->pitch*i));
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (h-1)-i, w, 1, fmt, GL_UNSIGNED_BYTE, (char*)(img->pixels)+(img->pitch*i));
 	}
 	UnBind();
 	if (img) SDL_FreeSurface(img);
@@ -189,6 +189,7 @@ HRESULT IDirectSoundBuffer8::Release()
 		sound_release_buffer(buffer);
 		buffer = NULL;
 	}
+	return S_OK;
 }
 
 HRESULT IDirectSoundBuffer8::Lock(DWORD dwOffset, DWORD dwBytes, LPVOID * ppvAudioPtr1, LPDWORD  pdwAudioBytes1, LPVOID * ppvAudioPtr2, LPDWORD pdwAudioBytes2, DWORD dwFlags)
@@ -788,10 +789,12 @@ HRESULT IDirect3DDevice9::SetStreamSource(UINT StreamNumber, IDirect3DVertexBuff
 	buffer[StreamNumber] = pStreamData;
 	offset[StreamNumber] = OffsetInBytes;
 	stride[StreamNumber] = Stride;
+	return S_OK;
 }
 
 HRESULT IDirect3DDevice9::SetFVF(DWORD FVF) {
 	fvf = FVF;
+	return S_OK;
 }
 
 IDirect3DVertexBuffer9::IDirect3DVertexBuffer9(uint32_t size, uint32_t fvf) {
