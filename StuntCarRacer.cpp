@@ -898,6 +898,15 @@ static long frameCount = 0;
 DWORD input = lastInput;	// take copy of user input
 D3DXMATRIX matRot, matTemp, matTrans, matView;
 
+#ifndef linux
+// crude 60fps cap method...
+static float lastFrame = 0.0f;
+#define FPSMAX (1.0f/60.f)
+	lastFrame += fElapsedTime;
+	if (lastFrame < FPSMAX)
+		return;
+	lastFrame -= FPSMAX;
+#endif
 	bFrameMoved = FALSE;
 //	VALUE3 = frameGap;
 
