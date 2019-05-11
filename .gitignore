@@ -1,3 +1,10 @@
 *.o
+*.obj
+*.pch
+*.pdb
+*.ipch
+StuntCarRacer.tlog
 *.suo
+StuntCarRacer.res
+StuntCarRacer.exe
 stuntcarracer
