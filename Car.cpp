@@ -918,6 +918,7 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 	pd3dDevice->SetFVF( D3DFVF_TRANSFORMEDCOLVERTEX );
 	pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, 0, 2 );	// 3 points per triangle
 
+	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 	//pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_DISABLE);
