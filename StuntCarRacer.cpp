@@ -569,7 +569,7 @@ HRESULT CALLBACK OnResetDevice( IDirect3DDevice9 *pd3dDevice,
 	if (CreateCockpitVertexBuffer(pd3dDevice) != S_OK)
 		return E_FAIL;
 
-	if ( FAILED( D3DXCreateTextureFromFile( pd3dDevice, L"Bitmap\\atlas.png", &g_pAtlas ) ) )
+	if ( FAILED( D3DXCreateTextureFromResource( pd3dDevice, NULL, L"ATLAS", &g_pAtlas ) ) )
 		return E_FAIL;
 	
 	InitAtlasCoord();

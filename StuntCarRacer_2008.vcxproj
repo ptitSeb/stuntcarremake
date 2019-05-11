@@ -390,6 +390,7 @@
     <Media Include="Sounds\Smash.wav" />
     <Media Include="Sounds\TickOver.wav" />
     <Media Include="Sounds\Wreck.wav" />
+    <Media Include="Bitmap\atlas.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
