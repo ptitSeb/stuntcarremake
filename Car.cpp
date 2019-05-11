@@ -873,10 +873,17 @@ void DrawCockpit (IDirect3DDevice9 *pd3dDevice)
 			return;
 		float X1 = Wide*2.f+196.0f, X2 = Wide*2.f+196.0f + ((old_speedbar > 240) ? (old_speedbar-240) : old_speedbar)/240.0f*242.0f;
 		float Y1 = 480.0f-61.0f, Y2=480.0f-61.0f+3.0f;
-		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 1.0f; pVertices[0].rhw = 1.0f; pVertices[0].color = (old_speedbar > 240)?0xff00ccff:0xff00ffff;
-		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 1.0f; pVertices[1].rhw = 1.0f; pVertices[1].color = (old_speedbar > 240)?0xff00ccff:0xff00ffff;
-		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 1.0f; pVertices[2].rhw = 1.0f; pVertices[2].color = (old_speedbar > 240)?0xff00ccff:0xff00ffff;
-		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 1.0f; pVertices[3].rhw = 1.0f; pVertices[3].color = (old_speedbar > 240)?0xff00ccff:0xff00ffff;
+#ifdef linux
+#define SPEEDCOL1 0xff00ffff	// ABGR
+#define SPEEDCOL2 0xff00ccff	// ABGR
+#else
+#define SPEEDCOL1 0xffffff00	// ARGB
+#define SPEEDCOL2 0xffffcc00	// ARGB
+#endif
+		pVertices[0].x = X1; pVertices[0].y = Y1; pVertices[0].z = 1.0f; pVertices[0].rhw = 1.0f; pVertices[0].color = (old_speedbar > 240)?SPEEDCOL2:SPEEDCOL1;
+		pVertices[1].x = X2; pVertices[1].y = Y1; pVertices[1].z = 1.0f; pVertices[1].rhw = 1.0f; pVertices[1].color = (old_speedbar > 240)?SPEEDCOL2:SPEEDCOL1;
+		pVertices[2].x = X2; pVertices[2].y = Y2; pVertices[2].z = 1.0f; pVertices[2].rhw = 1.0f; pVertices[2].color = (old_speedbar > 240)?SPEEDCOL2:SPEEDCOL1;
+		pVertices[3].x = X1; pVertices[3].y = Y2; pVertices[3].z = 1.0f; pVertices[3].rhw = 1.0f; pVertices[3].color = (old_speedbar > 240)?SPEEDCOL2:SPEEDCOL1;
 		pSpeedBarCB->Unlock();
 	}
 
