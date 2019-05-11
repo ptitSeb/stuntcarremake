@@ -32,7 +32,11 @@
 // Defines, constants, and global variables
 //-----------------------------------------------------------------------------
 
+#ifdef linux
 #define DEFAULT_FRAME_GAP	(6)		// 4 Used to limit frame rate.  Amiga StuntCarRacer uses value of 6 (called MIN.FRAMES)
+#else
+#define DEFAULT_FRAME_GAP	(4)
+#endif
 
 #define	HEIGHT_ABOVE_ROAD	(100)
 
