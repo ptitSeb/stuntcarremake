@@ -1,5 +1,13 @@
 #ifdef linux
 #include "dx_linux.h"
+// use a light version of stb_image
+#define STBI_NO_PSD
+#define STBI_NO_GIF
+#define STBI_NO_HDR
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 extern bool wideScreen;
 
@@ -25,33 +33,28 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 {
 	if (texID) glDeleteTextures(1, &texID);
 	glGenTextures(1, &texID);
-	SDL_Surface *img = IMG_Load(BitMapRessourceName(name));
+	int x,y,n;
+	unsigned char *img = stbi_load(BitMapRessourceName(name), &x, &y, &n, 0);
 	if(!img) {
 		printf("Warning, image \"%s\" => \"%s\" not loaded\n", name, BitMapRessourceName(name));
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		return;
 	}
-	GLint intfmt = img->format->BytesPerPixel;
+	GLint intfmt = n;
 	GLenum fmt = GL_RGBA;
 	switch (intfmt) {
     case 1:
         fmt = GL_ALPHA;
         break;
     case 3:     // no alpha channel
-        if (img->format->Rmask == 0x000000ff)
-            fmt = GL_RGB;
-        else
-            fmt = GL_BGR;
+		fmt = GL_RGB;
         break;
     case 4:     // contains an alpha channel
-        if (img->format->Rmask == 0x000000ff)
-            fmt = GL_RGBA;
-        else
-            fmt = GL_BGRA;
+		fmt = GL_RGBA;
         break;
 	}
-	w2 = w = img->w;
-	h2 = h = img->h;
+	w2 = w = x;
+	h2 = h = y;
 	// will handle non-pot2 texture later? or resize the texture to POT?
 	/*w2 = NP2(w);
 	h2 = NP2(h);
@@ -65,11 +68,12 @@ void IDirect3DTexture9::LoadTexture(const char* name)
 	glTexParameteri(GL_TEXTURE_2D , GL_TEXTURE_WRAP_T , GL_CLAMP_TO_EDGE );
 	glTexImage2D(GL_TEXTURE_2D, 0, intfmt, w2, h2, 0, fmt, GL_UNSIGNED_BYTE, NULL);
 	// simple and hugly way to make the texture upside down...
+	int pitch = y*n;
 	for (int i = 0; i< h ; i++) {
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (h-1)-i, w, 1, fmt, GL_UNSIGNED_BYTE, (char*)(img->pixels)+(img->pitch*i));
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, (h-1)-i, w, 1, fmt, GL_UNSIGNED_BYTE, img+(pitch*i));
 	}
 	UnBind();
-	if (img) SDL_FreeSurface(img);
+	if (img) free(img);
 }
 
 
