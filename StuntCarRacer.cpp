@@ -23,6 +23,7 @@
 #include "version.h"
 
 #ifdef linux
+#include <unistd.h>
 #define STRING "%S"
 #else
 #define STRING L"%s"
@@ -1970,6 +1971,18 @@ int main(int argc, const char** argv)
 	char maintitle[50] = {0};
 	sprintf(maintitle, "StuntCarRemake v%d.%02d.%02d", V_MAJOR, V_MINOR, V_PATCH);
 	printf("%s\n", maintitle);
+	// get executable folder and cd into it...
+	// this is linux only, will not work on BSD or macOS
+	char buf[500];
+	ssize_t bufsized = readlink("/proc/self/exe", buf, sizeof(buf));
+	if(bufsized>0) {
+		char* p = strrchr(buf, '/');
+		if(*p) {
+			*p=0;
+			chdir(buf);
+			printf("chdir(\"%s\")\n", buf);
+		}
+	}
 #ifdef USE_SDL2
 	SDL_Window *window = NULL;
 	SDL_GLContext context = NULL;
