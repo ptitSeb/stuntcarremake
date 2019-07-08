@@ -20,7 +20,7 @@ script:
   - cp -r Sounds appdir/usr/bin/
   - cp -r Tracks appdir/usr/bin/
   - mkdir -p appdir/usr/share/applications
-  - cp stuncarracer.desktop appdir/usr/share/applications/
+  - cp stuntcarracer.desktop appdir/usr/share/applications/
   - mkdir -p appdir/usr/share/icons/hicolor/48x48
   - cp icon48.png appdir/usr/share/icons/hicolor/48x48/stuntcarracer.png
   - mkdir -p appdir/usr/share/icons/hicolor/96x96
