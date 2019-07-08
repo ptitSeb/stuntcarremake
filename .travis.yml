@@ -33,9 +33,9 @@ script:
   - ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
 
 after_success:
-  - ls -lh StuntCarRemake*.AppImage*
+  - ls -lh Stunt_Car_Remake*.AppImage*
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - bash upload.sh StuntCarRemake*.AppImage*
+  - bash upload.sh Stunt_Car_Remake*.AppImage*
 
 branches:
   except:
