@@ -24,7 +24,7 @@
 #include <wchar.h>
 #define USEGLM
 #ifdef USEGLM
-#define GL_FORCE_RADIANS
+#define GLM_FORCE_RADIANS
 //#define GLM_LEFT_HANDED 
 #include <glm/glm.hpp>		
 #include <glm/gtc/type_ptr.hpp>		
