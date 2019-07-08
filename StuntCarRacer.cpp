@@ -20,6 +20,7 @@
 #include "Opponent_Behaviour.h"
 #include "wavefunctions.h"
 #include "Atlas.h"
+#include "version.h"
 
 #ifdef linux
 #define STRING "%S"
@@ -1743,6 +1744,8 @@ void CALLBACK OnDestroyDevice( void *pUserContext )
 INT WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 {
     // Enable run-time memory check for debug builds.
+	wchar_t maintitle[50] = {0};
+	wsprintf(maintitle, L"StuntCarRemake v%d.%02d.%02d", V_MAJOR, V_MINOR, V_PATCH);
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
@@ -1764,7 +1767,7 @@ INT WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
     // Initialize DXUT and create the desired Win32 window and Direct3D device for the application
     DXUTInit( true, true, true, false ); // Parse the command line, handle the default hotkeys, show msgboxes, don't handle Alt-Enter
     DXUTSetCursorSettings( true, true ); // Show the cursor and clip it when in full screen
-    DXUTCreateWindow( L"StuntCarRacer" );
+    DXUTCreateWindow( maintitle );
     DXUTCreateDevice( D3DADAPTER_DEFAULT, true, 800, 480, IsDeviceAcceptable, ModifyDeviceSettings );
 	wideScreen = 1;
 
@@ -1964,6 +1967,9 @@ bool process_events()
 int GL_MSAA = 0;
 int main(int argc, const char** argv)
 {
+	char maintitle[50] = {0};
+	sprintf(maintitle, "StuntCarRemake v%d.%02d.%02d", V_MAJOR, V_MINOR, V_PATCH);
+	printf("%s\n", maintitle);
 #ifdef USE_SDL2
 	SDL_Window *window = NULL;
 	SDL_GLContext context = NULL;
@@ -2089,13 +2095,13 @@ int main(int argc, const char** argv)
 	}
 #endif
 #ifdef USE_SDL2
-	window = SDL_CreateWindow("StuntCarRemake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
+	window = SDL_CreateWindow(maintitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
 	if(window==NULL && GL_MSAA) {
 		// fallback to no MSAA
 		GL_MSAA=0;
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, 0);
 		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, 0);
-		window = SDL_CreateWindow("StuntCarRemake", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
+		window = SDL_CreateWindow(maintitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, screenW, screenH, flags);
 	}
 	if(window==NULL) {
 		printf("Couldn't create Window (%dx%d): %s\n", screenW, screenH, SDL_GetError());
