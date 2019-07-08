@@ -9,27 +9,33 @@ compiler:
 before_install:
     - sudo apt-get install libsdl-mixer1.2-dev libsdl-image1.2-dev libsdl-ttf2.0-dev libopenal-dev libglm-dev -y
 
-script: make LINUX=1
+script: 
+  - make LINUX=1
+  # prepare the package
+  - mkdir -p appdir/usr
+  - mkdir appdir/usr/bin
+  - mkdir appdir/usr/lib
+  - cp stuntcarracer appdir/usr/bin/
+  - cp -r Bitmap appdir/usr/bin/
+  - cp -r Sounds appdir/usr/bin/
+  - cp -r Tracks appdir/usr/bin/
+  - mkdir -p appdir/usr/share/applications
+  - cp stuncarracer.desktop appdir/usr/share/applications/
+  - mkdir -p appdir/usr/share/icons/hicolor/48x48
+  - cp icon48.png appdir/usr/share/icons/hicolor/48x48/stuntcarracer.png
+  - mkdir -p appdir/usr/share/icons/hicolor/96x96
+  - cp icon.png appdir/usr/share/icons/hicolor/48x48/stuntcarracer.png
+  - mkdir -p appdir/usr/share/icons/hicolor/256x256
+  - cp icon256.png appdir/usr/share/icons/hicolor/48x48/stuntcarracer.png
+  # AppImage package
+  - wget -c -nv "https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage"
+  - chmod a+x linuxdeployqt-continuous-x86_64.AppImage
+  - ./linuxdeployqt-continuous-x86_64.AppImage appdir/usr/share/applications/*.desktop -appimage
 
 after_success:
-  - mkdir out
-  - mkdir out/bin
-  - mkdir out/lib
-  - cp stuntcarracer out/bin/
-  - cp -r Bitmap out/bin/
-  - cp -r Sounds out/bin/
-  - cp -r Trackes out/bin/
-  - mkdir -p out/share/applications
-  - cp stuncarracer.desktop out/share/applications/
-  - mkdir -p out/share/icons/hicolor/48x48
-  - cp icon48.png out/share/icons/hicolor/48x48/stuntcarracer.png
-  - mkdir -p out/share/icons/hicolor/96x96
-  - cp icon.png out/share/icons/hicolor/48x48/stuntcarracer.png
-  - mkdir -p out/share/icons/hicolor/256x256
-  - cp icon256.png out/share/icons/hicolor/48x48/stuntcarracer.png
-  - ls -lh out/*
+  - ls -lh StuntCarRemake*.AppImage*
   - wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
-  - bash upload.sh out/*
+  - bash upload.sh StuntCarRemake*.AppImage*
 
 branches:
   except:
