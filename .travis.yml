@@ -16,6 +16,7 @@ script:
   - mkdir appdir/usr/bin
   - mkdir appdir/usr/lib
   - cp stuntcarracer appdir/usr/bin/
+  - cp DejaVuSans*.ttf appdir/usr/bin/
   - cp -r Bitmap appdir/usr/bin/
   - cp -r Sounds appdir/usr/bin/
   - cp -r Tracks appdir/usr/bin/
