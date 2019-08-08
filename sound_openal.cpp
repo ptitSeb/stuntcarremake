@@ -37,6 +37,7 @@ struct sound_source_t {
 static ALCdevice* Device = NULL;
 static ALCcontext* Context = NULL;
 int sound_minimum_volume;
+int sound_initialized = 0;
 
 static void print_info ( void ) 
 {
@@ -120,8 +121,11 @@ bool sound_init( void )
 		return false;
 
 	Context = alcCreateContext(Device,NULL);
-	if(!Context)
+	if(!Context) {
+		alcCloseDevice(Device);
+		Device = NULL;
 		return false;
+	}
 
 	alcMakeContextCurrent(Context);
 
@@ -146,11 +150,15 @@ bool sound_init( void )
 
 	print_info();
 
+	sound_initialized = 1;
+
 	return true;
 }
 
 void sound_destroy( void )
 {
+	if(!sound_initialized)
+		return;
 	ALCcontext * Context = alcGetCurrentContext();
 	ALCdevice * Device = alcGetContextsDevice(Context);
 	alcMakeContextCurrent(NULL);
@@ -164,12 +172,16 @@ void sound_destroy( void )
 
 bool sound_listener_position( float x, float y, float z )
 {
+	if(!sound_initialized)
+		return false;
 	alListener3f(AL_POSITION, x, y, -z);
 	return true;
 }
 
 bool sound_listener_velocity( float x, float y, float z )
 {
+	if(!sound_initialized)
+		return false;
 	alListener3f(AL_VELOCITY, x, y, -z);
 	return true;
 }
@@ -179,6 +191,8 @@ bool sound_listener_orientation(
 	float ux, float uy, float uz  // up vector
 )
 {
+	if(!sound_initialized)
+		return false;
 	float vector[6] = {fx,fy,-fz,ux,uy,-uz};
 	alListenerfv(AL_ORIENTATION, &vector[0]);
 	return true;
@@ -187,6 +201,8 @@ bool sound_listener_orientation(
 // TODO - we'll want to set velocity as well
 void sound_position( sound_source_t * source, float x, float y, float z, float min, float max )
 {
+	if(!sound_initialized)
+		return;
 	alSource3f(source->id, AL_POSITION, x, y, -z);
 	alSourcef(source->id, AL_MAX_DISTANCE, max);
 	alSourcef(source->id, AL_REFERENCE_DISTANCE, min); // is this right?
@@ -198,6 +214,8 @@ void sound_position( sound_source_t * source, float x, float y, float z, float m
 
 void sound_set_pitch( sound_source_t * source, float pitch )
 {
+	if(!sound_initialized)
+		return;
 	ALfloat f = pitch ? pitch : 1.0f ; // 1.0f is default
 	alSourcef( source->id, AL_PITCH, f );
 	//printf("sound_pitch: %f\n",f);
@@ -205,6 +223,8 @@ void sound_set_pitch( sound_source_t * source, float pitch )
 
 void sound_set_frequency( sound_source_t * source, long frequency )
 {
+	if(!sound_initialized)
+		return;
 	ALfloat f = (float)frequency/source->buff->freq ; // 1.0f is default
 	alSourcef( source->id, AL_PITCH, f );
 	//printf("sound_pitch: %f\n",f);
@@ -212,6 +232,8 @@ void sound_set_frequency( sound_source_t * source, long frequency )
 
 void sound_volume( sound_source_t * source, long millibels )
 {
+	if(!sound_initialized)
+		return;
 	ALfloat f;
 	millibels = ( millibels > 0 ) ? 0 : millibels;
 	// gain is scaled to (silence) 0.0f through (no change) 1.0f
@@ -224,6 +246,8 @@ void sound_volume( sound_source_t * source, long millibels )
 
 void sound_pan( sound_source_t * source, long _pan )
 {
+	if(!sound_initialized)
+		return;
 	// where pan is -1 (left) to +1 (right)
 	// must be scaled from -1 <-> +1
 	// probably need to scale down by 10,000, since dsound goes from -10000 to +10000
@@ -240,6 +264,8 @@ void sound_pan( sound_source_t * source, long _pan )
 
 void sound_play( sound_source_t * source )
 {
+	if(!sound_initialized)
+		return;
 	if(!source->playing)
 		stats.playing++;
 	source->playing = true;
@@ -252,6 +278,8 @@ void sound_play( sound_source_t * source )
 
 void sound_play_looping( sound_source_t * source )
 {
+	if(!sound_initialized)
+		return;
 	if(!source->playing)
 		stats.playing++;
 	source->playing = true;
@@ -264,6 +292,8 @@ void sound_play_looping( sound_source_t * source )
 
 void sound_stop( sound_source_t * source )
 {
+	if(!sound_initialized)
+		return;
 	if(source->playing)
 		stats.playing--;
 	source->playing = false;
@@ -275,6 +305,8 @@ void sound_stop( sound_source_t * source )
 
 bool sound_is_playing( sound_source_t * source )
 {
+	if(!sound_initialized)
+		return;
 	ALint state;
 	alGetSourcei( source->id, AL_SOURCE_STATE, &state );
 	return (state == AL_PLAYING);
@@ -282,11 +314,15 @@ bool sound_is_playing( sound_source_t * source )
 
 void sound_set_position( sound_source_t * source, long newpos )
 {
+	if(!sound_initialized)
+		return;
     alSourcei( source->id, AL_BYTE_OFFSET, newpos );
 }
 
 long sound_get_position( sound_source_t * source )
 {
+	if(!sound_initialized)
+		return;
     ALint offset;
     alGetSourcei( source->id, AL_BYTE_OFFSET, &offset);
     return offset;
@@ -298,6 +334,8 @@ long sound_get_position( sound_source_t * source )
 
 sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channels, int freq)
 {
+	if(!sound_initialized)
+		return NULL;
 	ALenum error;
 	ALenum format;
 	u_int8_t *wav_buffer;
@@ -308,7 +346,7 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 	if(!buffer)
 	{
 		printf("sound_load: failed to malloc buffer\n");
-		return 0;
+		return NULL;
 	}
 
 	// clear error code
@@ -381,20 +419,22 @@ sound_buffer_t * sound_load(void* data, int size, int bits, int sign, int channe
 
 sound_source_t * sound_source( sound_buffer_t * buffer )
 {
+	if(!sound_initialized)
+		return NULL;
 	ALenum error;
 	sound_source_t * source;
 
 	if(!buffer)
 	{
 		printf("sound_source: null buffer given\n");
-		return 0;
+		return NULL;
 	}
 
     source = (sound_source_t*)malloc(sizeof(sound_source_t));
 	if(!source)
 	{
 		printf("sound_source: failed to malloc source\n");
-		return 0;
+		return NULL;
 	}
 	source->playing = false;
 	source->buffer = buffer->id;
