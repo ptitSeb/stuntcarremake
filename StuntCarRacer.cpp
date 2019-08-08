@@ -2126,7 +2126,31 @@ int main(int argc, const char** argv)
 			exit(-3);
 	}
 	SDL_GetWindowSize(window, &screenW, &screenH);
-#else
+	SDL_SetWindowTitle(window, maintitle);
+#endif
+	{
+		// icon...
+		int x,y,n;
+		unsigned char *img = stbi_load("Bitmap/icon.png", &x, &y, &n, STBI_rgb_alpha);
+		if(img) {
+			SDL_Surface *icon = 
+			#ifdef USE_SDL2
+				SDL_CreateRGBSurfaceWithFormatFrom(img, x, y, 32, x*4, SDL_PIXELFORMAT_RGBA32);
+			#else
+				SDL_CreateRGBSurfaceFrom(img, x, y, 32, x*4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+			#endif
+			if(icon) {
+				#ifdef USE_SDL2
+				SDL_SetWindowIcon(window, icon);
+				SDL_FreeSurface(icon);
+				#else
+				SDL_WM_SetIcon(icon, NULL);
+				#endif
+			}
+			free(img);
+		}
+	}
+#ifndef USE_SDL2
 	screen = SDL_SetVideoMode( screenW, screenH, 32, flags );
     if ( screen == NULL ) {
 		// fallback to no MSAA
@@ -2145,6 +2169,7 @@ int main(int argc, const char** argv)
     } else {
 		glEnable(GL_MULTISAMPLE);
 	}
+	SDL_WM_SetCaption(maintitle, NULL);
 #endif
 	// automatic guess the scale
 	float screenScale = 1.;
