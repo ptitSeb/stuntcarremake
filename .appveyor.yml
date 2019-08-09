@@ -12,3 +12,13 @@ build:
   project: StuntCarRacer_2008.sln
   verbosity: normal
 
+deploy:
+  provider: GitHub
+  auth_token:
+    secure: M9xvUw78oWu2qIEvVQ7bYKIfSrIDO4twEjWq3yaR8JVKcI4uUPAMfJuITLI+AfCS
+  artifact: /.*\.exe/
+  draft: true
+  prerelease: false
+  on:
+    branch: master
+    APPVEYOR_REPO_TAG: true
