@@ -17,7 +17,6 @@ artifacts:
 
 deploy:
   skip_tags: true
-  release: Release build ($(APPVEYOR_REPO_TAG_NAME))
   description: Windows build
   provider: GitHub
   auth_token:
