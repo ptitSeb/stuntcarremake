@@ -16,7 +16,7 @@ deploy:
   provider: GitHub
   auth_token:
     secure: M9xvUw78oWu2qIEvVQ7bYKIfSrIDO4twEjWq3yaR8JVKcI4uUPAMfJuITLI+AfCS
-  artifact: /.*\.exe/
+  artifact: Release\StuntCarRacer.exe
   draft: true
   prerelease: false
   force_update: true
