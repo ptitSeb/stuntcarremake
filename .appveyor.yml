@@ -16,11 +16,14 @@ artifacts:
   - path: Release\StuntCarRacer.exe
 
 deploy:
+  skip_tags: true
+  release: Release build ($(APPVEYOR_REPO_TAG_NAME))
+  description: Windows build
   provider: GitHub
   auth_token:
     secure: M9xvUw78oWu2qIEvVQ7bYKIfSrIDO4twEjWq3yaR8JVKcI4uUPAMfJuITLI+AfCS
   artifact: /.*\.exe/
-  draft: true
+  draft: false
   prerelease: false
   force_update: true
   on:
