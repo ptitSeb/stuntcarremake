@@ -12,11 +12,14 @@ build:
   project: StuntCarRacer_2008.sln
   verbosity: normal
 
+artifacts:
+  - path: C:\projects\stuntcarremake\Release\StuntCarRacer.exe
+
 deploy:
   provider: GitHub
   auth_token:
     secure: M9xvUw78oWu2qIEvVQ7bYKIfSrIDO4twEjWq3yaR8JVKcI4uUPAMfJuITLI+AfCS
-  artifact: C:\projects\stuntcarremake\Release\StuntCarRacer.exe
+  artifact: /.*\.exe/
   draft: true
   prerelease: false
   force_update: true
