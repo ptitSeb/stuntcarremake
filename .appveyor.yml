@@ -13,7 +13,7 @@ build:
   verbosity: normal
 
 artifacts:
-  - path: C:\projects\stuntcarremake\Release\StuntCarRacer.exe
+  - path: Release\StuntCarRacer.exe
 
 deploy:
   provider: GitHub
