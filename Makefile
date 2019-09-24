@@ -79,7 +79,7 @@ endif
 
 #SDL=1
 ifeq ($(EMSCRIPTEN),1)
-	LIBS+= -lopenal ../gl4es/lib/libGL.a
+	LIB+= -lopenal ../gl4es/lib/libGL.a
 else
 ifeq ($(SDL),2)
 	SDL_=sdl2
@@ -153,7 +153,7 @@ endif
 all: $(BIN)
 
 $(BIN): $(OBJ)
-	$(CC) -o $(BIN) $(OBJ) $(CFLAGS) $(LDFLAGS) $(LIBS)
+	$(CC) -o $(BIN) $(OBJ) $(CFLAGS) $(LDFLAGS) $(LIB)
 
 $(OBJ): $(INC)
 
