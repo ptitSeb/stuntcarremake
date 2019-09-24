@@ -14,7 +14,6 @@
 #ifdef USE_SDL2
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_image.h>
 #else
 #include <SDL/SDL.h>
 #include <SDL/SDL_ttf.h>
@@ -26,9 +25,15 @@
 #ifdef USEGLM
 #define GLM_FORCE_RADIANS
 //#define GLM_LEFT_HANDED 
+#ifdef __EMSCRIPTEN__
+#include <../glm/glm.hpp>		
+#include <../glm/gtc/type_ptr.hpp>		
+#include <../glm/gtc/matrix_transform.hpp>
+#else
 #include <glm/glm.hpp>		
 #include <glm/gtc/type_ptr.hpp>		
 #include <glm/gtc/matrix_transform.hpp>
+#endif
 #else
 #include "matvec.h"
 #endif
@@ -40,10 +45,10 @@
 #include "stb_image.h"
 
 // DX -> OpenGL inspired by forsaken project
-typedef u_int32_t DWORD;
-typedef u_int8_t BYTE;
-typedef u_int16_t WORD;
-typedef u_int32_t BOOL;
+typedef uint32_t DWORD;
+typedef uint8_t BYTE;
+typedef uint16_t WORD;
+typedef uint32_t BOOL;
 
 typedef const wchar_t* LPCWSTR;
 

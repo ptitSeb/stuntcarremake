@@ -28,6 +28,9 @@
 #else
 #define STRING L"%s"
 #endif
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 
 
 //-----------------------------------------------------------------------------
@@ -1965,9 +1968,44 @@ bool process_events()
 	return true;
 }
 
+IDirect3DDevice9 pd3dDevice;
+#ifdef USE_SDL2
+SDL_Window *window = NULL;
+#endif
+
+#ifdef __EMSCRIPTEN__
+extern "C"
+void initialize_gl4es();
+double fLastTime;
+void em_main_loop()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	double fTime = DXUTGetTime();
+	process_events();	// no quit...
+	OnFrameMove( &pd3dDevice, fTime, fTime - fLastTime, NULL );
+	OnFrameRender( &pd3dDevice, fTime, fTime - fLastTime, NULL );
+#ifdef USE_SDL2
+	SDL_GL_SwapWindow(window);
+#else
+	SDL_GL_SwapBuffers();
+#endif
+
+	int32_t timetowait = (1.0f/50.0f - (fTime-fLastTime))*1000;
+	//int32_t timetowait = (1.0f/60.0f - (fTime-fLastTime))*1000;
+	if (timetowait>0)
+		SDL_Delay(timetowait);
+
+	fLastTime = fTime;
+}
+#endif
+
 int GL_MSAA = 0;
 int main(int argc, const char** argv)
 {
+#ifdef __EMSCRIPTEN__
+	initialize_gl4es();
+#endif
 	char maintitle[50] = {0};
 	sprintf(maintitle, "StuntCarRemake v%d.%02d.%02d", V_MAJOR, V_MINOR, V_PATCH);
 	printf("%s\n", maintitle);
@@ -1984,7 +2022,6 @@ int main(int argc, const char** argv)
 		}
 	}
 #ifdef USE_SDL2
-	SDL_Window *window = NULL;
 	SDL_GLContext context = NULL;
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK)==-1) {
 		printf("Could not initialise SDL2: %s\n", SDL_GetError());
@@ -2201,8 +2238,6 @@ int main(int argc, const char** argv)
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	IDirect3DDevice9 pd3dDevice;
-
     D3DXMATRIX matProj;
 	FLOAT fAspect = screenW / 480.0f;
     D3DXMatrixPerspectiveFovLH( &matProj, D3DX_PI/4, fAspect, 0.5f, FURTHEST_Z );
@@ -2218,7 +2253,6 @@ int main(int argc, const char** argv)
 
 	sound_init();
 
-	double fLastTime = DXUTGetTime();
 
 	CreateFonts();
 	LoadTextures();
@@ -2233,10 +2267,13 @@ int main(int argc, const char** argv)
 	DSInit();
 	DSSetMode();
 
-	bool run = true;
 	glClearColor(0,0,0,1);
-	double fTime;
-	fLastTime = fTime = DXUTGetTime();
+#ifdef __EMSCRIPTEN__
+	fLastTime = DXUTGetTime();
+	emscripten_set_main_loop(em_main_loop, 0, 1);
+#else
+	bool run = true;
+	double fLastTime = DXUTGetTime();
     while( run ) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2257,7 +2294,7 @@ int main(int argc, const char** argv)
 
 		fLastTime = fTime;
     }
-
+#endif
 	FreeData();
 
 	sound_destroy();

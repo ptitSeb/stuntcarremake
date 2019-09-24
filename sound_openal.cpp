@@ -306,7 +306,7 @@ void sound_stop( sound_source_t * source )
 bool sound_is_playing( sound_source_t * source )
 {
 	if(!sound_initialized)
-		return;
+		return false;
 	ALint state;
 	alGetSourcei( source->id, AL_SOURCE_STATE, &state );
 	return (state == AL_PLAYING);
@@ -322,7 +322,7 @@ void sound_set_position( sound_source_t * source, long newpos )
 long sound_get_position( sound_source_t * source )
 {
 	if(!sound_initialized)
-		return;
+		return 0;
     ALint offset;
     alGetSourcei( source->id, AL_BYTE_OFFSET, &offset);
     return offset;
