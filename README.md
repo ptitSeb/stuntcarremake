@@ -10,6 +10,8 @@ and for PocketCHIP: `make CHIP=1`
 a simple `make` will build for Pandora.
 Also, you can also use SDL2 instead of SDL1, by adding `SDL=2` to the make command (so SDL2 Linux is `make LINUX=1 SDL=2`)
 
+You can play Emscripten version, buil using [gl4es](https://github.com/ptitSeb/gl4es) here: [Web version](http://ptitseb.github.io/stuntcarremake/)
+
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
 
 Controls are:
