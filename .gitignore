@@ -1,5 +1,6 @@
 *.o
 *.obj
+*.bc
 *.pch
 *.pdb
 *.ipch
