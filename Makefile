@@ -79,7 +79,8 @@ endif
 
 #SDL=1
 ifeq ($(EMSCRIPTEN),1)
-	LIB+= -lopenal ../gl4es/lib/libGL.a
+	GL4ES = ../gl4es/lib/libGL.a
+	LIB+= -lopenal ${GL4ES}
 else
 ifeq ($(SDL),2)
 	SDL_=sdl2
@@ -146,6 +147,8 @@ INC=$(wildcard *.h)
 SRC=$(wildcard *.cpp)
 ifeq ($(EMSCRIPTEN),1)
 OBJ=$(patsubst %.cpp,%.bc,$(SRC))
+#Not in OBJ to avoid removal with a "clean" command
+INC+=${GL4ES}
 else
 OBJ=$(patsubst %.cpp,%.o,$(SRC))
 endif
