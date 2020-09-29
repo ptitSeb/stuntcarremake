@@ -1202,7 +1202,7 @@ static void HandleTrackPreview( CDXUTTextHelper &txtHelper )
 
 	txtHelper.SetInsertionPos( 2+(wideScreen?10:0), pd3dsdBackBuffer->Height-15*6 );
 	txtHelper.DrawTextLine( L"Keyboard controls during game :-" );
-	#ifdef PANDORA
+	#if defined(PANDORA) || defined(PYRA)
 	txtHelper.DrawTextLine( L"  DPad = Steer, (X) = Accelerate, (B) = Brake, (R) = Nitro" );
 	#else
 	txtHelper.DrawTextLine( L"  S = Steer left, D = Steer right, Enter = Accelerate, Space = Brake" );
@@ -1892,7 +1892,7 @@ bool process_events()
 					lastInput |= KEY_P1_RIGHT;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
@@ -1902,7 +1902,7 @@ bool process_events()
 					lastInput |= KEY_P1_BOOST;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_END:
 #else
 				case SDLK_DOWN:
@@ -1910,7 +1910,7 @@ bool process_events()
 					lastInput |= KEY_P1_BRAKE;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_PAGEDOWN:
 #else
 				case SDLK_UP:
@@ -1934,7 +1934,7 @@ bool process_events()
 					lastInput &= ~KEY_P1_RIGHT;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_RCTRL:
 #else
 				case SDLK_SPACE:
@@ -1944,7 +1944,7 @@ bool process_events()
 					lastInput &= ~KEY_P1_BOOST;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_END:
 #else
 				case SDLK_DOWN:
@@ -1952,7 +1952,7 @@ bool process_events()
 					lastInput &= ~KEY_P1_BRAKE;
 					break;
 
-#ifdef PANDORA
+#if defined(PANDORA) || defined(PYRA)
 				case SDLK_PAGEDOWN:
 #else
 				case SDLK_UP:
@@ -2070,7 +2070,7 @@ int main(int argc, const char** argv)
     SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 16 );
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-#ifdef PANDORA
+#if defined(PANDORA)
 	int revision = 5;
 	FILE *f = fopen("/etc/powervr-esrev", "r");
 	if (f) {

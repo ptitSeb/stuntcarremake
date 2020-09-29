@@ -17,6 +17,12 @@ ifeq ($(PANDORA),1)
 	LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp
 	#HAVE_GLES=1
 endif
+ifeq ($(PYRA),1)
+        FLAGS= -mcpu=cortex-a15 -mfpu=neon -mfloat-abi=hard -fsingle-precision-constant
+        FLAGS+= -DPYRA
+        FLAGS+= -DARM
+        LDFLAGS= -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp
+endif
 ifeq ($(ODROID),1)
         FLAGS= -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard -fsingle-precision-constant -O3 -fsigned-char
         FLAGS+= -DODROID
