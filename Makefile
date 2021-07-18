@@ -69,7 +69,7 @@ endif
 
 ifeq ($(DEBUG),1)
 	FLAGS+= -g
-	CFLAGS+=-O2
+	CFLAGS+=-Og
 else
 	CFLAGS+=-O3 -Winit-self
 	LDFLAGS+=-s
