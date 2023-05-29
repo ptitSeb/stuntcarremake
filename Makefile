@@ -4,7 +4,7 @@
 
 CC=g++
 #PANDORA=1
-DEBUG=1
+#DEBUG=1
 
 # general compiler settings
 ifeq ($(M32),1)
