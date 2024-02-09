@@ -847,6 +847,7 @@ CDXUTTextHelper::CDXUTTextHelper(TTF_Font* font, GLuint sprite, int size) :
 			SDL_Surface* surf = TTF_RenderText_Blended(font, text, forecol);
 			if(surf) {
 				m_as[i*16+j] = surf->w;
+                                glPixelStorei(GL_UNPACK_ROW_LENGTH, surf->pitch / surf->format->BytesPerPixel);
 				glTexSubImage2D(GL_TEXTURE_2D, 0, j*m_fontsize, i*m_fontsize, surf->w, (surf->h>=m_fontsize)?m_fontsize-1:surf->h, GL_RGBA, GL_UNSIGNED_BYTE, surf->pixels);
 				SDL_FreeSurface(surf);
 			} else {
