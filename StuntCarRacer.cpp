@@ -617,6 +617,19 @@ void CreateFonts()
 	}
 	printf("Font created (%p / %p)\n", g_pFont, g_pFontLarge);
 }
+void CloseFonts()
+{
+	if (g_pFont!=NULL)
+	{
+		TTF_CloseFont(g_pFont);
+		g_pFont = 0;
+	}
+	if (g_pFontLarge!=NULL)
+	{
+		TTF_CloseFont(g_pFontLarge);
+		g_pFontLarge = NULL;
+	}
+}
 void LoadTextures()
 {
 	if (!g_pAtlas) g_pAtlas = new IDirect3DTexture9();
@@ -2296,6 +2309,8 @@ int main(int argc, const char** argv)
     }
 #endif
 	FreeData();
+
+	CloseFonts();
 
 	sound_destroy();
 	TTF_Quit();
