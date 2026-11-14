@@ -4,6 +4,15 @@
 *.pch
 *.pdb
 *.ipch
+CMakeCache.txt
+CMakeFiles/
+CMakeUserPresets.json
+cmake-build-*/
+cmake_install.cmake
+compile_commands.json
+build/
+build-*/
+out/
 StuntCarRacer.tlog
 *.suo
 StuntCarRacer.res

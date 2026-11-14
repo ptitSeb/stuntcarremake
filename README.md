@@ -6,13 +6,50 @@ This is a port to Linux & OpenPandora of Stunt Car Racer Remake, a windows remak
 
 ## Building
 
-To build on Linux, simply use `make LINUX=1`
-For ODroid it will be `make ODROID=1`
-and for PocketCHIP: `make CHIP=1`
-a simple `make` will build for Pandora.
-Also, you can also use SDL2 instead of SDL1, by adding `SDL=2` to the make command (so SDL2 Linux is `make LINUX=1 SDL=2`)
+The game is built with CMake. Select the target platform with the
+`STUNT_PLATFORM` cache variable: `LINUX` (default on desktop), `PANDORA`,
+`PYRA`, `ODROID`, `ODROIDN1` or `CHIP`.
 
-You can play Emscripten version, built using [gl4es](https://github.com/ptitSeb/gl4es) here: [Web version](http://ptitseb.github.io/stuntcarremake/)
+### Linux
+
+```sh
+cmake -S . -B build -DSTUNT_PLATFORM=LINUX -DSTUNT_SDL2=ON
+cmake --build build -j
+```
+
+Useful options:
+
+- `STUNT_SDL2=ON` uses SDL2 instead of SDL 1.2 (default: SDL 1.2)
+- `STUNT_GLES=ON` uses OpenGL ES instead of desktop OpenGL
+- `STUNT_32BIT=ON` builds a 32-bit executable
+- `-DCMAKE_BUILD_TYPE=Debug|Release|Profile` selects the build configuration
+  (default: `Release`)
+
+### Windows (Visual Studio)
+
+```sh
+cmake -S . -B build -G "Visual Studio 17 2022" -A Win32
+cmake --build build --config Release
+```
+
+Use `-A x64` for a 64-bit build. The Microsoft DirectX SDK (June 2010) is
+required. If CMake cannot find it, set `-DSTUNT_DXSDK_DIR=<sdk root>`. The
+generated Visual Studio solution provides `Debug`, `Release` and `Profile`
+configurations.
+
+### Emscripten
+
+```sh
+emcmake cmake -S . -B build-emscripten -DSTUNT_PLATFORM=EMSCRIPTEN
+cmake --build build-emscripten
+```
+
+The web build is written to `docs/index.html`. gl4es is expected at `../gl4es`;
+override this with `-DSTUNT_GL4ES_DIR=<path>`.
+
+You can play the Emscripten version, built using
+[gl4es](https://github.com/ptitSeb/gl4es) here:
+[Web version](http://ptitseb.github.io/stuntcarremake/)
 
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
 
