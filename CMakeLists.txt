@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(StuntCarRacer VERSION 0.0.2 LANGUAGES CXX)
+project(StuntCarRacer VERSION 0.0.3 LANGUAGES CXX)
 
 if(POLICY CMP0091)
     cmake_policy(SET CMP0091 NEW)

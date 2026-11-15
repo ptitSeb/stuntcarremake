@@ -40,9 +40,18 @@
     <script type="text/javascript">
         const $game = document.querySelector('.game');
         const widthToHeight = 800 / 480;
+        let gameStarted = false;
         const resize = () => {
-            if(window.innerWidth / window.innerHeight > widthToHeight === $game.classList.contains('portrait')) {
-            $game.classList.toggle('portrait');
+            const portrait = window.innerWidth / window.innerHeight < widthToHeight;
+            $game.classList.toggle('portrait', portrait);
+            if(!gameStarted)
+                return;
+            if(portrait) {
+                $game.width = window.innerWidth;
+                $game.height = Math.round(window.innerWidth / widthToHeight);
+            } else {
+                $game.height = window.innerHeight;
+                $game.width = Math.round(window.innerHeight * widthToHeight);
             }
         }
         var Module = {
@@ -52,7 +61,16 @@
             printErr() {
             console.error(Array.prototype.slice.call(arguments).join(' '));
             },
-            canvas: $game
+            canvas: $game,
+            onRuntimeInitialized() {
+                gameStarted = true;
+                // Let SDL finish creating its window, then switch to the
+                // actual canvas size so the game renders at full resolution.
+                setTimeout(() => {
+                    resize();
+                    window.dispatchEvent(new Event('resize'));
+                }, 0);
+            }
         };
         window.addEventListener('resize', resize, false);
         resize();

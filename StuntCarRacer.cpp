@@ -66,6 +66,11 @@ IDirect3DTexture9 *g_pAtlas = NULL;
 
 int wideScreen = 0;
 
+// Current drawable size in pixels. On Linux/Emscripten this tracks the actual
+// window (or canvas) size and is updated when the window is resized.
+int g_screenWidth = BASE_WIDTH_WIDESCREEN;
+int g_screenHeight = BASE_HEIGHT;
+
 static long frameGap = DEFAULT_FRAME_GAP;
 static bool bFrameMoved = FALSE;
 
@@ -315,11 +320,8 @@ void GetScreenDimensions( long *screen_width,
 						  long *screen_height )
 	{
 #ifdef linux
-	/*const SDL_VideoInfo* info = SDL_GetVideoInfo();
-	*screen_width = info->current_w;
-	*screen_height = info->current_h; */
-	*screen_width = (wideScreen)?800:640;
-	*screen_height = 480;
+	*screen_width = g_screenWidth;
+	*screen_height = g_screenHeight;
 #else
 	const D3DSURFACE_DESC *desc;
 	desc = DXUTGetBackBufferSurfaceDesc();
@@ -487,13 +489,12 @@ static void EnforceConstantFrameRate( long max_frame_rate )
 #ifdef linux
 TTF_Font *g_pFont = NULL;
 TTF_Font *g_pFontLarge = NULL;
-float GetTextScale() {
-	return 1.0f;	//TODO
-}
 GLuint   g_pSprite = 0;	// Texture for batching text calls
 #else
 ID3DXFont *g_pFont = NULL;         // Font for drawing text
 ID3DXFont *g_pFontLarge = NULL;    // Font for drawing large text
+ID3DXSprite *g_pSprite = NULL;       // Sprite for batching draw text calls
+#endif
 
 /*	======================================================================================= */
 /*	Function:		GetTextScale															*/
@@ -512,8 +513,6 @@ float GetTextScale()
 	float base_width = wideScreen ? static_cast<float>(BASE_WIDTH_WIDESCREEN) : static_cast<float>(BASE_WIDTH_STANDARD);
 	return static_cast<float>(current_width) / base_width;
 }
-ID3DXSprite *g_pSprite = NULL;       // Sprite for batching draw text calls
-#endif
 
 #ifndef linux
 //--------------------------------------------------------------------------------------
@@ -668,13 +667,18 @@ void CreateFonts()
 		exit(1);
 	}
 
+	int smallSize = static_cast<int>(15 * GetTextScale());
+	int largeSize = static_cast<int>(25 * GetTextScale());
+	if (smallSize < 1) smallSize = 1;
+	if (largeSize < 1) largeSize = 1;
+
 	if (g_pFont==NULL)
 	{
-		g_pFont = TTF_OpenFont("DejaVuSans-Bold.ttf", 15);
+		g_pFont = TTF_OpenFont("DejaVuSans-Bold.ttf", smallSize);
 	}
 	if (g_pFontLarge==NULL)
 	{
-		g_pFontLarge = TTF_OpenFont("DejaVuSans-Bold.ttf", 25);
+		g_pFontLarge = TTF_OpenFont("DejaVuSans-Bold.ttf", largeSize);
 	}
 	printf("Font created (%p / %p)\n", g_pFont, g_pFontLarge);
 }
@@ -1333,9 +1337,22 @@ void RenderText( double fTime )
     // pFont->DrawText() will not be batched together.  Batching calls will improve perf.
 	float textScale = GetTextScale();
 #ifdef linux
-	static
-#endif
+	// Cache the text helper so the glyph atlas is not rebuilt every frame, but
+	// recreate it when the window (and therefore font size) changes.
+	static CDXUTTextHelper *pTextHelper = NULL;
+	static TTF_Font *pTextHelperFont = NULL;
+	static int textHelperSize = 0;
+	int helperSize = static_cast<int>(15 * textScale);
+	if(pTextHelper == NULL || pTextHelperFont != g_pFont || textHelperSize != helperSize) {
+		delete pTextHelper;
+		pTextHelper = new CDXUTTextHelper( g_pFont, g_pSprite, helperSize );
+		pTextHelperFont = g_pFont;
+		textHelperSize = helperSize;
+	}
+	CDXUTTextHelper &txtHelper = *pTextHelper;
+#else
     CDXUTTextHelper txtHelper( g_pFont, g_pSprite, static_cast<int>(15 * textScale) );
+#endif
 
     // Output statistics
     txtHelper.Begin();
@@ -1402,10 +1419,21 @@ void RenderText( double fTime )
 
 			if (raceFinished)
 			{
-				#ifdef linux
-				static
-				#endif
+#ifdef linux
+				static CDXUTTextHelper *pTextHelperLarge = NULL;
+				static TTF_Font *pTextHelperLargeFont = NULL;
+				static int textHelperLargeSize = 0;
+				int helperLargeSize = static_cast<int>(25 * textScale);
+				if(pTextHelperLarge == NULL || pTextHelperLargeFont != g_pFontLarge || textHelperLargeSize != helperLargeSize) {
+					delete pTextHelperLarge;
+					pTextHelperLarge = new CDXUTTextHelper( g_pFontLarge, g_pSprite, helperLargeSize );
+					pTextHelperLargeFont = g_pFontLarge;
+					textHelperLargeSize = helperLargeSize;
+				}
+				CDXUTTextHelper &txtHelperLarge = *pTextHelperLarge;
+#else
 				CDXUTTextHelper txtHelperLarge( g_pFontLarge, g_pSprite, static_cast<int>(25 * textScale) );
+#endif
 
 				txtHelperLarge.Begin();
 
@@ -1924,6 +1952,16 @@ INT WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR, int )
 
 #else
 
+static void OnWindowResized( int width, int height );
+#ifdef USE_SDL2
+static void ConstrainWindowAspect( int *width, int *height );
+#endif
+
+IDirect3DDevice9 pd3dDevice;
+#ifdef USE_SDL2
+SDL_Window *window = NULL;
+#endif
+
 bool process_events()
 {
     SDL_Event event;
@@ -2088,6 +2126,20 @@ bool process_events()
 					break;
 				}
 			break;
+#ifdef USE_SDL2
+        case SDL_WINDOWEVENT:
+            if( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED ||
+                event.window.event == SDL_WINDOWEVENT_RESIZED )
+            {
+                int width = event.window.data1;
+                int height = event.window.data2;
+                ConstrainWindowAspect( &width, &height );
+                int drawable_width, drawable_height;
+                SDL_GL_GetDrawableSize( window, &drawable_width, &drawable_height );
+                OnWindowResized( drawable_width, drawable_height );
+            }
+            break;
+#endif
         case SDL_QUIT:
             return false;
         }
@@ -2095,10 +2147,80 @@ bool process_events()
 	return true;
 }
 
-IDirect3DDevice9 pd3dDevice;
 #ifdef USE_SDL2
-SDL_Window *window = NULL;
+// Keep the same aspect ratio as the Windows build while the user drags the
+// window borders. SDL2 has no WM_SIZING equivalent, so resize the window when
+// a size change would break the ratio.
+static void ConstrainWindowAspect( int *width, int *height )
+{
+	if( *width <= 0 || *height <= 0 )
+		return;
+
+	if( SDL_GetWindowFlags( window ) & (SDL_WINDOW_FULLSCREEN | SDL_WINDOW_FULLSCREEN_DESKTOP) )
+		return;
+
+	float targetAspect = wideScreen ? (800.0f / 480.0f) : (4.0f / 3.0f);
+	float currentAspect = static_cast<float>(*width) / static_cast<float>(*height);
+
+	if( currentAspect > targetAspect )
+	{
+		int newWidth = static_cast<int>(*height * targetAspect + 0.5f);
+		if( newWidth < 1 ) newWidth = 1;
+		if( abs( newWidth - *width ) > 1 )
+		{
+			SDL_SetWindowSize( window, newWidth, *height );
+			*width = newWidth;
+		}
+	}
+	else if( currentAspect < targetAspect )
+	{
+		int newHeight = static_cast<int>(*width / targetAspect + 0.5f);
+		if( newHeight < 1 ) newHeight = 1;
+		if( abs( newHeight - *height ) > 1 )
+		{
+			SDL_SetWindowSize( window, *width, newHeight );
+			*height = newHeight;
+		}
+	}
+}
 #endif
+
+// Apply a new drawable size to the OpenGL viewport, 2D coordinate system and
+// 3D projection. This mirrors what OnResetDevice() does on Windows when the
+// Direct3D back buffer is resized.
+static void ApplyScreenSize( int width, int height )
+{
+	if( width < 1 ) width = 1;
+	if( height < 1 ) height = 1;
+
+	g_screenWidth = width;
+	g_screenHeight = height;
+
+	glViewport( 0, 0, width, height );
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+	glOrtho( 0, width, height, 0, 0, FURTHEST_Z );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+
+	D3DXMATRIX matProj;
+	FLOAT fAspect = static_cast<FLOAT>(width) / static_cast<FLOAT>(height);
+	D3DXMatrixPerspectiveFovLH( &matProj, D3DX_PI/4, fAspect, 0.5f, FURTHEST_Z );
+	pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
+}
+
+static void OnWindowResized( int width, int height )
+{
+	if( width < 1 || height < 1 )
+		return;
+
+	ApplyScreenSize( width, height );
+
+	// Fonts are rendered at a fixed pixel size on Linux, so recreate them to
+	// match the new text scale (equivalent to OnResetDevice on Windows).
+	CloseFonts();
+	CreateFonts();
+}
 
 #ifdef __EMSCRIPTEN__
 extern "C"
@@ -2250,9 +2372,9 @@ int main(int argc, const char** argv)
 #endif
 	int flags = 0;
 	wideScreen = 0;
-	int screenH, screenW, screenX, screenY;
+	int screenH, screenW;
 #ifdef USE_SDL2
-	flags = SDL_WINDOW_OPENGL;
+	flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 #else
 	flags = SDL_OPENGL | SDL_DOUBLEBUF;
 #endif
@@ -2301,8 +2423,41 @@ int main(int argc, const char** argv)
 			screenH = customHeight > 0 ? customHeight : 480;
 		}
 	} else {
-		screenW = customWidth > 0 ? customWidth : 800;
-		screenH = customHeight > 0 ? customHeight : 480;
+		// Match the Windows build: open at roughly half the desktop size,
+		// keeping the 16:10 aspect ratio. Custom dimensions/scale still win.
+		if(customWidth > 0) {
+			screenW = customWidth;
+			screenH = customHeight > 0 ? customHeight : (screenW * 10) / 16;
+		} else if(customHeight > 0) {
+			screenH = customHeight;
+			screenW = (screenH * 16) / 10;
+		} else if(customScale > 0.0f) {
+			screenW = static_cast<int>(BASE_WIDTH_WIDESCREEN * customScale);
+			screenH = static_cast<int>(BASE_HEIGHT * customScale);
+		} else {
+#ifdef USE_SDL2
+			SDL_DisplayMode desktopMode;
+			if(SDL_GetDesktopDisplayMode(0, &desktopMode) == 0 &&
+			   desktopMode.w > 0 && desktopMode.h > 0) {
+				screenW = desktopMode.w / 2;
+				screenH = (screenW * 10) / 16;
+			} else {
+				screenW = BASE_WIDTH_WIDESCREEN;
+				screenH = BASE_HEIGHT;
+			}
+#else
+			const SDL_VideoInfo* infos = SDL_GetVideoInfo();
+			if(infos && infos->current_w > 0 && infos->current_h > 0) {
+				screenW = infos->current_w / 2;
+				screenH = (screenW * 10) / 16;
+			} else {
+				screenW = BASE_WIDTH_WIDESCREEN;
+				screenH = BASE_HEIGHT;
+			}
+#endif
+		}
+		if(screenW < 1) screenW = 1;
+		if(screenH < 1) screenH = 1;
 	}
 #endif
 #ifdef USE_SDL2
@@ -2368,50 +2523,30 @@ int main(int argc, const char** argv)
 		glEnable(GL_MULTISAMPLE);
 	}
 	SDL_WM_SetCaption(maintitle, NULL);
+	screenW = screen->w;
+	screenH = screen->h;
 #endif
-	// automatic guess the scale or use custom scale
-	float screenScale = 1.;
-	if(customScale > 0.0f) {
-		// Use custom scale factor
-		screenScale = customScale;
-	} else {
-		// Automatic scaling based on window size
-		if(screenW/640. < screenH/480.)
-			screenScale = screenW/640.;
-		else
-			screenScale = screenH/480.;
-	}
-	// is it a Wide screen ratio?
-	// Detect widescreen if width is significantly wider than 4:3 aspect ratio
-	if((screenW/screenScale - 640)>=80)
-		wideScreen=1;
-	screenX = (screenW-(wideScreen?800.:640.)*screenScale)/2.;
-	screenY = (screenH-480.*screenScale)/2.;
-	screenW = (wideScreen?800:640)*screenScale;
-	screenH = 480*screenScale;
+	// Choose the logical layout from the window aspect ratio. The Windows build
+	// uses the same 3:2 threshold to select widescreen or standard layout.
+	wideScreen = (screenW * 2 >= screenH * 3);
+
+	int drawableW = screenW;
+	int drawableH = screenH;
+#ifdef USE_SDL2
+	SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
+#endif
+	ApplyScreenSize(drawableW, drawableH);
+
 	printf("Display mode: %s, Scale: %.2f, Resolution: %dx%d\n",
-		   wideScreen ? "Widescreen" : "Standard", screenScale, screenW, screenH);
+		   wideScreen ? "Widescreen" : "Standard", GetTextScale(), g_screenWidth, g_screenHeight);
 #ifdef USE_SDL2
 	if(flags&SDL_WINDOW_FULLSCREEN || flags&SDL_WINDOW_FULLSCREEN_DESKTOP)
 #else
 	if(flags&SDL_FULLSCREEN)
 #endif
 		SDL_ShowCursor(SDL_DISABLE);
-	glViewport(screenX, screenY, screenW, screenH);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	screenH = 480;
-	screenW = wideScreen?800:640;
-	glOrtho(0, screenW, screenH, 0, 0, FURTHEST_Z);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    D3DXMATRIX matProj;
-	FLOAT fAspect = screenW / 480.0f;
-    D3DXMatrixPerspectiveFovLH( &matProj, D3DX_PI/4, fAspect, 0.5f, FURTHEST_Z );
-    pd3dDevice.SetTransform( D3DTS_PROJECTION, &matProj );
 
 	glEnable(GL_DEPTH_TEST);
 	glAlphaFunc(GL_NOTEQUAL, 0);

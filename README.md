@@ -53,23 +53,21 @@ You can play the Emscripten version, built using
 
 Some code (the OpenAL part) come from Forsaken/ProjectX port by chino.
 
-## Windows-Specific Features 
+## Dynamic Window Resizing
 
-The Windows build includes additional features not available on Linux:
+Both the Windows and Linux/Emscripten builds support arbitrary window sizes:
 
-### Dynamic Window Resizing
-- **Resizable window** with automatic aspect ratio preservation (16:10 for widescreen, 4:3 for standard)
+- **Resizable window** with automatic aspect ratio preservation (800:480 for widescreen, 4:3 for standard)
 - **Dynamic font scaling** - fonts and UI text scale based on window size
 - **Dynamic cockpit scaling** - cockpit overlay scales proportionally with window resolution
 - **Intelligent positioning** - UI elements maintain proper positioning at any resolution
 
 **Technical Details:**
-- Implemented via Win32 `WM_SIZING` message handler
-- Uses DirectX backbuffer dimensions for accurate scaling calculations
+- Windows uses a Win32 `WM_SIZING` handler; Linux/Emscripten use SDL2 window resize events
+- Rendering uses the real DirectX backbuffer or OpenGL drawable dimensions
+- The initial window size follows the Windows build: roughly half the desktop size at 16:10
 - Base resolutions: 800x480 (widescreen) or 640x480 (standard)
 - All scaling factors calculated dynamically from current vs base resolution
-
-**Linux Status:** Linux builds use fixed resolution (800x480 or 640x480) as the SDL implementation does not currently support dynamic resizing. The scaling code is present but inactive (returns 1.0x scale) to maintain compatibility.
 
 **Contributors:** Windows enhancements by omenoid <akaunist@gmail.com> (2025-11-30)
 
