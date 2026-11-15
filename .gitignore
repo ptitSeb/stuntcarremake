@@ -21,7 +21,7 @@ stuntcarracer
 Release/
 Debug/
 StuntCarRacer_2008.VC.db
-
+Makefile
 StuntCarRacer_2008.VC.VC.opendb
 *.user
 .vs/
