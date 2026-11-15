@@ -136,6 +136,13 @@ static void DrawHorizon( long viewpoint_y,
 	// start of code
 	GetScreenDimensions(&screen_width, &screen_height);
 
+	// The software engine's focal length (FOCUS) is a fixed value calibrated for a
+	// BASE_HEIGHT-tall window. The 3D track is projected by the (resolution
+	// independent) D3D perspective matrix whose focal length grows with window
+	// height, so scale the focal length the same way to keep the backdrop ground
+	// meeting the road at any resolution.
+	long focal = (long)FOCUS * screen_height / BASE_HEIGHT;
+
 	// calculate y adjustment depending upon viewpoint_x_angle.
 	// this is needed because only two horizon points are used rather than four.
 	// when the rotated z values are negative (i.e. viewpoint_x_angle in range shown)
@@ -168,8 +175,8 @@ static void DrawHorizon( long viewpoint_y,
 		trans_x = (x * cos_z) - (y * sin_z);
 		trans_y = (x * sin_z) + (y * cos_z);
 
-		// perspective projection
-		z = trans_z >> LOG_FOCUS;
+		// perspective projection (focal length scales with window height)
+		z = trans_z;
 
 		// debug stuff
 		if (z == 0)
@@ -182,8 +189,8 @@ static void DrawHorizon( long viewpoint_y,
 			z = 1;
 			}
 
-		x = (trans_x / z) + screen_width/2;
-		y = (trans_y / z) + screen_height/2;
+		x = (trans_x * focal) / z + screen_width/2;
+		y = (trans_y * focal) / z + screen_height/2;
 
 		// store screen x and screen y
 		screen_coords[i].x = x;
@@ -789,6 +796,10 @@ static void DrawScenery( long viewpoint_y,
 	// start of code
 	GetScreenDimensions(&screen_width, &screen_height);
 
+	// Scale the focal length with window height, as done for the horizon, so the
+	// scenery stays aligned with the resolution-independent 3D track.
+	long focal = (long)FOCUS * screen_height / BASE_HEIGHT;
+
 	// x/z angle are fixed for all scenery objects
 	GetSinCos(viewpoint_x_angle, &sin_x, &cos_x);
 	GetSinCos(viewpoint_z_angle, &sin_z, &cos_z);
@@ -853,8 +864,8 @@ static void DrawScenery( long viewpoint_y,
 			// could also eliminate scenery if selected points are outside the
 			// viewing pyramid, although the saving would probably be negligible
 
-			// perspective projection
-			z = trans_z >> LOG_FOCUS;
+			// perspective projection (focal length scales with window height)
+			z = trans_z;
 
 			// debug stuff
 			if (z == 0)
@@ -867,8 +878,8 @@ static void DrawScenery( long viewpoint_y,
 				z = 1;
 				}
 
-			x = (trans_x / z) + screen_width/2;
-			y = (trans_y / z) + screen_height/2;
+			x = (trans_x * focal) / z + screen_width/2;
+			y = (trans_y * focal) / z + screen_height/2;
 
 			// store screen x and screen y
 			screen_coords[i].x = x;
